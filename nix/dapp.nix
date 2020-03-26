@@ -273,15 +273,15 @@ let
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    mrs_957fb29 = rec {
+    mrs_b440f31 = rec {
       name = "mrs";
       deps = {
         ds-test = ds-test_a4e4005;
       };
       repo' = {
-        name = "mrs-957fb29-source";
+        name = "mrs-b440f31-source";
         url = "https://github.com/sweatdao/mrs";
-        rev = "957fb297c0c7a1a184c7420cb630ab2059faed50";
+        rev = "b440f313af52978de5bacc1fbe652a3f033f710f";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -325,7 +325,7 @@ let
         ds-test = ds-test_a4e4005;
         ds-token = ds-token_cee36a1;
         ds-weth = ds-weth_b5819d1;
-        mrs = mrs_957fb29;
+        mrs = mrs_b440f31;
         esm = esm_52ecb26;
       };
       src' = ../.;

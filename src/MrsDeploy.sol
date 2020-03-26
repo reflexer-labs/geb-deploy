@@ -256,6 +256,7 @@ contract MrsDeploy is DSAuth {
 
     function deployRateSetter(
         address pip,
+        uint span,
         uint trim,
         uint dawn,
         uint dusk,
@@ -271,6 +272,7 @@ contract MrsDeploy is DSAuth {
 
         // Setup
         vox.file("pip", pip);
+        vox.file("span", span);
         vox.file("trim", trim);
         vox.file("dawn", dawn);
         vox.file("dusk", dusk);

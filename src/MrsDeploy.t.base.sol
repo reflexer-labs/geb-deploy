@@ -394,6 +394,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     uint how  = 0.000005 ether;
     uint up   = 1000000000158153903837946258; // 0.5% annualy
     uint down = 1000000000158153903837946258; // 0.5% annualy
+    uint span = ray(2 ether);
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
@@ -471,7 +472,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
         mrsDeploy.deployTaxation();
-        mrsDeploy.deployRateSetter(address(pipMAI), trim, dawn, dusk, how, up, down);
+        mrsDeploy.deployRateSetter(address(pipMAI), span, trim, dawn, dusk, how, up, down);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployLiquidator();

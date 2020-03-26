@@ -355,6 +355,22 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(mai.balanceOf(address(flap)), 0);
     }
 
+    function testVox() public {
+        deploy();
+        jug.drip();
+        vox.drip();
+        vox.back();
+        assertEq(vox.way(), ray(1 ether));
+        assertEq(jug.base(), 1000000000158153903837946258);
+        pipMAI.poke(bytes32(uint(1.05 ether)));
+        hevm.warp(now + 1 seconds);
+        jug.drip();
+        vox.drip();
+        vox.back();
+        assertEq(vox.way(), 999999998452874042136787551);
+        assertEq(jug.base(), 1000000000158153903837946258); // because of bounds it's kept constant
+    }
+
     function testEnd() public {
         deploy();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
