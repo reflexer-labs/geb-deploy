@@ -17,8 +17,8 @@
 
 pragma solidity ^0.5.15;
 
-import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
-import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
+import {DSAuth, DSAuthority} from "./ds/auth/auth.sol";
+import {DSPause, DSPauseProxy} from "./ds/pause/pause.sol";
 
 import {Vat} from "mrs/vat.sol";
 import {Jug} from "mrs/jug.sol";
@@ -30,7 +30,7 @@ import {Flopper} from "mrs/flop.sol";
 import {Flipper} from "mrs/flip.sol";
 import {Mai} from "mrs/mai.sol";
 import {End} from "mrs/end.sol";
-import {ESM} from "esm/ESM.sol";
+import {ESM} from "./ds/esm/ESM.sol";
 import {Vox} from "mrs/vox.sol";
 import {Spotter} from "mrs/spot.sol";
 

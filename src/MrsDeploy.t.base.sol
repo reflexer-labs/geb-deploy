@@ -1,11 +1,11 @@
 pragma solidity ^0.5.15;
 
-import {DSTest} from "ds-test/test.sol";
-import {DSToken} from "ds-token/token.sol";
-import {DSValue} from "ds-value/value.sol";
-import {DSRoles} from "ds-roles/roles.sol";
-import {DSGuard} from "ds-guard/guard.sol";
-import {WETH9_} from "ds-weth/weth9.sol";
+import {DSTest} from "./ds/test/test.sol";
+import {DSToken} from "./ds/token/token.sol";
+import {DSValue} from "./ds/value/value.sol";
+import {DSRoles} from "./ds/roles/roles.sol";
+import {DSGuard} from "./ds/guard/guard.sol";
+import {WETH9_} from "./ds/weth/weth9.sol";
 
 import "./MrsDeploy.sol";
 import {GemJoin} from "./join.sol";
@@ -401,6 +401,10 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         require(y == 0 || (z = x * y) / y == x);
     }
 
+    function ray(uint x) internal pure returns (uint z) {
+        z = x * 10 ** 9;
+    }
+
     function setUp() public {
         vatFab = new VatFab();
         jugFab = new JugFab();
@@ -486,6 +490,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         end = mrsDeploy.end();
         esm = mrsDeploy.esm();
         pause = mrsDeploy.pause();
+        vox = mrsDeploy.vox();
 
         authority.setRootUser(address(pause.proxy()), true);
         mrsDeploy.giveControl(address(pause.proxy()));
@@ -516,10 +521,12 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         this.file(address(spotter), "COL", "mat", uint(1100000000 ether));
         spotter.poke("ETH");
         spotter.poke("COL");
-        (,,uint spot,,) = vat.ilks("ETH");
+        (,,uint spot,,,uint risk) = vat.ilks("ETH");
         assertEq(spot, 300 * ONE * ONE / 1500000000 ether);
-        (,, spot,,) = vat.ilks("COL");
+        assertEq(spot, risk);
+        (,, spot,,,risk) = vat.ilks("COL");
         assertEq(spot, 45 * ONE * ONE / 1100000000 ether);
+        assertEq(spot, risk);
 
         DSGuard(address(gov.authority())).permit(address(flop), address(gov), bytes4(keccak256("mint(address,uint256)")));
         DSGuard(address(gov.authority())).permit(address(flap), address(gov), bytes4(keccak256("burn(address,uint256)")));

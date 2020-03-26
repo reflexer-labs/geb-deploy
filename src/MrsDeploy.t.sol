@@ -14,7 +14,7 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFailMissingVat() public {
         mrsDeploy.deployTaxation();
-        mrsDeploy.deployAuctions(address(gov));
+        mrsDeploy.deployAuctions(address(gov), address(bin));
     }
 
     function testFailMissingTaxationAndAuctions() public {
@@ -27,7 +27,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
         mrsDeploy.deployTaxation();
-        mrsDeploy.deployAuctions(address(gov));
+        mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployShutdown(address(gov), address(0x0), 10);
     }
@@ -36,7 +36,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
         mrsDeploy.deployTaxation();
-        mrsDeploy.deployAuctions(address(gov));
+        mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployPause(0, authority);
     }
@@ -147,7 +147,6 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFrobPaybackMai() public {
         deployWithVatPermissions();
-        vat.file("close", 0);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -334,47 +333,27 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vat.sin(address(vow)), 0);
     }
 
-    // TODO
-    // function testFlap() public {
-    //     deploy();
-    //     this.dripAndFile(address(jug), bytes32("ETH"), bytes32("duty"), uint(1.05 * 10 ** 27));
-    //     weth.deposit.value(0.5 ether)();
-    //     weth.approve(address(ethJoin), uint(-1));
-    //     ethJoin.join(address(this), 0.5 ether);
-    //     vat.frob("ETH", address(this), address(this), address(this), 0.1 ether, 10 ether);
-    //     hevm.warp(now + 1);
-    //     jug.drip("ETH");
-    //
-    //     assertEq(vow.hump(), 0);
-    //     assertEq(vat.mai(address(vow)), rad(10 * 0.05 ether));
-    //
-    //     this.file(address(vow), bytes32("bump"), rad(0.05 ether));
-    //     uint batchId = vow.flap();
-    //
-    //     (,uint lot,,,) = flap.bids(batchId);
-    //     assertEq(lot, rad(0.05 ether));
-    //     user1.doApprove(address(gov), address(flap));
-    //     user2.doApprove(address(gov), address(flap));
-    //     gov.transfer(address(user1), 1 ether);
-    //     gov.transfer(address(user2), 1 ether);
-    //
-    //     assertEq(mai.balanceOf(address(user1)), 0);
-    //     assertEq(gov.balanceOf(address(0)), 0);
-    //
-    //     user1.doTend(address(flap), batchId, rad(0.05 ether), 0.001 ether);
-    //     user2.doTend(address(flap), batchId, rad(0.05 ether), 0.0015 ether);
-    //     user1.doTend(address(flap), batchId, rad(0.05 ether), 0.0016 ether);
-    //
-    //     assertEq(gov.balanceOf(address(user1)), 1 ether - 0.0016 ether);
-    //     assertEq(gov.balanceOf(address(user2)), 1 ether);
-    //     hevm.warp(now + flap.ttl() + 1);
-    //     assertEq(gov.balanceOf(address(flap)), 0.0016 ether);
-    //     user1.doDeal(address(flap), batchId);
-    //     assertEq(gov.balanceOf(address(flap)), 0);
-    //     user1.doHope(address(vat), address(maiJoin));
-    //     user1.doMaiExit(address(maiJoin), address(user1), 0.05 ether);
-    //     assertEq(mai.balanceOf(address(user1)), 0.05 ether);
-    // }
+    function testFlap() public {
+        deploy();
+        this.dripAndFile(address(jug), bytes32("ETH"), bytes32("duty"), uint(1.05 * 10 ** 27));
+        weth.deposit.value(0.5 ether)();
+        weth.approve(address(ethJoin), uint(-1));
+        ethJoin.join(address(this), 0.5 ether);
+        vat.frob("ETH", address(this), address(this), address(this), 0.1 ether, 10 ether);
+        hevm.warp(now + 100);
+        jug.drip("ETH");
+
+        assertEq(vow.hump(), 0);
+        assertEq(vat.mai(address(vow)), 1305012578463034550255975321520000000000000000000);
+
+        this.file(address(vow), bytes32("bump"), rad(1 ether));
+        uint batchId = vow.flap();
+
+        assertEq(gov.balanceOf(address(bin)), 49 ether);
+        assertEq(gov.totalSupply(), 149 ether);
+        assertEq(gov.balanceOf(address(flap)), 0);
+        assertEq(mai.balanceOf(address(flap)), 0);
+    }
 
     function testEnd() public {
         deploy();
