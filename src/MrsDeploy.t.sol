@@ -17,19 +17,19 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailMissingVat() public {
-        mrsDeploy.deployTaxation();
+        mrsDeploy.deployTaxation(false);
         mrsDeploy.deployAuctions(address(gov), address(bin));
     }
 
     function testFailMissingTaxationAndAuctions() public {
         mrsDeploy.deployVat();
-        mrsDeploy.deployMai(99);
+        mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
         mrsDeploy.deployLiquidator();
     }
 
     function testFailMissingLiquidator() public {
         mrsDeploy.deployVat();
-        mrsDeploy.deployMai(99);
+        mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
         mrsDeploy.deployTaxation(false);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
@@ -38,7 +38,7 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFailMissingEnd() public {
         mrsDeploy.deployVat();
-        mrsDeploy.deployMai(99);
+        mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
         mrsDeploy.deployTaxation(false);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
@@ -86,54 +86,54 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vat.gem("COL", address(this)), 0);
     }
 
-    function testFrobDrawMai() public {
+    function testFrobDrawCoin() public {
         deployBond();
-        assertEq(mai.balanceOf(address(this)), 0);
+        assertEq(coin.balanceOf(address(this)), 0);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
         vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 60 ether);
         assertEq(vat.gem("ETH", address(this)), 0.5 ether);
-        assertEq(vat.mai(address(this)), mul(ONE, 60 ether));
+        assertEq(vat.good(address(this)), mul(ONE, 60 ether));
 
-        vat.hope(address(maiJoin));
-        maiJoin.exit(address(this), 60 ether);
-        assertEq(mai.balanceOf(address(this)), 60 ether);
-        assertEq(vat.mai(address(this)), 0);
+        vat.hope(address(coinJoin));
+        coinJoin.exit(address(this), 60 ether);
+        assertEq(coin.balanceOf(address(this)), 60 ether);
+        assertEq(vat.good(address(this)), 0);
     }
 
-    function testFrobDrawMaiGem() public {
+    function testFrobDrawCoinGem() public {
         deployBond();
-        assertEq(mai.balanceOf(address(this)), 0);
+        assertEq(coin.balanceOf(address(this)), 0);
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
 
         vat.frob("COL", address(this), address(this), address(this), 0.5 ether, 20 ether);
 
-        vat.hope(address(maiJoin));
-        maiJoin.exit(address(this), 20 ether);
-        assertEq(mai.balanceOf(address(this)), 20 ether);
+        vat.hope(address(coinJoin));
+        coinJoin.exit(address(this), 20 ether);
+        assertEq(coin.balanceOf(address(this)), 20 ether);
     }
 
-    function testFrobDrawMaiLimit() public {
+    function testFrobDrawCoinLimit() public {
         deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // 0.5 * 300 / 1.5 = 100 MAI max
+        vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // 0.5 * 300 / 1.5 = 100 COIN max
     }
 
-    function testFrobDrawMaiGemLimit() public {
+    function testFrobDrawCoinGemLimit() public {
         deployBond();
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
-        vat.frob("COL", address(this), address(this), address(this), 0.5 ether, 20.454545454545454545 ether); // 0.5 * 45 / 1.1 = 20.454545454545454545 MAI max
+        vat.frob("COL", address(this), address(this), address(this), 0.5 ether, 20.454545454545454545 ether); // 0.5 * 45 / 1.1 = 20.454545454545454545 COIN max
     }
 
-    function testFailFrobDrawMaiLimit() public {
+    function testFailFrobDrawCoinLimit() public {
         deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
@@ -141,7 +141,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether + 1);
     }
 
-    function testFailFrobDrawMaiGemLimit() public {
+    function testFailFrobDrawCoinGemLimit() public {
         deployBond();
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
@@ -149,22 +149,22 @@ contract MrsDeployTest is MrsDeployTestBase {
         vat.frob("COL", address(this), address(this), address(this), 0.5 ether, 20.454545454545454545 ether + 1);
     }
 
-    function testFrobPaybackMai() public {
+    function testFrobPaybackCoin() public {
         deployBondWithVatPermissions();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 60 ether);
-        vat.hope(address(maiJoin));
-        maiJoin.exit(address(this), 60 ether);
-        assertEq(mai.balanceOf(address(this)), 60 ether);
-        mai.approve(address(maiJoin), uint(-1));
-        maiJoin.join(address(this), 60 ether);
-        assertEq(mai.balanceOf(address(this)), 0);
+        vat.hope(address(coinJoin));
+        coinJoin.exit(address(this), 60 ether);
+        assertEq(coin.balanceOf(address(this)), 60 ether);
+        coin.approve(address(coinJoin), uint(-1));
+        coinJoin.join(address(this), 60 ether);
+        assertEq(coin.balanceOf(address(this)), 0);
 
-        assertEq(vat.mai(address(this)), mul(ONE, 60 ether));
+        assertEq(vat.good(address(this)), mul(ONE, 60 ether));
         vat.frob("ETH", address(this), address(this), address(this), 0 ether, -60 ether);
-        assertEq(vat.mai(address(this)), 0);
+        assertEq(vat.good(address(this)), 0);
     }
 
     function testFrobFromAnotherUser() public {
@@ -199,7 +199,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // Maximum MAI
+        vat.frob("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // Maximum COIN
 
         cat.bite("ETH", address(this));
     }
@@ -211,7 +211,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun MAI generated
+        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
 
         pipETH.poke(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
         spotter.poke("ETH");
@@ -232,7 +232,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(10 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 10 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 10 ether, 2000 ether); // Maximun MAI generated
+        vat.frob("ETH", address(this), address(this), address(this), 10 ether, 2000 ether); // Maximun COIN generated
 
         pipETH.poke(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
         spotter.poke("ETH");
@@ -253,7 +253,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun MAI generated
+        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
         pipETH.poke(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
         spotter.poke("ETH");
         assertEq(vat.gem("ETH", address(ethFlip)), 0);
@@ -290,7 +290,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun MAI generated
+        vat.frob("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
         pipETH.poke(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
         spotter.poke("ETH");
         uint48 eraBite = uint48(now);
@@ -332,7 +332,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         user1.doDeal(address(flop), batchId);
         assertEq(gov.totalSupply(), prevGovSupply + 0.16 ether);
         vow.kiss(rad(20 ether));
-        assertEq(vat.mai(address(vow)), 0);
+        assertEq(vat.good(address(vow)), 0);
         assertEq(vat.sin(address(vow)) - vow.Sin() - vow.Ash(), 0);
         assertEq(vat.sin(address(vow)), 0);
     }
@@ -348,7 +348,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         jug.drip("ETH");
 
         assertEq(vow.hump(), 0);
-        assertEq(vat.mai(address(vow)), 1305012578463034550255975321520000000000000000000);
+        assertEq(vat.good(address(vow)), 1305012578463034550255975321520000000000000000000);
 
         this.file(address(vow), bytes32("bump"), rad(1 ether));
         uint batchId = vow.flap();
@@ -356,16 +356,17 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(gov.balanceOf(address(bin)), 49 ether);
         assertEq(gov.totalSupply(), 149 ether);
         assertEq(gov.balanceOf(address(flap)), 0);
-        assertEq(mai.balanceOf(address(flap)), 0);
+        assertEq(coin.balanceOf(address(flap)), 0);
     }
 
     function testVox() public {
         deployBond();
+        hevm.warp(now + 1 seconds);
         jug.drip();
         vox1.back();
         assertEq(vox1.way(), ray(1 ether));
         assertEq(jug.base(), 1000000000158153903837946258);
-        pipMAI.poke(bytes32(uint(1.05 ether)));
+        pipCOIN.poke(bytes32(uint(1.05 ether)));
         hevm.warp(now + 1 seconds);
         jug.drip();
         vox1.back();
@@ -380,10 +381,10 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.deposit.value(2 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 2 ether);
-        vat.frob("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum MAI generated
+        vat.frob("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
         pipETH.poke(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
         spotter.poke("ETH");
-        uint batchId = cat.bite("ETH", address(this)); // The CDP remains unsafe after 1st batch is bitten
+        uint batchId = cat.bite("ETH", address(this)); // The CDP recoinns unsafe after 1st batch is bitten
         address(user1).transfer(10 ether);
 
         user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
@@ -399,7 +400,7 @@ contract MrsDeployTest is MrsDeployTestBase {
 
         user1.doTend(address(ethFlip), batchId, 1 ether, rad(150 ether));
         user2.doTend(address(ethFlip), batchId, 1 ether, rad(160 ether));
-        assertEq(vat.mai(address(user2)), rad(840 ether));
+        assertEq(vat.good(address(user2)), rad(840 ether));
 
         this.cage(address(end));
         end.cage("ETH");
@@ -410,15 +411,15 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(art, 200 ether);
 
         end.skip("ETH", batchId);
-        assertEq(vat.mai(address(user2)), rad(1000 ether));
+        assertEq(vat.good(address(user2)), rad(1000 ether));
         (ink, art) = vat.urns("ETH", address(this));
         assertEq(ink, 2 ether);
         assertEq(art, 400 ether);
 
         end.skim("ETH", address(this));
         (ink, art) = vat.urns("ETH", address(this));
-        uint remainInkVal = 2 ether - 400 * end.tag("ETH") / 10 ** 9; // 2 ETH (deposited) - 400 MAI debt * ETH cage price
-        assertEq(ink, remainInkVal);
+        uint recoinnInkVal = 2 ether - 400 * end.tag("ETH") / 10 ** 9; // 2 ETH (deposited) - 400 COIN debt * ETH cage price
+        assertEq(ink, recoinnInkVal);
         assertEq(art, 0);
 
         end.free("ETH");
@@ -432,7 +433,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         end.skim("ETH", address(user1));
         end.skim("COL", address(user2));
 
-        vow.heal(vat.mai(address(vow)));
+        vow.heal(vat.good(address(vow)));
 
         end.thaw();
 
@@ -442,11 +443,11 @@ contract MrsDeployTest is MrsDeployTestBase {
         vat.hope(address(end));
         end.pack(400 ether);
 
-        assertEq(vat.gem("ETH", address(this)), remainInkVal);
+        assertEq(vat.gem("ETH", address(this)), recoinnInkVal);
         assertEq(vat.gem("COL", address(this)), 0);
         end.cash("ETH", 400 ether);
         end.cash("COL", 400 ether);
-        assertEq(vat.gem("ETH", address(this)), remainInkVal + 400 * end.fix("ETH") / 10 ** 9);
+        assertEq(vat.gem("ETH", address(this)), recoinnInkVal + 400 * end.fix("ETH") / 10 ** 9);
         assertEq(vat.gem("COL", address(this)), 400 * end.fix("COL") / 10 ** 9);
     }
 
@@ -615,8 +616,8 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vox1.wards(address(mrsDeploy)), 1);
         assertEq(vox1.wards(address(pause.proxy())), 1);
 
-        // mai
-        assertEq(mai.wards(address(mrsDeploy)), 1);
+        // coin
+        assertEq(coin.wards(address(mrsDeploy)), 1);
 
         // spotter
         assertEq(spotter.wards(address(mrsDeploy)), 1);
@@ -660,7 +661,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vow.wards(address(mrsDeploy)), 0);
         assertEq(jug.wards(address(mrsDeploy)), 0);
         assertEq(vox1.wards(address(mrsDeploy)), 0);
-        assertEq(mai.wards(address(mrsDeploy)), 0);
+        assertEq(coin.wards(address(mrsDeploy)), 0);
         assertEq(spotter.wards(address(mrsDeploy)), 0);
         assertEq(flap.wards(address(mrsDeploy)), 0);
         assertEq(flop.wards(address(mrsDeploy)), 0);
@@ -700,8 +701,8 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(pot.wards(address(mrsDeploy)), 1);
         assertEq(pot.wards(address(pause.proxy())), 1);
 
-        // mai
-        assertEq(mai.wards(address(mrsDeploy)), 1);
+        // coin
+        assertEq(coin.wards(address(mrsDeploy)), 1);
 
         // spotter
         assertEq(spotter.wards(address(mrsDeploy)), 1);
@@ -745,7 +746,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vow.wards(address(mrsDeploy)), 0);
         assertEq(jug.wards(address(mrsDeploy)), 0);
         assertEq(pot.wards(address(mrsDeploy)), 0);
-        assertEq(mai.wards(address(mrsDeploy)), 0);
+        assertEq(coin.wards(address(mrsDeploy)), 0);
         assertEq(spotter.wards(address(mrsDeploy)), 0);
         assertEq(flap.wards(address(mrsDeploy)), 0);
         assertEq(flop.wards(address(mrsDeploy)), 0);

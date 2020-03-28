@@ -46,12 +46,12 @@ contract FakeUser {
         DSToken(token).approve(guy);
     }
 
-    function doMaiJoin(address obj, address urn, uint wad) public {
-        MaiJoin(obj).join(urn, wad);
+    function doCoinJoin(address obj, address urn, uint wad) public {
+        CoinJoin(obj).join(urn, wad);
     }
 
-    function doMaiExit(address obj, address guy, uint wad) public {
-        MaiJoin(obj).exit(guy, wad);
+    function doCoinExit(address obj, address guy, uint wad) public {
+        CoinJoin(obj).exit(guy, wad);
     }
 
     function doEthJoin(address payable obj, address gem, address urn, uint wad) public {
@@ -60,8 +60,8 @@ contract FakeUser {
         GemJoin(gem).join(urn, wad);
     }
 
-    function doFrob(address obj, bytes32 ilk, address urn, address gem, address mai, int dink, int dart) public {
-        Vat(obj).frob(ilk, urn, gem, mai, dink, dart);
+    function doFrob(address obj, bytes32 ilk, address urn, address gem, address coin, int dink, int dart) public {
+        Vat(obj).frob(ilk, urn, gem, coin, dink, dart);
     }
 
     function doFork(address obj, bytes32 ilk, address src, address dst, int dink, int dart) public {
@@ -338,14 +338,15 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     JugFab jugFab;
     VowFab vowFab;
     CatFab catFab;
-    MaiFab maiFab;
-    MaiJoinFab maiJoinFab;
+    CoinFab coinFab;
+    CoinJoinFab coinJoinFab;
     FlapFab flapFab;
     FlopFab flopFab;
     FlipFab flipFab;
     SpotFab spotFab;
     Vox1Fab vox1Fab;
     EndFab endFab;
+    PotFab potFab;
     PauseFab pauseFab;
     ESMFab esmFab;
 
@@ -354,7 +355,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     DSToken gov;
     DSValue pipETH;
     DSValue pipCOL;
-    DSValue pipMAI;
+    DSValue pipCOIN;
 
     DSRoles authority;
 
@@ -369,9 +370,9 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     Cat cat;
     Flapper flap;
     Flopper flop;
-    Mai mai;
+    Coin coin;
     Pot pot;
-    MaiJoin maiJoin;
+    CoinJoin coinJoin;
     Spotter spotter;
     Vox1 vox1;
     End end;
@@ -414,8 +415,8 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         jugFab = new JugFab();
         vowFab = new VowFab();
         catFab = new CatFab();
-        maiFab = new MaiFab();
-        maiJoinFab = new MaiJoinFab();
+        coinFab = new CoinFab();
+        coinJoinFab = new CoinJoinFab();
         flapFab = new FlapFab();
         flopFab = new FlopFab();
         flipFab = new FlipFab();
@@ -434,8 +435,8 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
           jugFab,
           vowFab,
           catFab,
-          maiFab,
-          maiJoinFab,
+          coinFab,
+          coinJoinFab,
           potFab
         );
 
@@ -454,7 +455,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         gov.setAuthority(new DSGuard());
         pipETH = new DSValue();
         pipCOL = new DSValue();
-        pipMAI = new DSValue();
+        pipCOIN = new DSValue();
         authority = new DSRoles();
         authority.setRootUser(address(this), true);
 
@@ -475,9 +476,9 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         bin = new BinLike(1 ether);
 
         mrsDeploy.deployVat();
-        mrsDeploy.deployMai(99);
+        mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
         mrsDeploy.deployTaxation(false);
-        mrsDeploy.deployRateSetter(v, address(pipMAI), span, trim, dawn, dusk, how, up, down);
+        mrsDeploy.deployRateSetter(v, address(pipCOIN), span, trim, dawn, dusk, how, up, down, go);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployLiquidator();
@@ -490,13 +491,13 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         cat = mrsDeploy.cat();
         flap = mrsDeploy.flap();
         flop = mrsDeploy.flop();
-        mai = mrsDeploy.mai();
-        maiJoin = mrsDeploy.maiJoin();
+        coin = mrsDeploy.coin();
+        coinJoin = mrsDeploy.coinJoin();
         spotter = mrsDeploy.spotter();
         end = mrsDeploy.end();
         esm = mrsDeploy.esm();
         pause = mrsDeploy.pause();
-        vox1 = mrsDeploy.vox();
+        vox1 = mrsDeploy.vox1();
 
         authority.setRootUser(address(pause.proxy()), true);
         mrsDeploy.giveControl(address(pause.proxy()));
@@ -516,9 +517,9 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         this.file(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
         this.file(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
 
-        pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 MAI = 1 ETH (precision 18)
-        pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 MAI = 1 COL (precision 18)
-        pipMAI.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 MAI = 1 USD
+        pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
+        pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
+        pipCOIN.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethFlip,) = mrsDeploy.ilks("ETH");
         (colFlip,) = mrsDeploy.ilks("COL");
         this.file(address(spotter), "ETH", "tam", uint(1500000000 ether));
@@ -545,7 +546,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         bin = new BinLike(1 ether);
 
         mrsDeploy.deployVat();
-        mrsDeploy.deployMai(99);
+        mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
         mrsDeploy.deployTaxation(true);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
@@ -559,8 +560,8 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         cat = mrsDeploy.cat();
         flap = mrsDeploy.flap();
         flop = mrsDeploy.flop();
-        mai = mrsDeploy.mai();
-        maiJoin = mrsDeploy.maiJoin();
+        coin = mrsDeploy.coin();
+        coinJoin = mrsDeploy.coinJoin();
         spotter = mrsDeploy.spotter();
         end = mrsDeploy.end();
         esm = mrsDeploy.esm();
@@ -585,9 +586,9 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         this.file(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
         this.file(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
 
-        pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 MAI = 1 ETH (precision 18)
-        pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 MAI = 1 COL (precision 18)
-        pipMAI.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 MAI = 1 USD
+        pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
+        pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
+        pipCOIN.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethFlip,) = mrsDeploy.ilks("ETH");
         (colFlip,) = mrsDeploy.ilks("COL");
         this.file(address(spotter), "ETH", "tam", uint(1500000000 ether));

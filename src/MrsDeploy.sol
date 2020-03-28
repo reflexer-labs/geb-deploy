@@ -24,11 +24,11 @@ import {Vat} from "mrs/vat.sol";
 import {Jug} from "mrs/jug.sol";
 import {Vow} from "mrs/vow.sol";
 import {Cat} from "mrs/cat.sol";
-import {MaiJoin} from "mrs/join.sol";
+import {CoinJoin} from "mrs/join.sol";
 import {Flapper} from "mrs/flap.sol";
 import {Flopper} from "mrs/flop.sol";
 import {Flipper} from "mrs/flip.sol";
-import {Mai} from "mrs/mai.sol";
+import {Coin} from "mrs/coin.sol";
 import {End} from "mrs/end.sol";
 import {ESM} from "./ds/esm/ESM.sol";
 import {Vox1} from "mrs/vox.sol";
@@ -67,17 +67,18 @@ contract CatFab {
     }
 }
 
-contract MaiFab {
-    function newMai(uint chainId) public returns (Mai mai) {
-        mai = new Mai(chainId);
-        mai.rely(msg.sender);
-        mai.deny(address(this));
+contract CoinFab {
+    function newCoin(string memory name, string memory symbol, uint8 decimals, uint chainId)
+      public returns (Coin coin) {
+        coin = new Coin(name, symbol, decimals, chainId);
+        coin.rely(msg.sender);
+        coin.deny(address(this));
     }
 }
 
-contract MaiJoinFab {
-    function newMaiJoin(address vat, address mai) public returns (MaiJoin maiJoin) {
-        maiJoin = new MaiJoin(vat, mai);
+contract CoinJoinFab {
+    function newCoinJoin(address vat, address coin) public returns (CoinJoin coinJoin) {
+        coinJoin = new CoinJoin(vat, coin);
     }
 }
 
@@ -154,8 +155,8 @@ contract MrsDeploy is DSAuth {
     JugFab       public jugFab;
     VowFab       public vowFab;
     CatFab       public catFab;
-    MaiFab       public maiFab;
-    MaiJoinFab   public maiJoinFab;
+    CoinFab      public coinFab;
+    CoinJoinFab  public coinJoinFab;
     FlapFab      public flapFab;
     FlopFab      public flopFab;
     FlipFab      public flipFab;
@@ -170,12 +171,12 @@ contract MrsDeploy is DSAuth {
     Jug       public jug;
     Vow       public vow;
     Cat       public cat;
-    Mai       public mai;
-    MaiJoin   public maiJoin;
+    Coin      public coin;
+    CoinJoin  public coinJoin;
     Flapper   public flap;
     Flopper   public flop;
     Spotter   public spotter;
-    Vox       public vox;
+    Vox1      public vox1;
     Pot       public pot;
     End       public end;
     ESM       public esm;
@@ -203,8 +204,8 @@ contract MrsDeploy is DSAuth {
         JugFab jugFab_,
         VowFab vowFab_,
         CatFab catFab_,
-        MaiFab maiFab_,
-        MaiJoinFab maiJoinFab_,
+        CoinFab coinFab_,
+        CoinJoinFab coinJoinFab_,
         PotFab potFab_
     ) public auth {
         require(address(vatFab) == address(0), "Vat Fab already set");
@@ -212,8 +213,8 @@ contract MrsDeploy is DSAuth {
         jugFab = jugFab_;
         vowFab = vowFab_;
         catFab = catFab_;
-        maiFab = maiFab_;
-        maiJoinFab = maiJoinFab_;
+        coinFab = coinFab_;
+        coinJoinFab = coinJoinFab_;
         potFab = potFab_;
     }
 
@@ -248,13 +249,14 @@ contract MrsDeploy is DSAuth {
         vat.rely(address(spotter));
     }
 
-    function deployMai(uint256 chainId) public auth {
+    function deployCoin(string memory name, string memory symbol, uint8 decimals, uint256 chainId)
+      public auth {
         require(address(vat) != address(0), "Missing previous step");
 
         // Deploy
-        mai      = maiFab.newMai(chainId);
-        maiJoin  = maiJoinFab.newMaiJoin(address(vat), address(mai));
-        mai.rely(address(maiJoin));
+        coin      = coinFab.newCoin(name, symbol, decimals, chainId);
+        coinJoin  = coinJoinFab.newCoinJoin(address(vat), address(coin));
+        coin.rely(address(coinJoin));
     }
 
     function deployTaxation(bool save) public auth {
@@ -288,28 +290,28 @@ contract MrsDeploy is DSAuth {
         }
 
         // Deploy
-        vox = vox1Fab.newVox(address(jug), address(spotter));
+        vox1 = vox1Fab.newVox1(address(jug), address(spotter));
 
         // Setup
-        vox.file("pip", pip);
-        vox.file("span", span);
-        vox.file("trim", trim);
-        vox.file("dawn", dawn);
-        vox.file("dusk", dusk);
-        vox.file("how", how);
-        vox.file("up", up);
-        vox.file("down", down);
-        vox.file("go", go);
+        vox1.file("pip", pip);
+        vox1.file("span", span);
+        vox1.file("trim", trim);
+        vox1.file("dawn", dawn);
+        vox1.file("dusk", dusk);
+        vox1.file("how", how);
+        vox1.file("up", up);
+        vox1.file("down", down);
+        vox1.file("go", go);
 
         // Internal auth
-        spotter.rely(address(vox));
-        jug.rely(address(vox));
+        spotter.rely(address(vox1));
+        jug.rely(address(vox1));
     }
 
     function deployAuctions(address gov, address bin) public auth {
         require(gov != address(0), "Missing GOV address");
         require(address(jug) != address(0), "Missing previous step");
-        require(address(mai) != address(0), "Missing MAI address");
+        require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
         flap = flapFab.newFlap(address(vat));
@@ -317,9 +319,9 @@ contract MrsDeploy is DSAuth {
 
         // Setup
         flap.file("gov", gov);
-        flap.file("join", address(maiJoin));
+        flap.file("join", address(coinJoin));
         flap.file("bin", bin);
-        flap.file("bond", address(mai));
+        flap.file("bond", address(coin));
 
         // Internal auth
         vat.rely(address(flop));
@@ -363,8 +365,8 @@ contract MrsDeploy is DSAuth {
         if (address(pot) != address(0)) {
           end.file("pot", address(pot));
         }
-        if (address(vox) != address(0)) {
-          end.file("vox", address(vox));
+        if (address(vox1) != address(0)) {
+          end.file("vox", address(vox1));
         }
 
         // Internal auth
@@ -375,8 +377,8 @@ contract MrsDeploy is DSAuth {
         if (address(pot) != address(0)) {
           pot.rely(address(end));
         }
-        if (address(vox) != address(0)) {
-          vox.rely(address(end));
+        if (address(vox1) != address(0)) {
+          vox1.rely(address(end));
         }
 
         // Deploy ESM
@@ -385,7 +387,7 @@ contract MrsDeploy is DSAuth {
     }
 
     function deployPause(uint delay, DSAuthority authority) public auth {
-        require(address(mai) != address(0), "Missing previous step");
+        require(address(coin) != address(0), "Missing previous step");
         require(address(end) != address(0), "Missing previous step");
 
         pause = pauseFab.newPause(delay, address(0), authority);
@@ -396,7 +398,6 @@ contract MrsDeploy is DSAuth {
         cat.rely(address(usr));
         vow.rely(address(usr));
         jug.rely(address(usr));
-        vox.rely(address(usr));
         spotter.rely(address(usr));
         flap.rely(address(usr));
         flop.rely(address(usr));
@@ -404,8 +405,8 @@ contract MrsDeploy is DSAuth {
         if (address(pot) != address(0)) {
           pot.rely(address(usr));
         }
-        if (address(vox) != address(0)) {
-          vox.rely(address(usr));
+        if (address(vox1) != address(0)) {
+          vox1.rely(address(usr));
         }
     }
 
@@ -414,7 +415,6 @@ contract MrsDeploy is DSAuth {
         cat.deny(address(usr));
         vow.deny(address(usr));
         jug.deny(address(usr));
-        vox.deny(address(usr));
         spotter.deny(address(usr));
         flap.deny(address(usr));
         flop.deny(address(usr));
@@ -422,8 +422,8 @@ contract MrsDeploy is DSAuth {
         if (address(pot) != address(0)) {
           pot.deny(address(usr));
         }
-        if (address(vox) != address(0)) {
-          vox.deny(address(usr));
+        if (address(vox1) != address(0)) {
+          vox1.deny(address(usr));
         }
     }
 
@@ -467,7 +467,7 @@ contract MrsDeploy is DSAuth {
         cat.deny(address(this));
         vow.deny(address(this));
         jug.deny(address(this));
-        mai.deny(address(this));
+        coin.deny(address(this));
         spotter.deny(address(this));
         flap.deny(address(this));
         flop.deny(address(this));
@@ -475,8 +475,8 @@ contract MrsDeploy is DSAuth {
         if (address(pot) != address(0)) {
           pot.deny(address(this));
         }
-        if (address(vox) != address(0)) {
-          vox.deny(address(this));
+        if (address(vox1) != address(0)) {
+          vox1.deny(address(this));
         }
     }
 
