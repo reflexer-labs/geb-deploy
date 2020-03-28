@@ -344,7 +344,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     FlopFab flopFab;
     FlipFab flipFab;
     SpotFab spotFab;
-    VoxFab voxFab;
+    Vox1Fab vox1Fab;
     EndFab endFab;
     PauseFab pauseFab;
     ESMFab esmFab;
@@ -370,9 +370,10 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     Flapper flap;
     Flopper flop;
     Mai mai;
+    Pot pot;
     MaiJoin maiJoin;
     Spotter spotter;
-    Vox vox;
+    Vox1 vox1;
     End end;
     ESM esm;
 
@@ -388,6 +389,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     uint256[] chops;
 
     // Vox vars
+    uint v    = 1;
     uint trim = ray(0.03 ether);
     uint dawn = 1000000000158153903837946258; // 0.5% annualy
     uint dusk = ray(1 ether); // 0% annualy
@@ -395,6 +397,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     uint up   = 1000000000158153903837946258; // 0.5% annualy
     uint down = 1000000000158153903837946258; // 0.5% annualy
     uint span = ray(2 ether);
+    uint go   = ray(1 ether);
 
     // --- Math ---
     uint256 constant ONE = 10 ** 27;
@@ -417,11 +420,12 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         flopFab = new FlopFab();
         flipFab = new FlipFab();
         spotFab = new SpotFab();
-        voxFab = new VoxFab();
+        vox1Fab = new Vox1Fab();
         endFab = new EndFab();
         pauseFab = new PauseFab();
         govActions = new GovActions();
         esmFab = new ESMFab();
+        potFab = new PotFab();
 
         mrsDeploy = new MrsDeploy();
 
@@ -431,7 +435,8 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
           vowFab,
           catFab,
           maiFab,
-          maiJoinFab
+          maiJoinFab,
+          potFab
         );
 
         mrsDeploy.setSecondFabBatch(
@@ -439,7 +444,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
           flopFab,
           flipFab,
           spotFab,
-          voxFab,
+          vox1Fab,
           endFab,
           esmFab,
           pauseFab
@@ -466,13 +471,13 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         return wad * 10 ** 27;
     }
 
-    function deployKeepAuth() public {
+    function deployBondKeepAuth() public {
         bin = new BinLike(1 ether);
 
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
-        mrsDeploy.deployTaxation();
-        mrsDeploy.deployRateSetter(address(pipMAI), span, trim, dawn, dusk, how, up, down);
+        mrsDeploy.deployTaxation(false);
+        mrsDeploy.deployRateSetter(v, address(pipMAI), span, trim, dawn, dusk, how, up, down);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployLiquidator();
@@ -491,7 +496,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         end = mrsDeploy.end();
         esm = mrsDeploy.esm();
         pause = mrsDeploy.pause();
-        vox = mrsDeploy.vox();
+        vox1 = mrsDeploy.vox();
 
         authority.setRootUser(address(pause.proxy()), true);
         mrsDeploy.giveControl(address(pause.proxy()));
@@ -536,22 +541,110 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         gov.push(address(bin), 50 ether);
     }
 
-    function deploy() public {
-        deployKeepAuth();
+    function deployStableKeepAuth() public {
+        bin = new BinLike(1 ether);
+
+        mrsDeploy.deployVat();
+        mrsDeploy.deployMai(99);
+        mrsDeploy.deployTaxation(true);
+        mrsDeploy.deployAuctions(address(gov), address(bin));
+        mrsDeploy.deployVow();
+        mrsDeploy.deployLiquidator();
+        mrsDeploy.deployShutdown(address(gov), address(0x0), 10);
+        mrsDeploy.deployPause(0, authority);
+
+        vat = mrsDeploy.vat();
+        jug = mrsDeploy.jug();
+        vow = mrsDeploy.vow();
+        cat = mrsDeploy.cat();
+        flap = mrsDeploy.flap();
+        flop = mrsDeploy.flop();
+        mai = mrsDeploy.mai();
+        maiJoin = mrsDeploy.maiJoin();
+        spotter = mrsDeploy.spotter();
+        end = mrsDeploy.end();
+        esm = mrsDeploy.esm();
+        pause = mrsDeploy.pause();
+        pot = mrsDeploy.pot();
+
+        authority.setRootUser(address(pause.proxy()), true);
+        mrsDeploy.giveControl(address(pause.proxy()));
+
+        weth = new WETH9_();
+        ethJoin = new GemJoin(address(vat), "ETH", address(weth));
+        mrsDeploy.deployCollateral("ETH", address(ethJoin), address(pipETH), 5 * 10**26);
+        mrsDeploy.addAuthToFlip("ETH", address(pause.proxy()));
+
+        col = new DSToken("COL");
+        colJoin = new GemJoin(address(vat), "COL", address(col));
+        mrsDeploy.deployCollateral("COL", address(colJoin), address(pipCOL), 5 * 10**26);
+        mrsDeploy.addAuthToFlip("COL", address(pause.proxy()));
+
+        // Set Vat Params
+        this.file(address(vat), bytes32("Line"), uint(10000 * 10 ** 45));
+        this.file(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
+        this.file(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
+
+        pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 MAI = 1 ETH (precision 18)
+        pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 MAI = 1 COL (precision 18)
+        pipMAI.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 MAI = 1 USD
+        (ethFlip,) = mrsDeploy.ilks("ETH");
+        (colFlip,) = mrsDeploy.ilks("COL");
+        this.file(address(spotter), "ETH", "tam", uint(1500000000 ether));
+        this.file(address(spotter), "ETH", "mat", uint(1500000000 ether));
+        this.file(address(spotter), "COL", "tam", uint(1100000000 ether));
+        this.file(address(spotter), "COL", "mat", uint(1100000000 ether));
+        spotter.poke("ETH");
+        spotter.poke("COL");
+        (,,uint spot,,,uint risk) = vat.ilks("ETH");
+        assertEq(spot, 300 * ONE * ONE / 1500000000 ether);
+        assertEq(spot, risk);
+        (,, spot,,,risk) = vat.ilks("COL");
+        assertEq(spot, 45 * ONE * ONE / 1100000000 ether);
+        assertEq(spot, risk);
+
+        DSGuard(address(gov.authority())).permit(address(flop), address(gov), bytes4(keccak256("mint(address,uint256)")));
+        DSGuard(address(gov.authority())).permit(address(flap), address(gov), bytes4(keccak256("burn(address,uint256)")));
+
+        gov.mint(150 ether);
+        gov.push(address(bin), 50 ether);
+    }
+
+    // Bond
+    function deployBond() public {
+        deployBondKeepAuth();
         mrsDeploy.releaseAuth();
     }
 
-    function deployWithVatPermissions() public {
-        deployKeepAuth();
+    function deployBondWithVatPermissions() public {
+        deployBondKeepAuth();
         mrsDeploy.addCreatorAuth();
         mrsDeploy.releaseAuth();
     }
 
-    function deployWithFullPermissions() public {
-        deployKeepAuth();
+    function deployBondWithFullPermissions() public {
+        deployBondKeepAuth();
         mrsDeploy.addCreatorAuth();
     }
 
+    // Stablecoin
+    function deployStable() public {
+        deployStableKeepAuth();
+        mrsDeploy.releaseAuth();
+    }
+
+    function deployStableWithVatPermissions() public {
+        deployStableKeepAuth();
+        mrsDeploy.addCreatorAuth();
+        mrsDeploy.releaseAuth();
+    }
+
+    function deployStableWithFullPermissions() public {
+        deployStableKeepAuth();
+        mrsDeploy.addCreatorAuth();
+    }
+
+    // Utils
     function giveVatPermission(address usr) public {
         require(usr != address(0), "MrsDeploy/usr-is-null");
         vat.rely(usr);

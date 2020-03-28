@@ -8,8 +8,12 @@ contract MrsDeployTest is MrsDeployTestBase {
     uint constant ONE = 10 ** 27;
     uint constant HUNDRED = 10 ** 29;
 
-    function testDeploy() public {
-        deploy();
+    function testDeployBond() public {
+        deployBond();
+    }
+
+    function testDeployStable() public {
+        deployStable();
     }
 
     function testFailMissingVat() public {
@@ -26,7 +30,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     function testFailMissingLiquidator() public {
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
-        mrsDeploy.deployTaxation();
+        mrsDeploy.deployTaxation(false);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployShutdown(address(gov), address(0x0), 10);
@@ -35,14 +39,14 @@ contract MrsDeployTest is MrsDeployTestBase {
     function testFailMissingEnd() public {
         mrsDeploy.deployVat();
         mrsDeploy.deployMai(99);
-        mrsDeploy.deployTaxation();
+        mrsDeploy.deployTaxation(false);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployPause(0, authority);
     }
 
     function testJoinETH() public {
-        deploy();
+        deployBond();
         assertEq(vat.gem("ETH", address(this)), 0);
         weth.deposit.value(1 ether)();
         assertEq(weth.balanceOf(address(this)), 1 ether);
@@ -53,7 +57,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testJoinGem() public {
-        deploy();
+        deployBond();
         col.mint(1 ether);
         assertEq(col.balanceOf(address(this)), 1 ether);
         assertEq(vat.gem("COL", address(this)), 0);
@@ -64,7 +68,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testExitETH() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -73,7 +77,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testExitGem() public {
-        deploy();
+        deployBond();
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -83,7 +87,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobDrawMai() public {
-        deploy();
+        deployBond();
         assertEq(mai.balanceOf(address(this)), 0);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
@@ -100,7 +104,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobDrawMaiGem() public {
-        deploy();
+        deployBond();
         assertEq(mai.balanceOf(address(this)), 0);
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
@@ -114,7 +118,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobDrawMaiLimit() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -122,7 +126,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobDrawMaiGemLimit() public {
-        deploy();
+        deployBond();
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -130,7 +134,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailFrobDrawMaiLimit() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -138,7 +142,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailFrobDrawMaiGemLimit() public {
-        deploy();
+        deployBond();
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -146,7 +150,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobPaybackMai() public {
-        deployWithVatPermissions();
+        deployBondWithVatPermissions();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -164,7 +168,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFrobFromAnotherUser() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -173,7 +177,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailFrobDust() public {
-        deploy();
+        deployBond();
         weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -183,7 +187,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailFrobFromAnotherUser() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -191,7 +195,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailBite() public {
-        deploy();
+        deployBond();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -201,7 +205,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testBite() public {
-        deploy();
+        deployBond();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
         this.file(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
@@ -222,7 +226,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testBitePartial() public {
-        deploy();
+        deployBond();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
         this.file(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(10 ether)();
@@ -243,7 +247,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFlip() public {
-        deploy();
+        deployBond();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
         this.file(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
@@ -280,7 +284,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFlop() public {
-        deploy();
+        deployBond();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
         this.file(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
@@ -334,7 +338,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFlap() public {
-        deploy();
+        deployBond();
         this.dripAndFile(address(jug), bytes32("ETH"), bytes32("duty"), uint(1.05 * 10 ** 27));
         weth.deposit.value(0.5 ether)();
         weth.approve(address(ethJoin), uint(-1));
@@ -356,23 +360,21 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testVox() public {
-        deploy();
+        deployBond();
         jug.drip();
-        vox.drip();
-        vox.back();
-        assertEq(vox.way(), ray(1 ether));
+        vox1.back();
+        assertEq(vox1.way(), ray(1 ether));
         assertEq(jug.base(), 1000000000158153903837946258);
         pipMAI.poke(bytes32(uint(1.05 ether)));
         hevm.warp(now + 1 seconds);
         jug.drip();
-        vox.drip();
-        vox.back();
-        assertEq(vox.way(), 999999998452874042136787551);
+        vox1.back();
+        assertEq(vox1.way(), 999999998452874042136787551);
         assertEq(jug.base(), 1000000000158153903837946258); // because of bounds it's kept constant
     }
 
     function testEnd() public {
-        deploy();
+        deployBond();
         this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
         this.file(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(2 ether)();
@@ -449,7 +451,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFireESM() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         gov.mint(address(user1), 10);
 
         user1.doESMJoin(address(gov), address(esm), 10);
@@ -457,7 +459,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFork() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -480,7 +482,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailFork() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -491,7 +493,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testForkFromOtherUsr() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -503,7 +505,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailForkFromOtherUsr() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -514,7 +516,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailForkUnsafeSrc() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -524,7 +526,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailForkUnsafeDst() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -534,7 +536,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailForkDustSrc() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -547,7 +549,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailForkDustDst() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -560,21 +562,21 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testSetPauseAuthority() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         assertEq(address(pause.authority()), address(authority));
         this.setAuthority(address(123));
         assertEq(address(pause.authority()), address(123));
     }
 
     function testSetPauseDelay() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         assertEq(pause.delay(), 0);
         this.setDelay(5);
         assertEq(pause.delay(), 5);
     }
 
     function testSetPauseAuthorityAndDelay() public {
-        deployKeepAuth();
+        deployBondKeepAuth();
         assertEq(address(pause.authority()), address(authority));
         assertEq(pause.delay(), 0);
         this.setAuthorityAndDelay(address(123), 5);
@@ -582,8 +584,8 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(pause.delay(), 5);
     }
 
-    function testAuth() public {
-        deployKeepAuth();
+    function testBondAuth() public {
+        deployBondKeepAuth();
 
         assertEq(vat.wards(address(mrsDeploy)), 1);
         assertEq(vat.wards(address(ethJoin)), 1);
@@ -610,8 +612,8 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(jug.wards(address(pause.proxy())), 1);
 
         // vox
-        assertEq(vox.wards(address(mrsDeploy)), 1);
-        assertEq(vox.wards(address(pause.proxy())), 1);
+        assertEq(vox1.wards(address(mrsDeploy)), 1);
+        assertEq(vox1.wards(address(pause.proxy())), 1);
 
         // mai
         assertEq(mai.wards(address(mrsDeploy)), 1);
@@ -657,7 +659,92 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(cat.wards(address(mrsDeploy)), 0);
         assertEq(vow.wards(address(mrsDeploy)), 0);
         assertEq(jug.wards(address(mrsDeploy)), 0);
-        assertEq(vox.wards(address(mrsDeploy)), 0);
+        assertEq(vox1.wards(address(mrsDeploy)), 0);
+        assertEq(mai.wards(address(mrsDeploy)), 0);
+        assertEq(spotter.wards(address(mrsDeploy)), 0);
+        assertEq(flap.wards(address(mrsDeploy)), 0);
+        assertEq(flop.wards(address(mrsDeploy)), 0);
+        assertEq(end.wards(address(mrsDeploy)), 0);
+        assertEq(ethFlip.wards(address(mrsDeploy)), 0);
+        assertEq(colFlip.wards(address(mrsDeploy)), 0);
+    }
+
+    function testStableAuth() public {
+        deployStableKeepAuth();
+
+        assertEq(vat.wards(address(mrsDeploy)), 1);
+        assertEq(vat.wards(address(ethJoin)), 1);
+        assertEq(vat.wards(address(colJoin)), 1);
+        assertEq(vat.wards(address(cat)), 1);
+        assertEq(vat.wards(address(jug)), 1);
+        assertEq(vat.wards(address(spotter)), 1);
+        assertEq(vat.wards(address(end)), 1);
+        assertEq(vat.wards(address(pause.proxy())), 1);
+
+        // cat
+        assertEq(cat.wards(address(mrsDeploy)), 1);
+        assertEq(cat.wards(address(end)), 1);
+        assertEq(cat.wards(address(pause.proxy())), 1);
+
+        // vow
+        assertEq(vow.wards(address(mrsDeploy)), 1);
+        assertEq(vow.wards(address(cat)), 1);
+        assertEq(vow.wards(address(end)), 1);
+        assertEq(vow.wards(address(pause.proxy())), 1);
+
+        // jug
+        assertEq(jug.wards(address(mrsDeploy)), 1);
+        assertEq(jug.wards(address(pause.proxy())), 1);
+
+        // pot
+        assertEq(pot.wards(address(mrsDeploy)), 1);
+        assertEq(pot.wards(address(pause.proxy())), 1);
+
+        // mai
+        assertEq(mai.wards(address(mrsDeploy)), 1);
+
+        // spotter
+        assertEq(spotter.wards(address(mrsDeploy)), 1);
+        assertEq(spotter.wards(address(pause.proxy())), 1);
+
+        // flap
+        assertEq(flap.wards(address(mrsDeploy)), 1);
+        assertEq(flap.wards(address(vow)), 1);
+        assertEq(flap.wards(address(pause.proxy())), 1);
+
+        // flop
+        assertEq(flop.wards(address(mrsDeploy)), 1);
+        assertEq(flop.wards(address(vow)), 1);
+        assertEq(flop.wards(address(pause.proxy())), 1);
+
+        // end
+        assertEq(end.wards(address(mrsDeploy)), 1);
+        assertEq(end.wards(address(esm)), 1);
+        assertEq(end.wards(address(pause.proxy())), 1);
+
+        // flips
+        assertEq(ethFlip.wards(address(mrsDeploy)), 1);
+        assertEq(ethFlip.wards(address(end)), 1);
+        assertEq(ethFlip.wards(address(pause.proxy())), 1);
+        assertEq(colFlip.wards(address(mrsDeploy)), 1);
+        assertEq(colFlip.wards(address(end)), 1);
+        assertEq(colFlip.wards(address(pause.proxy())), 1);
+
+        // pause
+        assertEq(address(pause.authority()), address(authority));
+        assertEq(pause.owner(), address(0));
+
+        // root
+        assertTrue(authority.isUserRoot(address(this)));
+
+        mrsDeploy.releaseAuth();
+        mrsDeploy.releaseAuthFlip("ETH");
+        mrsDeploy.releaseAuthFlip("COL");
+        assertEq(vat.wards(address(mrsDeploy)), 0);
+        assertEq(cat.wards(address(mrsDeploy)), 0);
+        assertEq(vow.wards(address(mrsDeploy)), 0);
+        assertEq(jug.wards(address(mrsDeploy)), 0);
+        assertEq(pot.wards(address(mrsDeploy)), 0);
         assertEq(mai.wards(address(mrsDeploy)), 0);
         assertEq(spotter.wards(address(mrsDeploy)), 0);
         assertEq(flap.wards(address(mrsDeploy)), 0);
