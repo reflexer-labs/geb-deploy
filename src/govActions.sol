@@ -80,8 +80,7 @@ contract GovActions {
 
     function dripAndBack(address x, address y) public {
         Setter(x).drip();
-        Setter(y).drip();
-        Setter(x).back();
+        Setter(y).back();
     }
 
     function dripAndFile(address who, bytes32 what, uint data) public {

@@ -180,10 +180,10 @@ contract ProxyActions {
         pause.exec(usr, tag, fax, eta);
     }
 
-    function dripAndBack(address who, address x, address y) external {
+    function dripAndBack(address who, address addr1, address addr2) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("dripAndBack(address,address,address)", who, x, y);
+        bytes memory fax = abi.encodeWithSignature("dripAndBack(address,address,address)", who, addr1, addr2);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
