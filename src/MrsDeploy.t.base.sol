@@ -477,13 +477,15 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
 
         mrsDeploy.deployVat();
         mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
-        mrsDeploy.deployTaxation(false);
+        mrsDeploy.deployTaxation(0);
         mrsDeploy.deployRateSetter(v, address(pipCOIN), span, trim, dawn, dusk, how, up, down, go);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployLiquidator();
         mrsDeploy.deployShutdown(address(gov), address(0x0), 10);
         mrsDeploy.deployPause(0, authority);
+
+        require(address(mrsDeploy.pot()) == address(0), "Pot incompatible with reflex-bond");
 
         vat = mrsDeploy.vat();
         jug = mrsDeploy.jug();
@@ -547,7 +549,7 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
 
         mrsDeploy.deployVat();
         mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
-        mrsDeploy.deployTaxation(true);
+        mrsDeploy.deployTaxation(1);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployLiquidator();

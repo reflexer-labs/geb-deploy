@@ -259,16 +259,16 @@ contract MrsDeploy is DSAuth {
         coin.rely(address(coinJoin));
     }
 
-    function deployTaxation(bool save) public auth {
+    function deployTaxation(uint256 savings) public auth {
         require(address(vat) != address(0), "Missing previous step");
 
         // Deploy
         jug = jugFab.newJug(address(vat));
-        if (save) pot = potFab.newPot(address(vat));
+        if (savings >= 1) pot = potFab.newPot(address(vat));
 
         // Internal auth
         vat.rely(address(jug));
-        if (save) vat.rely(address(pot));
+        if (savings >= 1) vat.rely(address(pot));
     }
 
     function deployRateSetter(

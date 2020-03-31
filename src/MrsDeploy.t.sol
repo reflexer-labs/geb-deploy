@@ -17,7 +17,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     }
 
     function testFailMissingVat() public {
-        mrsDeploy.deployTaxation(false);
+        mrsDeploy.deployTaxation(0);
         mrsDeploy.deployAuctions(address(gov), address(bin));
     }
 
@@ -30,7 +30,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     function testFailMissingLiquidator() public {
         mrsDeploy.deployVat();
         mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
-        mrsDeploy.deployTaxation(false);
+        mrsDeploy.deployTaxation(0);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployShutdown(address(gov), address(0x0), 10);
@@ -39,7 +39,7 @@ contract MrsDeployTest is MrsDeployTestBase {
     function testFailMissingEnd() public {
         mrsDeploy.deployVat();
         mrsDeploy.deployCoin("Mai Reflex-Bond", "MAI", 18, 99);
-        mrsDeploy.deployTaxation(false);
+        mrsDeploy.deployTaxation(0);
         mrsDeploy.deployAuctions(address(gov), address(bin));
         mrsDeploy.deployVow();
         mrsDeploy.deployPause(0, authority);
