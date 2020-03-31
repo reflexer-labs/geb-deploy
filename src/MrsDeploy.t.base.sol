@@ -97,48 +97,8 @@ contract FakeUser {
 }
 
 contract ProxyActions {
-    DSPause public pause;
-    GovActions public govActions;
-
-    function file(address who, bytes32 data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,bytes32)", who, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function file(address who, address data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,address)", who, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function file(address who, uint256 data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,uint256)", who, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function file(address who, bytes32 what, address data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,bytes32,address)", who, what, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
+    DSPause pause;
+    GovActions govActions;
 
     function file(address who, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
@@ -150,40 +110,10 @@ contract ProxyActions {
         pause.exec(usr, tag, fax, eta);
     }
 
-    function file(address who, address usr, bool data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,address,bool)", who, usr, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
     function file(address who, bytes32 ilk, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
         bytes memory fax = abi.encodeWithSignature("file(address,bytes32,bytes32,uint256)", who, ilk, what, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function file(address who, bytes32 ilk, bytes32 what, address data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,bytes32,bytes32,address)", who, ilk, what, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function dripAndBack(address who, address addr1, address addr2) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("dripAndBack(address,address,address)", who, addr1, addr2);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
@@ -210,90 +140,10 @@ contract ProxyActions {
         pause.exec(usr, tag, fax, eta);
     }
 
-    function hire(address who, address data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("hire(address,address)", who, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function fire(address who, address data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("fire(address,address)", who, data);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function hope(address who, address trg) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("hope(address,address)", who, trg);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function nope(address who, address trg) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("nope(address,address)", who, trg);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function give(address who, address trg, uint wad) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("give(address,address,uint256)", who, trg, wad);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function take(address who, address trg, uint wad) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("take(address,address,uint256)", who, trg, wad);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function move(address who, address trg, uint wad) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("move(address,address,uint256)", who, trg, wad);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
     function cage(address end) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
         bytes memory fax = abi.encodeWithSignature("cage(address)", end);
-        uint         eta = now;
-
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
-    }
-
-    function cage(address end, bytes32 data) external {
-        address      usr = address(govActions);
-        bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("cage(address,bytes32)", end, data);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
