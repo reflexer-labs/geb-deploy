@@ -1,3 +1,6 @@
-[submodule "lib/mrs"]
-	path = lib/mrs
-	url = https://github.com/sweatdao/mrs
+[submodule "lib/geb"]
+	path = lib/geb
+	url = https://github.com/reflexer-labs/geb.git
+[submodule "geb-redemption-feedback-mechanism"]
+	path = geb-redemption-feedback-mechanism
+	url = https://github.com/reflexer-labs/geb-redemption-feedback-mechanism.git

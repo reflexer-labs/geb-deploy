@@ -7,13 +7,13 @@ let
   inherit (callPackage ./nix/dapp.nix {}) specs package;
 
   this = package (specs.this // {
-    name = "mrs-deploy";
+    name = "geb-deploy";
     inherit doCheck;
     solcFlags = "--metadata";
   });
 
   this-optimize = package (specs.this // {
-    name = "mrs-deploy-optimized";
+    name = "geb-deploy-optimized";
     inherit doCheck;
     solcFlags = "--optimize --metadata";
   });
@@ -28,17 +28,17 @@ let
   };
 
   optimized = mkScripts {
-    name = "mrs-deploy-optimized";
+    name = "geb-deploy-optimized";
     regex = [ "deploy-core" ];
     solidityPackages = [ this-optimize ];
   };
 
   nonOptimized = mkScripts {
-    name = "mrs-deploy";
-    regex = [ "deploy-fab" "deploy-ilk.*" ];
+    name = "geb-deploy";
+    regex = [ "deploy-contract-deployer" "deploy-collateral-type.*" ];
     solidityPackages = [ this ];
   };
 in symlinkJoin {
-  name = "mrs-deploy-both";
+  name = "geb-deploy-both";
   paths = [ optimized nonOptimized ];
 }

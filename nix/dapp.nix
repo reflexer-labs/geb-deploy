@@ -266,22 +266,22 @@ let
       };
       repo' = {
         name = "ds-weth-b5819d1-source";
-        url = "https://github.com/sweatdao/ds-weth";
+        url = "https://github.com/reflexer-labs/ds-weth";
         rev = "b5819d1c088e1b750900b8539d6f7bfd6c0b28c7";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    mrs_cdd05ab = rec {
-      name = "mrs";
+    geb_4799302 = rec {
+      name = "geb";
       deps = {
         ds-test = ds-test_a4e4005;
       };
       repo' = {
-        name = "mrs-cdd05ab-source";
-        url = "https://github.com/sweatdao/mrs";
-        rev = "cdd05abc70c67cd7e9a060e35b1af37beb7daa56";
+        name = "geb-4799302-source";
+        url = "https://github.com/reflexer-labs/geb";
+        rev = "4799302a8bb36dd95e8e5b2ed7a6f6727f6636bc";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -300,23 +300,23 @@ let
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    esm_52ecb26 = rec {
+    esm_46bffa2 = rec {
       name = "esm";
       deps = {
         ds-test = ds-test_a4e4005;
         ds-token = ds-token_cee36a1;
       };
       repo' = {
-        name = "esm-52ecb26-source";
-        url = "https://github.com/sweatdao/esm";
-        rev = "52ecb26f7f2d68bf5ab2e135c17ba53169348e17";
+        name = "esm-46bffa2-source";
+        url = "https://github.com/reflexer-labs/esm";
+        rev = "46bffa249a770cec9cefe40abb6eb81f0a1bb682";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    mrs-deploy = rec {
-      name = "mrs-deploy";
+    geb-deploy = rec {
+      name = "geb-deploy";
       deps = {
         ds-auth = ds-auth_f783169;
         ds-guard = ds-guard_4678e1c;
@@ -325,13 +325,13 @@ let
         ds-test = ds-test_a4e4005;
         ds-token = ds-token_cee36a1;
         ds-weth = ds-weth_b5819d1;
-        mrs = mrs_cdd05ab;
-        esm = esm_52ecb26;
+        geb = geb_4799302;
+        esm = esm_46bffa2;
       };
       src' = ../.;
       src = ../src;
     };
-    this = mrs-deploy;
+    this = geb-deploy;
   };
 in {
   inherit package packageSpecs specs;

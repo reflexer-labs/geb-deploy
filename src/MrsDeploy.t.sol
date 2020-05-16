@@ -182,7 +182,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 
-        this.file(address(vat), "ETH", "dust", mul(ONE, 20 ether));
+        this.modifyParameters(address(vat), "ETH", "dust", mul(ONE, 20 ether));
         vat.frob("ETH", address(this), address(this), address(this), 100 ether, 19 ether);
     }
 
@@ -206,8 +206,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testBite() public {
         deployBond();
-        this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
-        this.file(address(cat), "ETH", "chop", ONE);
+        this.modifyParameters(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -227,8 +227,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testBitePartial() public {
         deployBond();
-        this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
-        this.file(address(cat), "ETH", "chop", ONE);
+        this.modifyParameters(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(10 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 10 ether);
@@ -248,8 +248,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFlip() public {
         deployBond();
-        this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
-        this.file(address(cat), "ETH", "chop", ONE);
+        this.modifyParameters(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -285,8 +285,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFlop() public {
         deployBond();
-        this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
-        this.file(address(cat), "ETH", "chop", ONE);
+        this.modifyParameters(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(1 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -315,8 +315,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
         vow.flog(eraBite);
         vow.heal(rad(180 ether));
-        this.file(address(vow), "dump", 0.65 ether);
-        this.file(address(vow), bytes32("sump"), rad(20 ether));
+        this.modifyParameters(address(vow), "dump", 0.65 ether);
+        this.modifyParameters(address(vow), bytes32("sump"), rad(20 ether));
         batchId = vow.flop();
 
         (uint bid,,,,) = flop.bids(batchId);
@@ -339,7 +339,7 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testFlap() public {
         deployBond();
-        this.dripAndFile(address(jug), bytes32("ETH"), bytes32("duty"), uint(1.05 * 10 ** 27));
+        this.dripAndmodifyParameters(address(jug), bytes32("ETH"), bytes32("duty"), uint(1.05 * 10 ** 27));
         weth.deposit.value(0.5 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 0.5 ether);
@@ -350,7 +350,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         assertEq(vow.hump(), 0);
         assertEq(vat.good(address(vow)), 1305012578463034550255975321520000000000000000000);
 
-        this.file(address(vow), bytes32("bump"), rad(1 ether));
+        this.modifyParameters(address(vow), bytes32("bump"), rad(1 ether));
         uint batchId = vow.flap();
 
         assertEq(gov.balanceOf(address(bin)), 49 ether);
@@ -376,8 +376,8 @@ contract MrsDeployTest is MrsDeployTestBase {
 
     function testEnd() public {
         deployBond();
-        this.file(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
-        this.file(address(cat), "ETH", "chop", ONE);
+        this.modifyParameters(address(cat), "ETH", "lump", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(cat), "ETH", "chop", ONE);
         weth.deposit.value(2 ether)();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 2 ether);
@@ -542,7 +542,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 
-        this.file(address(vat), "ETH", "dust", mul(ONE, 20 ether));
+        this.modifyParameters(address(vat), "ETH", "dust", mul(ONE, 20 ether));
         vat.frob("ETH", address(this), address(this), address(this), 100 ether, 60 ether);
 
         user1.doHope(address(vat), address(this));
@@ -555,7 +555,7 @@ contract MrsDeployTest is MrsDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 
-        this.file(address(vat), "ETH", "dust", mul(ONE, 20 ether));
+        this.modifyParameters(address(vat), "ETH", "dust", mul(ONE, 20 ether));
         vat.frob("ETH", address(this), address(this), address(this), 100 ether, 60 ether);
 
         user1.doHope(address(vat), address(this));

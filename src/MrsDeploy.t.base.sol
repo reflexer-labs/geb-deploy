@@ -100,40 +100,40 @@ contract ProxyActions {
     DSPause pause;
     GovActions govActions;
 
-    function file(address who, bytes32 what, uint256 data) external {
+    function modifyParameters(address who, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,bytes32,uint256)", who, what, data);
+        bytes memory fax = abi.encodeWithSignature("modifyParameters(address,bytes32,uint256)", who, what, data);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
         pause.exec(usr, tag, fax, eta);
     }
 
-    function file(address who, bytes32 ilk, bytes32 what, uint256 data) external {
+    function modifyParameters(address who, bytes32 ilk, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("file(address,bytes32,bytes32,uint256)", who, ilk, what, data);
+        bytes memory fax = abi.encodeWithSignature("modifyParameters(address,bytes32,bytes32,uint256)", who, ilk, what, data);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
         pause.exec(usr, tag, fax, eta);
     }
 
-    function dripAndFile(address who, bytes32 what, uint256 data) external {
+    function dripAndmodifyParameters(address who, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("dripAndFile(address,bytes32,uint256)", who, what, data);
+        bytes memory fax = abi.encodeWithSignature("dripAndmodifyParameters(address,bytes32,uint256)", who, what, data);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
         pause.exec(usr, tag, fax, eta);
     }
 
-    function dripAndFile(address who, bytes32 ilk, bytes32 what, uint256 data) external {
+    function dripAndmodifyParameters(address who, bytes32 ilk, bytes32 what, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("dripAndFile(address,bytes32,bytes32,uint256)", who, ilk, what, data);
+        bytes memory fax = abi.encodeWithSignature("dripAndmodifyParameters(address,bytes32,bytes32,uint256)", who, ilk, what, data);
         uint         eta = now;
 
         pause.plot(usr, tag, fax, eta);
@@ -365,19 +365,19 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         mrsDeploy.addAuthToFlip("COL", address(pause.proxy()));
 
         // Set Vat Params
-        this.file(address(vat), bytes32("Line"), uint(10000 * 10 ** 45));
-        this.file(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
-        this.file(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("Line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
 
         pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
         pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
         pipCOIN.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethFlip,) = mrsDeploy.ilks("ETH");
         (colFlip,) = mrsDeploy.ilks("COL");
-        this.file(address(spotter), "ETH", "tam", uint(1500000000 ether));
-        this.file(address(spotter), "ETH", "mat", uint(1500000000 ether));
-        this.file(address(spotter), "COL", "tam", uint(1100000000 ether));
-        this.file(address(spotter), "COL", "mat", uint(1100000000 ether));
+        this.modifyParameters(address(spotter), "ETH", "tam", uint(1500000000 ether));
+        this.modifyParameters(address(spotter), "ETH", "mat", uint(1500000000 ether));
+        this.modifyParameters(address(spotter), "COL", "tam", uint(1100000000 ether));
+        this.modifyParameters(address(spotter), "COL", "mat", uint(1100000000 ether));
         spotter.poke("ETH");
         spotter.poke("COL");
         (,,uint spot,,,uint risk) = vat.ilks("ETH");
@@ -434,19 +434,19 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
         mrsDeploy.addAuthToFlip("COL", address(pause.proxy()));
 
         // Set Vat Params
-        this.file(address(vat), bytes32("Line"), uint(10000 * 10 ** 45));
-        this.file(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
-        this.file(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("Line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("ETH"), bytes32("line"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(vat), bytes32("COL"), bytes32("line"), uint(10000 * 10 ** 45));
 
         pipETH.poke(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
         pipCOL.poke(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
         pipCOIN.poke(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethFlip,) = mrsDeploy.ilks("ETH");
         (colFlip,) = mrsDeploy.ilks("COL");
-        this.file(address(spotter), "ETH", "tam", uint(1500000000 ether));
-        this.file(address(spotter), "ETH", "mat", uint(1500000000 ether));
-        this.file(address(spotter), "COL", "tam", uint(1100000000 ether));
-        this.file(address(spotter), "COL", "mat", uint(1100000000 ether));
+        this.modifyParameters(address(spotter), "ETH", "tam", uint(1500000000 ether));
+        this.modifyParameters(address(spotter), "ETH", "mat", uint(1500000000 ether));
+        this.modifyParameters(address(spotter), "COL", "tam", uint(1100000000 ether));
+        this.modifyParameters(address(spotter), "COL", "mat", uint(1100000000 ether));
         spotter.poke("ETH");
         spotter.poke("COL");
         (,,uint spot,,,uint risk) = vat.ilks("ETH");
@@ -500,12 +500,12 @@ contract MrsDeployTestBase is DSTest, ProxyActions {
     // Utils
     function giveVatPermission(address usr) public {
         require(usr != address(0), "MrsDeploy/usr-is-null");
-        vat.rely(usr);
+        vat.addAuthorization(usr);
     }
 
     function offerVatPermissionTo(address usr) public {
-        vat.rely(usr);
-        vat.deny(address(this));
+        vat.addAuthorization(usr);
+        vat.removeAuthorization(address(this));
     }
 
     function release() public {

@@ -1,4 +1,4 @@
 /out
-load-fab*
-load-dcs*
-load-ilk*
+load-contract-deployer*
+load-geb*
+load-collateral-type*

@@ -1,24 +1,24 @@
 pragma solidity ^0.5.6;
 
-contract GemLike {
+contract TokenLike {
     function balanceOf(address) public view returns (uint256);
     function transfer(address, uint256) public returns (bool);
     function transferFrom(address, address, uint256) public returns (bool);
 }
 
-contract EndLike {
-    function cage() public;
+contract GlobalSettlementLike {
+    function shutdownSystem() public;
 }
 
 contract ESM {
-    GemLike public gem; // collateral
-    EndLike public end; // cage module
-    address public pit; // burner
-    uint256 public min; // threshold
-    uint256 public fired;
+    TokenLike public protocolToken;   // collateral
+    GlobalSettlementLike public globalSettlement;  // shutdown module
+    address public tokenBurner;       // burner
+    uint256 public triggerThreshold;  // threshold
+    uint256 public settled;
 
-    mapping(address => uint256) public sum; // per-address balance
-    uint256 public Sum; // total balance
+    mapping(address => uint256) public burntTokens; // per-address balance
+    uint256 public totalAmountBurnt; // total balance
 
     // --- Logs ---
     event LogNote(
@@ -48,11 +48,11 @@ contract ESM {
         }
     }
 
-    constructor(address gem_, address end_, address pit_, uint256 min_) public {
-        gem = GemLike(gem_);
-        end = EndLike(end_);
-        pit = pit_;
-        min = min_;
+    constructor(address protocolToken_, address globalSettlement_, address tokenBurner_, uint256 triggerThreshold_) public {
+        protocolToken = TokenLike(protocolToken_);
+        globalSettlement = GlobalSettlementLike(globalSettlement_);
+        tokenBurner = tokenBurner_;
+        triggerThreshold = triggerThreshold_;
     }
 
     // -- math --
@@ -61,21 +61,19 @@ contract ESM {
         require(z >= x);
     }
 
-    function fire() external note {
-        require(fired == 0,  "esm/already-fired");
-        require(Sum >= min,  "esm/min-not-reached");
-
-        end.cage();
-
-        fired = 1;
+    function shutdown() external note {
+        require(settled == 0,  "esm/already-settled");
+        require(totalAmountBurnt >= triggerThreshold, "esm/threshold-not-reached");
+        globalSettlement.shutdownSystem();
+        settled = 1;
     }
 
-    function join(uint256 wad) external note {
-        require(fired == 0, "esm/already-fired");
+    function burnTokens(uint256 amountToBurn) external note {
+        require(settled == 0, "esm/already-settled");
 
-        sum[msg.sender] = add(sum[msg.sender], wad);
-        Sum = add(Sum, wad);
+        burntTokens[msg.sender] = add(burntTokens[msg.sender], amountToBurn);
+        totalAmountBurnt = add(totalAmountBurnt, amountToBurn);
 
-        require(gem.transferFrom(msg.sender, pit, wad), "esm/transfer-failed");
+        require(protocolToken.transferFrom(msg.sender, tokenBurner, amountToBurn), "esm/transfer-failed");
     }
 }
