@@ -1,10 +1,6 @@
-# Mai Reflex-Bond Deployment
+# GEB Deploy
 
-This repository contains the smart contract code and bash scripts for deploying the whole `mrs` system and provides an initial set up.
-
-## Additional Documentation
-
-`mrs` is also documented in the [wiki](https://github.com/sweatdao/mrs/wiki) and in [DEVELOPING.md](https://github.com/sweatdao/mrs/blob/master/DEVELOPING.md)
+This repository contains the smart contract code and bash scripts for deploying the whole `geb` system and provides an initial set up.
 
 ## Deployment
 
