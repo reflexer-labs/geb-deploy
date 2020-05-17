@@ -392,11 +392,11 @@ contract CollateralJoin5 is Logging {
       _;
     }
 
-    CDPEngineLike public cdpEngine;
-    bytes32       public collateralType;
-    GemLike5      public collateral;
-    uint          public decimals;
-    uint          public contractEnabled;  // Access Flag
+    CDPEngineLike   public cdpEngine;
+    bytes32         public collateralType;
+    CollateralLike5 public collateral;
+    uint            public decimals;
+    uint            public contractEnabled;  // Access Flag
 
     constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
         collateral = CollateralLike5(collateral_);
@@ -408,7 +408,7 @@ contract CollateralJoin5 is Logging {
         collateralType = collateralType_;
     }
 
-    function disableContract() external emitLog auth {
+    function disableContract() external emitLog isAuthorized {
         contractEnabled = 0;
     }
 
@@ -466,14 +466,14 @@ contract AuthCollateralJoin is Logging {
         require(y <= 0 || z >= x);
     }
 
-    function join(address usr, uint wad) public auth emitLog {
+    function join(address usr, uint wad) public isAuthorized emitLog {
         require(contractEnabled == 1, "AuthCollateralJoin/contract-not-enabled");
         require(int(wad) >= 0, "AuthCollateralJoin/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         require(collateral.transferFrom(msg.sender, address(this), wad), "AuthCollateralJoin/failed-transfer");
     }
 
-    function exit(address usr, uint wad) public auth emitLog {
+    function exit(address usr, uint wad) public isAuthorized emitLog {
         require(wad <= 2 ** 255, "AuthCollateralJoin/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "AuthCollateralJoin/failed-transfer");
