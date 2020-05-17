@@ -20,23 +20,26 @@ pragma solidity ^0.5.15;
 import {DSAuth, DSAuthority} from "./ds/auth/auth.sol";
 import {DSPause, DSPauseProxy} from "./ds/pause/pause.sol";
 
-import {CDPEngine} from "geb/cdpEngine.sol";
-import {TaxCollector} from "geb/taxCollector.sol";
-import {Vow} from "geb/vow.sol";
-import {Cat} from "geb/cat.sol";
-import {CoinJoin} from "geb/join.sol";
-import {Flapper} from "geb/flap.sol";
-import {Flopper} from "geb/flop.sol";
-import {Flipper} from "geb/flip.sol";
-import {Coin} from "geb/coin.sol";
-import {End} from "geb/end.sol";
+import {CDPEngine} from "geb/CDPEngine.sol";
+import {TaxCollector} from "geb/TaxCollector.sol";
+import {AccountingEngine} from "geb/AccountingEngine.sol";
+import {LiquidationEngine} from "geb/LiquidationEngine.sol";
+import {CoinJoin} from "geb/BasicTokenAdapters.sol";
+import {SurplusAuctionHouseOne} from "geb/SurplusAuctionHouse.sol";
+import {DebtAuctionHouse} from "geb/DebtAuctionHouse.sol";
+import {CollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
+import {Coin} from "geb/Coin.sol";
+import {SettlementSurplusAuctioner} from "geb/SettlementSurplusAuctioner.sol";
+import {GlobalSettlement} from "geb/GlobalSettlement.sol";
 import {ESM} from "./ds/esm/ESM.sol";
-import {Vox1} from "geb/vox.sol";
+import {RedemptionRateSetter} from "geb-redemption-feedback-mechanism/RedemptionRateSetter.sol";
+import {EmergencyRateSetter} from "geb-redemption-feedback-mechanism/EmergencyRateSetter.sol";
+import {MoneyMarketSetter} from "geb-money-market-setter/MoneyMarketSetter.sol";
+import {StabilityFeeTreasury} from "geb/StabilityFeeTreasury.sol";
 import {CoinSavingsAccount} from "geb/CoinSavingsAccount.sol";
-import {SettlementSurplusAuction} from "geb/SettlementSurplusAuction.sol";
 import {OracleRelayer} from "geb/OracleRelayer.sol";
 
-contract CDPEngineFab {
+contract CDPEngineFactory {
     function newCDPEngine() public returns (CDPEngine cdpEngine) {
         cdpEngine = new CDPEngine();
         cdpEngine.addAuthorization(msg.sender);
@@ -44,7 +47,7 @@ contract CDPEngineFab {
     }
 }
 
-contract TaxCollectorFab {
+contract TaxCollectorFactory {
     function newTaxCollector(address cdpEngine) public returns (TaxCollector taxCollector) {
         taxCollector = new TaxCollector(cdpEngine);
         taxCollector.addAuthorization(msg.sender);
@@ -52,145 +55,196 @@ contract TaxCollectorFab {
     }
 }
 
-contract VowFab {
-    function newVow(address cdpEngine, address flap, address flop) public returns (Vow vow) {
-        vow = new Vow(cdpEngine, flap, flop);
-        vow.addAuthorization(msg.sender);
-        vow.removeAuthorization(address(this));
+contract AccountingEngineFactory {
+    function newAccountingEngine(address cdpEngine, address surplusAuctionHouse, address debtAuctionHouse) public returns (AccountingEngine accountingEngine) {
+        accountingEngine = new AccountingEngine(cdpEngine, surplusAuctionHouse, debtAuctionHouse);
+        accountingEngine.addAuthorization(msg.sender);
+        accountingEngine.removeAuthorization(address(this));
     }
 }
 
-contract CatFab {
-    function newCat(address cdpEngine) public returns (Cat cat) {
-        cat = new Cat(cdpEngine);
-        cat.addAuthorization(msg.sender);
-        cat.removeAuthorization(address(this));
+contract LiquidationEngineFactory {
+    function newLiquidationEngine(address cdpEngine) public returns (LiquidationEngine liquidationEngine) {
+        liquidationEngine = new LiquidationEngine(cdpEngine);
+        liquidationEngine.addAuthorization(msg.sender);
+        liquidationEngine.removeAuthorization(address(this));
     }
 }
 
-contract CoinFab {
-    function newCoin(string memory name, string memory symbol, uint8 decimals, uint chainId)
+contract CoinFactory {
+    function newCoin(string memory name, string memory symbol, uint chainId)
       public returns (Coin coin) {
-        coin = new Coin(name, symbol, decimals, chainId);
+        coin = new Coin(name, symbol, chainId);
         coin.addAuthorization(msg.sender);
         coin.removeAuthorization(address(this));
     }
 }
 
-contract CoinJoinFab {
+contract CoinJoinFactory {
     function newCoinJoin(address cdpEngine, address coin) public returns (CoinJoin coinJoin) {
         coinJoin = new CoinJoin(cdpEngine, coin);
     }
 }
 
-contract FlapFab {
-    function newFlap(address cdpEngine) public returns (Flapper flap) {
-        flap = new Flapper(cdpEngine);
-        flap.addAuthorization(msg.sender);
-        flap.removeAuthorization(address(this));
+contract SurplusAuctionHouseFactory {
+    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (SurplusAuctionHouseOne surplusAuctionHouse) {
+        surplusAuctionHouse = new SurplusAuctionHouseOne(cdpEngine, prot);
+        surplusAuctionHouse.addAuthorization(msg.sender);
+        surplusAuctionHouse.removeAuthorization(address(this));
     }
 }
 
-contract FlopFab {
-    function newFlop(address cdpEngine, address gov) public returns (Flopper flop) {
-        flop = new Flopper(cdpEngine, gov);
-        flop.addAuthorization(msg.sender);
-        flop.removeAuthorization(address(this));
+contract SettlementSurplusAuctionerFactory {
+    function newSettlementSurplusAuctioner(
+      address accountingEngine
+    ) public returns (SettlementSurplusAuctioner settlementSurplusAuctioner) {
+        settlementSurplusAuctioner = new SettlementSurplusAuctioner(accountingEngine);
+        settlementSurplusAuctioner.addAuthorization(msg.sender);
+        settlementSurplusAuctioner.removeAuthorization(address(this));
     }
 }
 
-contract FlipFab {
-    function newFlip(address cdpEngine, bytes32 ilk) public returns (Flipper flip) {
-        flip = new Flipper(cdpEngine, ilk);
-        flip.addAuthorization(msg.sender);
-        flip.removeAuthorization(address(this));
+contract DebtAuctionHouseFactory {
+    function newDebtAuctionHouse(address cdpEngine, address prot) public returns (DebtAuctionHouse debtAuctionHouse) {
+        debtAuctionHouse = new DebtAuctionHouse(cdpEngine, prot);
+        debtAuctionHouse.addAuthorization(msg.sender);
+        debtAuctionHouse.removeAuthorization(address(this));
     }
 }
 
-contract SpotFab {
-    function newSpotter(address cdpEngine) public returns (Spotter spotter) {
-        spotter = new Spotter(cdpEngine);
-        spotter.addAuthorization(msg.sender);
-        spotter.removeAuthorization(address(this));
+contract CollateralAuctionHouseFactory {
+    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (CollateralAuctionHouse collateralAuctionHouse) {
+        collateralAuctionHouse = new CollateralAuctionHouse(cdpEngine, collateralType);
+        collateralAuctionHouse.addAuthorization(msg.sender);
+        collateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
-contract PotFab {
-    function newPot(address cdpEngine) public returns (Pot pot) {
-        pot = new Pot(cdpEngine);
-        pot.addAuthorization(msg.sender);
-        pot.removeAuthorization(address(this));
+contract OracleRelayerFactory {
+    function newOracleRelayer(address cdpEngine) public returns (OracleRelayer oracleRelayer) {
+        oracleRelayer = new OracleRelayer(cdpEngine);
+        oracleRelayer.addAuthorization(msg.sender);
+        oracleRelayer.removeAuthorization(address(this));
     }
 }
 
-contract Vox1Fab {
-    function newVox1(address taxCollector, address spot) public returns (Vox1 vox) {
-        vox = new Vox1(taxCollector, spot);
-        vox.addAuthorization(msg.sender);
-        vox.removeAuthorization(address(this));
+contract CoinSavingsAccountFactory {
+    function newCoinSavingsAccount(address cdpEngine) public returns (CoinSavingsAccount coinSavingsAccount) {
+        coinSavingsAccount = new CoinSavingsAccount(cdpEngine);
+        coinSavingsAccount.addAuthorization(msg.sender);
+        coinSavingsAccount.removeAuthorization(address(this));
     }
 }
 
-contract ESMFab {
-    function newESM(address gov, address end, address pit, uint min) public returns (ESM esm) {
-        esm = new ESM(gov, end, pit, min);
+contract RedemptionRateSetterFactory {
+    function newRedemptionRateSetter(address oracleRelayer) public returns (RedemptionRateSetter redemptionRateSetter) {
+        redemptionRateSetter = new RedemptionRateSetter(taxCollector, coinSavingsAccount);
+        redemptionRateSetter.addAuthorization(msg.sender);
+        redemptionRateSetter.removeAuthorization(address(this));
     }
 }
 
-contract EndFab {
-    function newEnd() public returns (End end) {
-        end = new End();
-        end.addAuthorization(msg.sender);
-        end.removeAuthorization(address(this));
+contract EmergencyRateSetterFactory {
+    function newEmergencyRateSetter(address oracleRelayer) public returns (RedemptionRateSetter redemptionRateSetter) {
+        redemptionRateSetter = new EmergencyRateSetter(oracleRelayer);
+        redemptionRateSetter.addAuthorization(msg.sender);
+        redemptionRateSetter.removeAuthorization(address(this));
     }
 }
 
-contract PauseFab {
+contract MoneyMarketSetterFactory {
+    function newMoneyMarketSetter(
+      address oracleRelayer, address coinSavingsAccount, address taxCollector
+    ) public returns (MoneyMarketSetter moneyMarketSetter) {
+        moneyMarketSetter = new MoneyMarketSetter(oracleRelayer, coinSavingsAccount, taxCollector);
+        moneyMarketSetter.addAuthorization(msg.sender);
+        moneyMarketSetter.removeAuthorization(address(this));
+    }
+}
+
+contract StabilityFeeTreasuryFactory {
+    function newStabilityFeeTreasury(
+      address cdpEngine,
+      address accountingEngine,
+      address coinJoin,
+      uint surplusTransferDelay
+    ) public returns (StabilityFeeTreasury stabilityFeeTreasury) {
+        stabilityFeeTreasury = new StabilityFeeTreasury(cdpEngine, accountingEngine, coinJoin, surplusTransferDelay);
+        stabilityFeeTreasury.addAuthorization(msg.sender);
+        stabilityFeeTreasury.removeAuthorization(address(this));
+    }
+}
+
+contract ESMFactory {
+    function newESM(
+        address prot, address globalSettlement, address tokenBurner, uint threshold
+    ) public returns (ESM esm) {
+        esm = new ESM(prot, globalSettlement, tokenBurner, threshold);
+    }
+}
+
+contract GlobalSettlementFactory {
+    function newGlobalSettlement() public returns (GlobalSettlement globalSettlement) {
+        globalSettlement = new GlobalSettlement();
+        globalSettlement.addAuthorization(msg.sender);
+        globalSettlement.removeAuthorization(address(this));
+    }
+}
+
+contract PauseFactory {
     function newPause(uint delay, address owner, DSAuthority authority) public returns(DSPause pause) {
         pause = new DSPause(delay, owner, authority);
     }
 }
 
-contract MrsDeploy is DSAuth {
-    CDPEngineFab       public cdpEngineFab;
-    TaxCollectorFab       public taxCollectorFab;
-    VowFab       public vowFab;
-    CatFab       public catFab;
-    CoinFab      public coinFab;
-    CoinJoinFab  public coinJoinFab;
-    FlapFab      public flapFab;
-    FlopFab      public flopFab;
-    FlipFab      public flipFab;
-    SpotFab      public spotFab;
-    Vox1Fab      public vox1Fab;
-    EndFab       public endFab;
-    ESMFab       public esmFab;
-    PauseFab     public pauseFab;
-    PotFab       public potFab;
+contract GebDeploy is DSAuth {
+    CDPEngineFactory                  public cdpEngineFactory;
+    TaxCollectorFactory               public taxCollectorFactory;
+    AccountingEngineFactory           public accountingEngineFactory;
+    LiquidationEngineFactory          public liquidationEngineFactory;
+    CoinFactory                       public coinFactory;
+    CoinJoinFactory                   public coinJoinFactory;
+    StabilityFeeTreasuryFactory       public stabilityFeeTreasuryFactory;
+    SurplusAuctionHouseFactory        public surplusAuctionHouseFactory;
+    DebtAuctionHouseFactory           public debtAuctionHouseFactory;
+    CollateralAuctionHouseFactory     public collateralAuctionHouseFactory;
+    OracleRelayerFactory              public oracleRelayerFactory;
+    RedemptionRateSetterFactory       public redemptionRateSetterFactory;
+    EmergencyRateSetterFactory        public emergencyRateSetterFactory;
+    MoneyMarketSetterFactory          public moneyMarketSetterFactory;
+    GlobalSettlementFactory           public globalSettlementFactory;
+    ESMFactory                        public esmFactory;
+    PauseFactory                      public pauseFactory;
+    CoinSavingsAccountFactory         public coinSavingsAccountFactory;
+    SettlementSurplusAuctionerFactory public settlementSurplusAuctioner;
 
-    CDPEngine       public cdpEngine;
-    TaxCollector       public taxCollector;
-    Vow       public vow;
-    Cat       public cat;
-    Coin      public coin;
-    CoinJoin  public coinJoin;
-    Flapper   public flap;
-    Flopper   public flop;
-    Spotter   public spotter;
-    Vox1      public vox1;
-    Pot       public pot;
-    End       public end;
-    ESM       public esm;
-    DSPause   public pause;
+    CDPEngine                     public cdpEngine;
+    TaxCollector                  public taxCollector;
+    AccountingEngine              public accountingEngine;
+    LiquidationEngine             public liquidationEngine;
+    StabilityFeeTreasury          public stabilityFeeTreasury;
+    Coin                          public coin;
+    CoinJoin                      public coinJoin;
+    SurplusAuctionHouseOne        public surplusAuctionHouse;
+    DebtAuctionHouse              public debtAuctionHouse;
+    OracleRelayer                 public oracleRelayer;
+    RedemptionRateSetter          public redemptionRateSetter;
+    EmergencyRateSetter           public emergencyRateSetter;
+    MoneyMarketSetter             public moneyMarketSetter;
+    CoinSavingsAccount            public coinSavingsAccount;
+    GlobalSettlement              public globalSettlement;
+    SettlementSurplusAuctioner    public settlementSurplusAuctioner;
+    ESM                           public esm;
+    DSPause                       public pause;
 
-    mapping(bytes32 => Ilk) public ilks;
+    mapping(bytes32 => CollateralType) public collateralTypes;
 
     uint8 public step = 0;
 
     uint256 constant ONE = 10 ** 27;
 
-    struct Ilk {
-        Flipper flip;
+    struct CollateralType {
+        CollateralAuctionHouse collateralAuctionHouse;
         address adapter;
     }
 
@@ -200,292 +254,379 @@ contract MrsDeploy is DSAuth {
         return wad * 10 ** 27;
     }
 
-    function setFirstFabBatch(
-        CDPEngineFab cdpEngineFab_,
-        TaxCollectorFab taxCollectorFab_,
-        VowFab vowFab_,
-        CatFab catFab_,
-        CoinFab coinFab_,
-        CoinJoinFab coinJoinFab_,
-        PotFab potFab_
+    function setFirstFactoryBatch(
+        CDPEngineFactory cdpEngineFactory_,
+        TaxCollectorFactory taxCollectorFactory_,
+        AccountingEngineFactory accountingEngineFactory_,
+        LiquidationEngineFactory liquidationEngineFactory_,
+        CoinFactory coinFactory_,
+        CoinJoinFactory coinJoinFactory_,
+        CoinSavingsAccountFactory coinSavingsAccountFactory_,
+        SettlementSurplusAuctionerFactory settlementSurplusAuctionerFactory_,
     ) public auth {
-        require(address(cdpEngineFab) == address(0), "CDPEngine Fab already set");
-        cdpEngineFab = cdpEngineFab_;
-        taxCollectorFab = taxCollectorFab_;
-        vowFab = vowFab_;
-        catFab = catFab_;
-        coinFab = coinFab_;
-        coinJoinFab = coinJoinFab_;
-        potFab = potFab_;
+        require(address(cdpEngineFactory) == address(0), "CDPEngine Factory already set");
+        cdpEngineFactory = cdpEngineFactory_;
+        taxCollectorFactory = taxCollectorFactory_;
+        accountingEngineFactory = accountingEngineFactory_;
+        liquidationEngineFactory = liquidationEngineFactory_;
+        coinFactory = coinFactory_;
+        coinJoinFactory = coinJoinFactory_;
+        coinSavingsAccountFactory = coinSavingsAccountFactory_;
+        settlementSurplusAuctionerFactory = settlementSurplusAuctionerFactory_;
+    }
+    function setSecondFactoryBatch(
+        SurplusAuctionHouseFactory surplusAuctionHouseFactory_,
+        DebtAuctionHouseFactory debtAuctionHouseFactory_,
+        CollateralAuctionHouseFactory collateralAuctionHouseFactory_,
+        OracleRelayerFactory oracleRelayerFactory_,
+        RedemptionRateSetterFactory redemptionRateSetterFactory_,
+        GlobalSettlementFactory globalSettlementFactory_,
+        ESMFactory esmFactory_,
+        PauseFactory pauseFactory_
+    ) public isAuthorized {
+        require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        require(address(surplusAuctionHouseFactory) == address(0), "SurplusAuctionHouse Factory already set");
+        surplusAuctionHouseFactory = surplusAuctionHouseFactory_;
+        debtAuctionHouseFactory = debtAuctionHouseFactory_;
+        collateralAuctionHouseFactory = collateralAuctionHouseFactory_;
+        oracleRelayerFactory = oracleRelayerFactory_;
+        redemptionRateSetterFactory = redemptionRateSetterFactory_;
+        globalSettlementFactory = globalSettlementFactory_;
+        esmFactory = esmFactory_;
+        pauseFactory = pauseFactory_;
+    }
+    function setThirdFactoryBatch(
+        EmergencyRateSetterFactory emergencyRateSetterFactory_,
+        MoneyMarketSetterFactory moneyMarketSetterFactory_,
+        StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
+    ) public isAuthorized {
+        require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        emergencyRateSetterFactory = emergencyRateSetterFactory_;
+        moneyMarketSetterFactory = moneyMarketSetterFactory_;
+        stabilityFeeTreasuryFactory = stabilityFeeTreasuryFactory_;
     }
 
-    function setSecondFabBatch(
-        FlapFab flapFab_,
-        FlopFab flopFab_,
-        FlipFab flipFab_,
-        SpotFab spotFab_,
-        Vox1Fab vox1Fab_,
-        EndFab endFab_,
-        ESMFab esmFab_,
-        PauseFab pauseFab_
-    ) public auth {
-        require(address(cdpEngineFab) != address(0), "CDPEngine Fab not set");
-        require(address(flapFab) == address(0), "Flap Fab already set");
-        flapFab = flapFab_;
-        flopFab = flopFab_;
-        flipFab = flipFab_;
-        spotFab = spotFab_;
-        vox1Fab = vox1Fab_;
-        endFab = endFab_;
-        esmFab = esmFab_;
-        pauseFab = pauseFab_;
-    }
-
-    function deployCDPEngine() public auth {
-        require(address(cdpEngine) == address(0), "VAT already deployed");
-        cdpEngine = cdpEngineFab.newCDPEngine();
-        spotter = spotFab.newSpotter(address(cdpEngine));
+    function deployCDPEngine() public isAuthorized {
+        require(address(cdpEngine) == address(0), "CDPEngine already deployed");
+        cdpEngine = cdpEngineFactory.newCDPEngine();
+        oracleRelayer = oracleRelayerFactory.newOracleRelayer(address(cdpEngine));
 
         // Internal auth
-        cdpEngine.addAuthorization(address(spotter));
+        cdpEngine.addAuthorization(address(oracleRelayer));
     }
 
-    function deployCoin(string memory name, string memory symbol, uint8 decimals, uint256 chainId)
-      public auth {
+    function deployCoin(string memory name, string memory symbol, uint256 chainId)
+      public isAuthorized {
         require(address(cdpEngine) != address(0), "Missing previous step");
 
         // Deploy
-        coin      = coinFab.newCoin(name, symbol, decimals, chainId);
-        coinJoin  = coinJoinFab.newCoinJoin(address(cdpEngine), address(coin));
+        coin      = coinFactory.newCoin(name, symbol, chainId);
+        coinJoin  = coinJoinFactory.newCoinJoin(address(cdpEngine), address(coin));
         coin.addAuthorization(address(coinJoin));
     }
 
-    function deployTaxation(uint256 savings) public auth {
+    function deployTaxation() public isAuthorized {
         require(address(cdpEngine) != address(0), "Missing previous step");
 
         // Deploy
-        taxCollector = taxCollectorFab.newTaxCollector(address(cdpEngine));
-        if (savings >= 1) pot = potFab.newPot(address(cdpEngine));
+        taxCollector = taxCollectorFactory.newTaxCollector(address(cdpEngine));
 
         // Internal auth
         cdpEngine.addAuthorization(address(taxCollector));
-        if (savings >= 1) cdpEngine.addAuthorization(address(pot));
+    }
+
+    function deploySavingsAccount() public isAuthorized {
+        require(address(cdpEngine) != address(0), "Missing previous step");
+
+        // Deploy
+        coinSavingsAccount = coinSavingsAccountFactory.newCoinSavingsAccount(address(cdpEngine));
+
+        // Internal auth
+        cdpEngine.addAuthorization(address(coinSavingsAccount));
     }
 
     function deployRateSetter(
-        uint version,
-        address pip,
-        uint span,
-        uint trim,
-        uint dawn,
-        uint dusk,
-        uint how,
-        uint up,
-        uint down,
-        uint go
-    ) public auth {
+        address orcl
+    ) public isAuthorized {
         require(address(taxCollector) != address(0), "Missing previous step");
-        require(address(spotter) != address(0), "Missing previous step");
-        if (version == 1) {
-          require(address(pot) == address(0), "Vox1 incompatible with Pot");
-        }
+        require(address(oracleRelayer) != address(0), "Missing previous step");
+        require(address(redemptionRateSetter) == address(0), "Rate setter already set");
 
         // Deploy
-        vox1 = vox1Fab.newVox1(address(taxCollector), address(spotter));
+        redemptionRateSetter = redemptionRateSetterFactory.newRedemptionRateSetter(address(oracleRelayer));
 
         // Setup
-        vox1.modifyParameters("pip", pip);
-        vox1.modifyParameters("span", span);
-        vox1.modifyParameters("trim", trim);
-        vox1.modifyParameters("dawn", dawn);
-        vox1.modifyParameters("dusk", dusk);
-        vox1.modifyParameters("how", how);
-        vox1.modifyParameters("up", up);
-        vox1.modifyParameters("down", down);
-        vox1.modifyParameters("go", go);
+        redemptionRateSetter.modifyParameters("orcl", orcl);
 
         // Internal auth
-        spotter.addAuthorization(address(vox1));
-        taxCollector.addAuthorization(address(vox1));
+        oracleRelayer.addAuthorization(address(redemptionRateSetter));
     }
 
-    function deployAuctions(address gov, address bin) public auth {
-        require(gov != address(0), "Missing GOV address");
+    function deployEmergencyRateSetter(
+        address orcl
+    ) public isAuthorized {
+        require(address(taxCollector) != address(0), "Missing previous step");
+        require(address(oracleRelayer) != address(0), "Missing previous step");
+        require(address(redemptionRateSetter) == address(0), "Rate setter already set");
+
+        // Deploy
+        redemptionRateSetter = emergencyRateSetterFactory.newEmergencyRateSetter(address(oracleRelayer));
+
+        // Setup
+        redemptionRateSetter.modifyParameters("orcl", orcl);
+
+        // Internal auth
+        oracleRelayer.addAuthorization(address(redemptionRateSetter));
+    }
+
+    function deployMoneyMarketSetter(
+        address orcl
+    ) public isAuthorized {
+        require(address(taxCollector) != address(0), "Missing previous step");
+        require(address(coinSavingsAccount) != address(0), "Missing previous step");
+
+        // Setup
+        moneyMarketSetter = moneyMarketSetterFactory.newMoneyMarketSetter(
+          address(oracleRelayer), address(coinSavingsAccount), address(taxCollector)
+        );
+
+        // Setup
+        moneyMarketSetter.modifyParameters("orcl", orcl);
+
+        // Internal auth
+        taxCollector.addAuthorization(address(moneyMarketSetter));
+        coinSavingsAccount.addAuthorization(address(moneyMarketSetter));
+    }
+
+    function deployAuctions(address prot, address bin) public isAuthorized {
+        require(prot != address(0), "Missing PROT address");
         require(address(taxCollector) != address(0), "Missing previous step");
         require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
-        flap = flapFab.newFlap(address(cdpEngine));
-        flop = flopFab.newFlop(address(cdpEngine), gov);
-
-        // Setup
-        flap.modifyParameters("gov", gov);
-        flap.modifyParameters("join", address(coinJoin));
-        flap.modifyParameters("bin", bin);
-        flap.modifyParameters("bond", address(coin));
+        surplusAuctionHouse = surplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
+        debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(cdpEngine), prot);
 
         // Internal auth
-        cdpEngine.addAuthorization(address(flop));
+        cdpEngine.addAuthorization(address(debtAuctionHouse));
     }
 
-    function deployVow() public auth {
-        vow = vowFab.newVow(address(cdpEngine), address(flap), address(flop));
+    function deployAccountingEngine() public isAuthorized {
+        accountingEngine = accountingEngineFactory.newAccountingEngine(address(cdpEngine), address(surplusAuctionHouse), address(debtAuctionHouse));
 
-        flap.addAuthorization(address(vow));
-        flop.addAuthorization(address(vow));
+        surplusAuctionHouse.addAuthorization(address(accountingEngine));
+        debtAuctionHouse.addAuthorization(address(accountingEngine));
 
-        flap.modifyParameters("safe", address(vow));
-        taxCollector.modifyParameters("vow", address(vow));
+        taxCollector.modifyParameters("accountingEngine", address(accountingEngine));
     }
 
-    function deployLiquidator() public auth {
-        require(address(vow) != address(0), "Missing previous step");
+    function deployStabilityFeeTreasury(uint surplusTransferDelay) public isAuthorized {
+        require(address(cdpEngine) != address(0), "Missing previous step");
+        require(address(accountingEngine) != address(0), "Missing previous step");
+        require(address(coinJoin) != address(0), "Missing previous step");
 
         // Deploy
-        cat = catFab.newCat(address(cdpEngine));
-
-        // Internal references set up
-        cat.modifyParameters("vow", address(vow));
-
-        // Internal auth
-        cdpEngine.addAuthorization(address(cat));
-        vow.addAuthorization(address(cat));
+        stabilityFeeTreasury = stabilityFeeTreasuryFactory.newStabilityFeeTreasury(
+          address(cdpEngine),
+          address(accountingEngine),
+          address(coinJoin),
+          surplusTransferDelay
+        );
     }
 
-    function deployShutdown(address gov, address pit, uint256 min) public auth {
-        require(address(cat) != address(0), "Missing previous step");
+    function deploySettlementSurplusAuctioner() public isAuthorized {
+        require(address(accountingEngine) != address(0), "Missing previous step");
 
         // Deploy
-        end = endFab.newEnd();
+        settlementSurplusAuctioner = settlementSurplusAuctionerFactory.newSettlementSurplusAuctioner(address(accountingEngine));
+
+        // Set
+        accountingEngine.modifyParameters("settlementSurplusAuctioner", address(settlementSurplusAuctioner));
+
+        // Internal auth
+        surplusAuctionHouse.addAuthorization(address(settlementSurplusAuctioner));
+    }
+
+    function deployLiquidator() public isAuthorized {
+        require(address(accountingEngine) != address(0), "Missing previous step");
+
+        // Deploy
+        liquidationEngine = liquidationEngineFactory.newLiquidationEngine(address(cdpEngine));
 
         // Internal references set up
-        end.modifyParameters("cdpEngine", address(cdpEngine));
-        end.modifyParameters("cat", address(cat));
-        end.modifyParameters("vow", address(vow));
-        end.modifyParameters("spot", address(spotter));
-        if (address(pot) != address(0)) {
-          end.modifyParameters("pot", address(pot));
+        liquidationEngine.modifyParameters("accountingEngine", address(accountingEngine));
+
+        // Internal auth
+        cdpEngine.addAuthorization(address(liquidationEngine));
+        accountingEngine.addAuthorization(address(liquidationEngine));
+    }
+
+    function deployShutdown(address prot, address tokenBurner, uint256 threshold) public isAuthorized {
+        require(address(liquidationEngine) != address(0), "Missing previous step");
+
+        // Deploy
+        globalSettlement = globalSettlementFactory.newGlobalSettlement();
+
+        // Internal references set up
+        globalSettlement.modifyParameters("cdpEngine", address(cdpEngine));
+        globalSettlement.modifyParameters("liquidationEngine", address(liquidationEngine));
+        globalSettlement.modifyParameters("accountingEngine", address(accountingEngine));
+        globalSettlement.modifyParameters("oracleRelayer", address(oracleRelayer));
+        if (address(coinSavingsAccount) != address(0)) {
+          globalSettlement.modifyParameters("coinSavingsAccount", address(coinSavingsAccount));
         }
-        if (address(vox1) != address(0)) {
-          end.modifyParameters("vox", address(vox1));
+        if (address(redemptionRateSetter) != address(0)) {
+          globalSettlement.modifyParameters("rateSetter", address(redemptionRateSetter));
+        }
+        if (address(stabilityFeeTreasury) != address(0)) {
+          globalSettlement.modifyParameters("stabilityFeeTreasury", address(stabilityFeeTreasury));
         }
 
         // Internal auth
-        cdpEngine.addAuthorization(address(end));
-        cat.addAuthorization(address(end));
-        vow.addAuthorization(address(end));
-        spotter.addAuthorization(address(end));
-        if (address(pot) != address(0)) {
-          pot.addAuthorization(address(end));
+        cdpEngine.addAuthorization(address(globalSettlement));
+        liquidationEngine.addAuthorization(address(globalSettlement));
+        accountingEngine.addAuthorization(address(globalSettlement));
+        oracleRelayer.addAuthorization(address(globalSettlement));
+        if (address(coinSavingsAccount) != address(0)) {
+          coinSavingsAccount.addAuthorization(address(globalSettlement));
         }
-        if (address(vox1) != address(0)) {
-          vox1.addAuthorization(address(end));
+        if (address(redemptionRateSetter) != address(0)) {
+          redemptionRateSetter.addAuthorization(address(globalSettlement));
+        }
+        if (address(stabilityFeeTreasury) != address(0)) {
+          stabilityFeeTreasury.addAuthorization(address(globalSettlement));
         }
 
         // Deploy ESM
-        esm = esmFab.newESM(gov, address(end), address(pit), min);
-        end.addAuthorization(address(esm));
+        esm = esmFactory.newESM(prot, address(globalSettlement), address(tokenBurner), threshold);
+        globalSettlement.addAuthorization(address(esm));
     }
 
-    function deployPause(uint delay, DSAuthority authority) public auth {
+    function deployPause(uint delay, DSAuthority authority) public isAuthorized {
         require(address(coin) != address(0), "Missing previous step");
-        require(address(end) != address(0), "Missing previous step");
+        require(address(globalSettlement) != address(0), "Missing previous step");
 
-        pause = pauseFab.newPause(delay, address(0), authority);
+        pause = pauseFactory.newPause(delay, address(0), authority);
     }
 
-    function giveControl(address usr) public auth {
+    function giveControl(address usr) public isAuthorized {
         cdpEngine.addAuthorization(address(usr));
-        cat.addAuthorization(address(usr));
-        vow.addAuthorization(address(usr));
+        liquidationEngine.addAuthorization(address(usr));
+        accountingEngine.addAuthorization(address(usr));
         taxCollector.addAuthorization(address(usr));
-        spotter.addAuthorization(address(usr));
-        flap.addAuthorization(address(usr));
-        flop.addAuthorization(address(usr));
-        end.addAuthorization(address(usr));
-        if (address(pot) != address(0)) {
-          pot.addAuthorization(address(usr));
+        oracleRelayer.addAuthorization(address(usr));
+        surplusAuctionHouse.addAuthorization(address(usr));
+        debtAuctionHouse.addAuthorization(address(usr));
+        globalSettlement.addAuthorization(address(usr));
+        if (address(coinSavingsAccount) != address(0)) {
+          coinSavingsAccount.addAuthorization(address(usr));
         }
-        if (address(vox1) != address(0)) {
-          vox1.addAuthorization(address(usr));
+        if (address(redemptionRateSetter) != address(0)) {
+          redemptionRateSetter.addAuthorization(address(usr));
+        }
+        if (address(stabilityFeeTreasury) != address(0)) {
+          stabilityFeeTreasury.addAuthorization(address(usr));
+        }
+        if (address(moneyMarketSetter) != address(0)) {
+          moneyMarketSetter.addAuthorization(address(usr));
+        }
+        if (address(settlementSurplusAuctioner) != address(0)) {
+          settlementSurplusAuctioner.addAuthorization(address(usr));
         }
     }
 
-    function takeControl(address usr) public auth {
+    function takeControl(address usr) public isAuthorized {
         cdpEngine.removeAuthorization(address(usr));
-        cat.removeAuthorization(address(usr));
-        vow.removeAuthorization(address(usr));
+        liquidationEngine.removeAuthorization(address(usr));
+        accountingEngine.removeAuthorization(address(usr));
         taxCollector.removeAuthorization(address(usr));
-        spotter.removeAuthorization(address(usr));
-        flap.removeAuthorization(address(usr));
-        flop.removeAuthorization(address(usr));
-        end.removeAuthorization(address(usr));
-        if (address(pot) != address(0)) {
-          pot.removeAuthorization(address(usr));
+        oracleRelayer.removeAuthorization(address(usr));
+        surplusAuctionHouse.removeAuthorization(address(usr));
+        debtAuctionHouse.removeAuthorization(address(usr));
+        globalSettlement.removeAuthorization(address(usr));
+        if (address(coinSavingsAccount) != address(0)) {
+          coinSavingsAccount.removeAuthorization(address(usr));
         }
-        if (address(vox1) != address(0)) {
-          vox1.removeAuthorization(address(usr));
+        if (address(redemptionRateSetter) != address(0)) {
+          redemptionRateSetter.removeAuthorization(address(usr));
+        }
+        if (address(stabilityFeeTreasury) != address(0)) {
+          stabilityFeeTreasury.removeAuthorization(address(usr));
+        }
+        if (address(moneyMarketSetter) != address(0)) {
+          moneyMarketSetter.removeAuthorization(address(usr));
+        }
+        if (address(settlementSurplusAuctioner) != address(0)) {
+          settlementSurplusAuctioner.removeAuthorization(address(usr));
         }
     }
 
-    function deployCollateral(bytes32 ilk, address adapter, address pip, uint cut) public auth {
-        require(ilk != bytes32(""), "Missing ilk name");
+    function addAuthToCollateralAuctionHouse(bytes32 collateralType, address usr) public isAuthorized {
+        require(address(collateralTypes[collateralType].collateralAuctionHouse) != address(0), "CollateralAuctionHouse not initialized");
+        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(usr);
+    }
+
+    function releaseAuthCollateralAuctionHouse(bytes32 collateralType, address usr) public isAuthorized {
+        collateralTypes[collateralType].collateralAuctionHouse.removeAuthorization(usr);
+    }
+
+    function deployCollateral(
+      bytes32 collateralType, address adapter, address orcl, uint bidToMarketPriceRatio
+    ) public isAuthorized {
+        require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
-        require(pip != address(0), "Missing PIP address");
+        require(orcl != address(0), "Missing PIP address");
 
         // Deploy
-        ilks[ilk].flip = flipFab.newFlip(address(cdpEngine), ilk);
-        ilks[ilk].adapter = adapter;
-        Spotter(spotter).modifyParameters(ilk, "pip", address(pip)); // Set pip
+        collateralTypes[collateralType].collateralAuctionHouse =
+          collateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+        collateralTypes[collateralType].adapter = adapter;
+        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(orcl));
 
         // Internal references set up
-        cat.modifyParameters(ilk, "flip", address(ilks[ilk].flip));
-        cdpEngine.initializeCollateralType(ilk);
-        taxCollector.initializeCollateralType(ilk);
+        liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].collateralAuctionHouse));
+        cdpEngine.initializeCollateralType(collateralType);
+        taxCollector.initializeCollateralType(collateralType);
 
         // Internal auth
         cdpEngine.addAuthorization(adapter);
-        ilks[ilk].flip.addAuthorization(address(cat));
-        ilks[ilk].flip.addAuthorization(address(end));
+        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(address(liquidationEngine));
+        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(address(globalSettlement));
 
         // Set bid restrictions
-        Flipper(address(ilks[ilk].flip)).modifyParameters("cut", cut);
-        Flipper(address(ilks[ilk].flip)).modifyParameters("spot", address(spotter));
-        Flipper(address(ilks[ilk].flip)).modifyParameters("feed", address(pip));
+        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
+        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("oracleRelayer", address(oracleRelayer));
+        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("orcl", address(orcl));
     }
 
-    function relyOnCdpManager(address cdpManager) public auth {
-        cdpEngine.addAuthorization(cdpManager);
-    }
-
-    function addAuthToFlip(bytes32 ilk, address usr) public auth {
-        require(address(ilks[ilk].flip) != address(0), "Flip not initialized");
-        ilks[ilk].flip.addAuthorization(usr);
-    }
-
-    function releaseAuth() public auth {
+    function releaseAuth() public isAuthorized {
         cdpEngine.removeAuthorization(address(this));
-        cat.removeAuthorization(address(this));
-        vow.removeAuthorization(address(this));
+        liquidationEngine.removeAuthorization(address(this));
+        accountingEngine.removeAuthorization(address(this));
         taxCollector.removeAuthorization(address(this));
         coin.removeAuthorization(address(this));
-        spotter.removeAuthorization(address(this));
-        flap.removeAuthorization(address(this));
-        flop.removeAuthorization(address(this));
-        end.removeAuthorization(address(this));
-        if (address(pot) != address(0)) {
-          pot.removeAuthorization(address(this));
+        oracleRelayer.removeAuthorization(address(this));
+        surplusAuctionHouse.removeAuthorization(address(this));
+        debtAuctionHouse.removeAuthorization(address(this));
+        globalSettlement.removeAuthorization(address(this));
+        if (address(coinSavingsAccount) != address(0)) {
+          coinSavingsAccount.removeAuthorization(address(this));
         }
-        if (address(vox1) != address(0)) {
-          vox1.removeAuthorization(address(this));
+        if (address(redemptionRateSetter) != address(0)) {
+          redemptionRateSetter.removeAuthorization(address(this));
+        }
+        if (address(stabilityFeeTreasury) != address(0)) {
+          stabilityFeeTreasury.removeAuthorization(address(address(this)));
+        }
+        if (address(moneyMarketSetter) != address(0)) {
+          moneyMarketSetter.removeAuthorization(address(address(this)));
+        }
+        if (address(settlementSurplusAuctioner) != address(0)) {
+          settlementSurplusAuctioner.removeAuthorization(address(address(this)));
         }
     }
 
-    function addCreatorAuth() public auth {
+    function addCreatorAuth() public isAuthorized {
         cdpEngine.addAuthorization(msg.sender);
-    }
-
-    function releaseAuthFlip(bytes32 ilk) public auth {
-        ilks[ilk].flip.removeAuthorization(address(this));
     }
 }
