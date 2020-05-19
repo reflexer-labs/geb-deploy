@@ -400,7 +400,7 @@ contract GebDeploy is DSAuth, Logging {
         coinSavingsAccount.addAuthorization(address(moneyMarketSetter));
     }
 
-    function deployAuctions(address prot, address bin) public auth {
+    function deployAuctions(address prot) public auth {
         require(prot != address(0), "Missing PROT address");
         require(address(taxCollector) != address(0), "Missing previous step");
         require(address(coin) != address(0), "Missing COIN address");
@@ -416,13 +416,16 @@ contract GebDeploy is DSAuth, Logging {
     function deployAccountingEngine() public auth {
         accountingEngine = accountingEngineFactory.newAccountingEngine(address(cdpEngine), address(surplusAuctionHouse), address(debtAuctionHouse));
 
+        // Setup
+        debtAuctionHouse.modifyParameters("accountingEngine", address(accountingEngine));
+        taxCollector.modifyParameters("accountingEngine", address(accountingEngine));
+
+        // Internal auth
         surplusAuctionHouse.addAuthorization(address(accountingEngine));
         debtAuctionHouse.addAuthorization(address(accountingEngine));
-
-        taxCollector.modifyParameters("accountingEngine", address(accountingEngine));
     }
 
-    function deployStabilityFeeTreasury(uint surplusTransferDelay) public auth {
+    function deployStabilityFeeTreasury() public auth {
         require(address(cdpEngine) != address(0), "Missing previous step");
         require(address(accountingEngine) != address(0), "Missing previous step");
         require(address(coinJoin) != address(0), "Missing previous step");
@@ -432,7 +435,7 @@ contract GebDeploy is DSAuth, Logging {
           address(cdpEngine),
           address(accountingEngine),
           address(coinJoin),
-          surplusTransferDelay
+          0
         );
     }
 

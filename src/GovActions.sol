@@ -67,8 +67,8 @@ contract GovActions {
         Setter(targetContract).initializeCollateralType(collateralType);
     }
 
-    function shutdownSystem(address end) public {
-        GlobalSettlementLike(end).shutdownSystem();
+    function shutdownSystem(address globalSettlement) public {
+        GlobalSettlementLike(globalSettlement).shutdownSystem();
     }
 
     function setAuthority(address pause, address newAuthority) public {
