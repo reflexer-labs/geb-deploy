@@ -630,6 +630,14 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(oracleRelayer.authorizedAccounts(address(pause.proxy())), 1);
 
+        // stabilityFeeTreasury
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
+
+        // settlementSurplusAuctioner
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(pause.proxy())), 1);
+
         // surplusAuctionHouse
         assertEq(surplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(surplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
@@ -675,6 +683,8 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 0);
     }
 
     function testStableAuth() public {
@@ -707,6 +717,22 @@ contract GebDeployTest is GebDeployTestBase {
         // coinSavingsAccount
         assertEq(coinSavingsAccount.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(coinSavingsAccount.authorizedAccounts(address(pause.proxy())), 1);
+
+        // stabilityFeeTreasury
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
+
+        // settlementSurplusAuctioner
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(pause.proxy())), 1);
+
+        // moneyMarketSetter
+        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(moneyMarketSetter.authorizedAccounts(address(pause.proxy())), 1);
+
+        // emergencyRateSetter
+        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(emergencyRateSetter.authorizedAccounts(address(pause.proxy())), 1);
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
@@ -760,5 +786,9 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 0);
     }
 }

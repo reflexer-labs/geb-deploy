@@ -27,232 +27,231 @@ let
   packageSpecs = mapAttrs (_: package);
 
   specs = rec {
-    ds-auth_f783169 = rec {
+    ds-auth_434bf46 = rec {
       name = "ds-auth";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-auth-f783169-source";
+        name = "ds-auth-434bf46-source";
         url = "https://github.com/dapphub/ds-auth";
-        rev = "f783169408c278f85e26d77ba7b45823ed9503dd";
+        rev = "434bf463b255ecc2157b9c671139f6c617795ebf";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-chief_ea05ee0 = rec {
+    ds-chief_73e6889 = rec {
       name = "ds-chief";
       deps = {
-        ds-roles = ds-roles_0138372;
-        ds-test = ds-test_a4e4005;
-        ds-thing = ds-thing_5e49fcb;
-        ds-token = ds-token_cee36a1;
+        ds-roles = ds-roles_dbd4c1a;
+        ds-test = ds-test_eb7148d;
+        ds-thing = ds-thing_98c26fb;
+        ds-token = ds-token_8943920;
       };
       repo' = {
-        name = "ds-chief-ea05ee0-source";
+        name = "ds-chief-73e6889-source";
         url = "https://github.com/dapphub/ds-chief";
-        rev = "ea05ee0413a8b3852142664a6c04d6e4923be426";
+        rev = "73e6889a1335b386d0b642d1439a29084d01df4d";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-exec_c53aab4 = rec {
+    ds-exec_2acecab = rec {
       name = "ds-exec";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-exec-c53aab4-source";
+        name = "ds-exec-2acecab-source";
         url = "https://github.com/dapphub/ds-exec";
-        rev = "c53aab4ba91645b30b0644972ef016b5ee606ca8";
+        rev = "2acecab8404bb0215ce595ff606c8c663eedd89f";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-guard_4678e1c = rec {
+    ds-guard_12461a5 = rec {
       name = "ds-guard";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-test = ds-test_a4e4005;
+        ds-auth = ds-auth_434bf46;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-guard-4678e1c-source";
+        name = "ds-guard-12461a5-source";
         url = "https://github.com/dapphub/ds-guard";
-        rev = "4678e1c74fce1542f1379f11325d7bfbbb897344";
+        rev = "12461a5282ee7316525d490da83a351209eb0b20";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-math_784079b = rec {
+    ds-math_bd110d4 = rec {
       name = "ds-math";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-math-784079b-source";
+        name = "ds-math-bd110d4-source";
         url = "https://github.com/dapphub/ds-math";
-        rev = "784079b72c4d782b022b3e893a7c5659aa35971a";
+        rev = "bd110d4bd7572637a5947aca0647e933b1332cd8";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-note_beef816 = rec {
+    ds-note_c673c9d = rec {
       name = "ds-note";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-note-beef816-source";
+        name = "ds-note-c673c9d-source";
         url = "https://github.com/dapphub/ds-note";
-        rev = "beef8166f2184a4bac3d02abdb944647fd735060";
+        rev = "c673c9d1a1464e973db4489221e22dc5b9b02319";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-pause_f43edc1 = rec {
+    ds-pause_53700f6 = rec {
       name = "ds-pause";
       deps = {
-        ds-chief = ds-chief_ea05ee0;
-        ds-proxy = ds-proxy_379f5e2;
-        ds-spell = ds-spell_c908b78;
-        ds-test = ds-test_a4e4005;
-        ds-token = ds-token_cee36a1;
+        ds-chief = ds-chief_73e6889;
+        ds-proxy = ds-proxy_4299be4;
+        ds-spell = ds-spell_1324209;
+        ds-test = ds-test_eb7148d;
+        ds-token = ds-token_8943920;
       };
       repo' = {
-        name = "ds-pause-f43edc1-source";
+        name = "ds-pause-53700f6-source";
         url = "https://github.com/dapphub/ds-pause";
-        rev = "f43edc1c0305b3210cdd7ad524f9639a70da371c";
+        rev = "53700f6fb648911ab18ac080e97c5dfd2aa03f2e";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-proxy_379f5e2 = rec {
+    ds-proxy_4299be4 = rec {
       name = "ds-proxy";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-note = ds-note_beef816;
-        ds-test = ds-test_a4e4005;
+        ds-auth = ds-auth_434bf46;
+        ds-note = ds-note_c673c9d;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-proxy-379f5e2-source";
+        name = "ds-proxy-4299be4-source";
         url = "https://github.com/dapphub/ds-proxy";
-        rev = "379f5e2fc0a6ed5a7a96d3f211cc5ed8761baf00";
+        rev = "4299be40d5a76c02e690db055281d476a460a38b";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-roles_0138372 = rec {
+    ds-roles_dbd4c1a = rec {
       name = "ds-roles";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-test = ds-test_a4e4005;
+        ds-auth = ds-auth_434bf46;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-roles-0138372-source";
+        name = "ds-roles-dbd4c1a-source";
         url = "https://github.com/dapphub/ds-roles";
-        rev = "01383725a4240000c0e274e55bdcf251570fd486";
+        rev = "dbd4c1a4f5aa2d64598fff69a12f773e2b4f4fa6";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-spell_c908b78 = rec {
+    ds-spell_1324209 = rec {
       name = "ds-spell";
       deps = {
-        ds-exec = ds-exec_c53aab4;
-        ds-note = ds-note_beef816;
-        ds-test = ds-test_a4e4005;
+        ds-exec = ds-exec_2acecab;
+        ds-note = ds-note_c673c9d;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-spell-c908b78-source";
+        name = "ds-spell-1324209-source";
         url = "https://github.com/dapphub/ds-spell";
-        rev = "c908b7807f08661b4eca97adff6d9561d0116244";
+        rev = "1324209fff044e232c1279f9a292e6a488e58793";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-stop_6e2bda6 = rec {
+    ds-stop_d7fe123 = rec {
       name = "ds-stop";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-note = ds-note_beef816;
+        ds-auth = ds-auth_434bf46;
+        ds-note = ds-note_c673c9d;
         ds-test = ds-test_a4e4005;
       };
       repo' = {
-        name = "ds-stop-6e2bda6-source";
+        name = "ds-stop-d7fe123-source";
         url = "https://github.com/dapphub/ds-stop";
-        rev = "6e2bda69cb3cbf25a475491d9bc22969adb05993";
+        rev = "d7fe123558df655caa60e3d6c5f4bf8430d394ae";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-test_a4e4005 = rec {
+    ds-test_eb7148d = rec {
       name = "ds-test";
-      deps = {
-      };
+      deps = {};
       repo' = {
-        name = "ds-test-a4e4005-source";
+        name = "ds-test-eb7148d-source";
         url = "https://github.com/dapphub/ds-test";
-        rev = "a4e40050b809705b15867939f5829540c50cb84f";
+        rev = "eb7148d43c1ca6f9890361e2e2378364af2430ba";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-thing_5e49fcb = rec {
+    ds-thing_98c26fb = rec {
       name = "ds-thing";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-math = ds-math_784079b;
-        ds-note = ds-note_beef816;
-        ds-test = ds-test_a4e4005;
+        ds-auth = ds-auth_434bf46;
+        ds-math = ds-math_bd110d4;
+        ds-note = ds-note_c673c9d;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "ds-thing-5e49fcb-source";
+        name = "ds-thing-98c26fb-source";
         url = "https://github.com/dapphub/ds-thing";
-        rev = "5e49fcbdf4ef8ccd241423ed114576f51c42f1e0";
+        rev = "98c26fb5e6b09cd91eeec237bc18b9a0d7cce5dd";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-token_cee36a1 = rec {
+    ds-token_8943920 = rec {
       name = "ds-token";
       deps = {
-        ds-math = ds-math_784079b;
-        ds-stop = ds-stop_6e2bda6;
-        ds-test = ds-test_a4e4005;
+        ds-math = ds-math_bd110d4;
+        ds-stop = ds-stop_d7fe123;
+        ds-test = ds-test_eb7148d;
         erc20 = erc20_f322aac;
       };
       repo' = {
-        name = "ds-token-cee36a1-source";
+        name = "ds-token-8943920-source";
         url = "https://github.com/dapphub/ds-token";
-        rev = "cee36a14685b3f93ffa0332853d3fcd943fe96a5";
+        rev = "8943920eedbf35853c45167403dc4e5620be16aa";
         ref = "HEAD";
       };
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    ds-value_f307171 = rec {
+    ds-value_0bc3c89 = rec {
       name = "ds-value";
       deps = {
-        ds-test = ds-test_a4e4005;
-        ds-thing = ds-thing_5e49fcb;
+        ds-test = ds-test_eb7148d;
+        ds-thing = ds-thing_98c26fb;
       };
       repo' = {
-        name = "ds-value-f307171-source";
+        name = "ds-value-0bc3c89-source";
         url = "https://github.com/dapphub/ds-value";
-        rev = "f3071713afbd583991637f8cfab5e0d29466dffd";
+        rev = "0bc3c89b3f503c5134649456102e442cf8c9a0a8";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -261,7 +260,7 @@ let
     ds-weth_b5819d1 = rec {
       name = "ds-weth";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
         erc20 = erc20_f322aac;
       };
       repo' = {
@@ -273,15 +272,15 @@ let
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    geb_4799302 = rec {
+    geb_f320178 = rec {
       name = "geb";
       deps = {
-        ds-test = ds-test_a4e4005;
+        ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "geb-4799302-source";
+        name = "geb-f320178-source";
         url = "https://github.com/reflexer-labs/geb";
-        rev = "4799302a8bb36dd95e8e5b2ed7a6f6727f6636bc";
+        rev = "f3201787816f70bc0f7d238dc42f1d446b82968a";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -300,16 +299,16 @@ let
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    esm_46bffa2 = rec {
+    esm_40e3b5a = rec {
       name = "esm";
       deps = {
-        ds-test = ds-test_a4e4005;
-        ds-token = ds-token_cee36a1;
+        ds-test = ds-test_eb7148d;
+        ds-token = ds-token_8943920;
       };
       repo' = {
-        name = "esm-46bffa2-source";
+        name = "esm-40e3b5a-source";
         url = "https://github.com/reflexer-labs/esm";
-        rev = "46bffa249a770cec9cefe40abb6eb81f0a1bb682";
+        rev = "40e3b5ae1ae02641599bdf9bed8e3ec02743dfd8";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -318,15 +317,15 @@ let
     geb-deploy = rec {
       name = "geb-deploy";
       deps = {
-        ds-auth = ds-auth_f783169;
-        ds-guard = ds-guard_4678e1c;
-        ds-pause = ds-pause_f43edc1;
-        ds-roles = ds-roles_0138372;
-        ds-test = ds-test_a4e4005;
-        ds-token = ds-token_cee36a1;
+        ds-auth = ds-auth_434bf46;
+        ds-guard = ds-guard_12461a5;
+        ds-pause = ds-pause_53700f6;
+        ds-roles = ds-roles_dbd4c1a;
+        ds-test = ds-test_eb7148d;
+        ds-token = ds-token_8943920;
         ds-weth = ds-weth_b5819d1;
-        geb = geb_4799302;
-        esm = esm_46bffa2;
+        geb = geb_f320178;
+        esm = esm_40e3b5a;
       };
       src' = ../.;
       src = ../src;
