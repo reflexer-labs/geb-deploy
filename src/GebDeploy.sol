@@ -473,6 +473,8 @@ contract GebDeploy is DSAuth, Logging {
         globalSettlement = globalSettlementFactory.newGlobalSettlement();
 
         // Internal references set up
+        surplusAuctionHouse.modifyParameters("globalSettlement", address(globalSettlement));
+
         globalSettlement.modifyParameters("cdpEngine", address(cdpEngine));
         globalSettlement.modifyParameters("liquidationEngine", address(liquidationEngine));
         globalSettlement.modifyParameters("accountingEngine", address(accountingEngine));

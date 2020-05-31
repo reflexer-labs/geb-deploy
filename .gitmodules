@@ -22,9 +22,9 @@
 [submodule "lib/ds-value"]
 	path = lib/ds-value
 	url = https://github.com/reflexer-labs/ds-value.git
-[submodule "lib/geb"]
-	path = lib/geb
-	url = https://github.com/reflexer-labs/geb.git
 [submodule "lib/geb-redemption-feedback-mechanism"]
 	path = lib/geb-redemption-feedback-mechanism
 	url = https://github.com/reflexer-labs/geb-redemption-feedback-mechanism.git
+[submodule "lib/geb"]
+	path = lib/geb
+	url = https://github.com/reflexer-labs/geb.git
