@@ -272,15 +272,15 @@ let
       src' = fetchGit repo';
       src = "${src'}/src";
     };
-    geb_88c82bd = rec {
+    geb_f13158d = rec {
       name = "geb";
       deps = {
         ds-test = ds-test_eb7148d;
       };
       repo' = {
-        name = "geb-88c82bd-source";
+        name = "geb-f13158d-source";
         url = "https://github.com/reflexer-labs/geb";
-        rev = "88c82bd65d51a6bc28c075dab66e2ed60edf9e75";
+        rev = "f13158d4db4e0b7c3ef8cd576160fc249d8fafd9";
         ref = "HEAD";
       };
       src' = fetchGit repo';
@@ -324,7 +324,7 @@ let
         ds-test = ds-test_eb7148d;
         ds-token = ds-token_8943920;
         ds-weth = ds-weth_b5819d1;
-        geb = geb_88c82bd;
+        geb = geb_f13158d;
         esm = esm_40e3b5a;
       };
       src' = ../.;
