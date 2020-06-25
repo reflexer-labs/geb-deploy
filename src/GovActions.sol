@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.6.7;
 
 contract Setter {
     function modifyParameters(bytes32, address) public;

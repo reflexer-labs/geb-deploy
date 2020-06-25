@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.6.7;
 
 import {DSTest} from "ds-test/test.sol";
 import {DSToken} from "ds-token/token.sol";
@@ -11,18 +11,18 @@ import "./GebDeploy.sol";
 import {CollateralJoin} from "./AdvancedTokenAdapters.sol";
 import {GovActions} from "./GovActions.sol";
 
-contract Hevm {
-    function warp(uint256) public;
+abstract contract Hevm {
+    function warp(uint256) virtual public;
 }
 
-contract AuctionLike {
-    function increaseBidSize(uint, uint, uint) public;
-    function decreaseSoldAmount(uint, uint, uint) public;
-    function settleAuction(uint) public;
+abstract contract AuctionLike {
+    function increaseBidSize(uint, uint, uint) virtual public;
+    function decreaseSoldAmount(uint, uint, uint) virtual public;
+    function settleAuction(uint) virtual public;
 }
 
-contract CDPApprovalLike {
-    function approveCDPModification(address guy) public;
+abstract contract CDPApprovalLike {
+    function approveCDPModification(address guy) virtual public;
 }
 
 contract FakeUser {
@@ -81,7 +81,7 @@ contract FakeUser {
         ESM(esm).burnTokens(wad);
     }
 
-    function() external payable {}
+    receive() external payable {}
 }
 
 contract ProxyActions {
@@ -182,25 +182,26 @@ contract ProxyActions {
 contract GebDeployTestBase is DSTest, ProxyActions {
     Hevm hevm;
 
-    CDPEngineFactory                  cdpEngineFactory;
-    TaxCollectorFactory               taxCollectorFactory;
-    AccountingEngineFactory           accountingEngineFactory;
-    LiquidationEngineFactory          liquidationEngineFactory;
-    StabilityFeeTreasuryFactory       stabilityFeeTreasuryFactory;
-    CoinFactory                       coinFactory;
-    CoinJoinFactory                   coinJoinFactory;
-    SurplusAuctionHouseFactory        surplusAuctionHouseFactory;
-    DebtAuctionHouseFactory           debtAuctionHouseFactory;
-    CollateralAuctionHouseFactory     collateralAuctionHouseFactory;
-    OracleRelayerFactory              oracleRelayerFactory;
-    GlobalSettlementFactory           globalSettlementFactory;
-    RedemptionRateSetterFactory       redemptionRateSetterFactory;
-    EmergencyRateSetterFactory        emergencyRateSetterFactory;
-    MoneyMarketSetterFactory          moneyMarketSetterFactory;
-    ESMFactory                        esmFactory;
-    CoinSavingsAccountFactory         coinSavingsAccountFactory;
-    SettlementSurplusAuctionerFactory settlementSurplusAuctionerFactory;
-    PauseFactory                      pauseFactory;
+    CDPEngineFactory                         cdpEngineFactory;
+    TaxCollectorFactory                      taxCollectorFactory;
+    AccountingEngineFactory                  accountingEngineFactory;
+    LiquidationEngineFactory                 liquidationEngineFactory;
+    StabilityFeeTreasuryFactory              stabilityFeeTreasuryFactory;
+    CoinFactory                              coinFactory;
+    CoinJoinFactory                          coinJoinFactory;
+    PreSettlementSurplusAuctionHouseFactory  preSettlementSurplusAuctionHouseFactory;
+    PostSettlementSurplusAuctionHouseFactory postSettlementSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                  debtAuctionHouseFactory;
+    CollateralAuctionHouseFactory            collateralAuctionHouseFactory;
+    OracleRelayerFactory                     oracleRelayerFactory;
+    GlobalSettlementFactory                  globalSettlementFactory;
+    RedemptionRateSetterFactory              redemptionRateSetterFactory;
+    EmergencyRateSetterFactory               emergencyRateSetterFactory;
+    MoneyMarketSetterFactory                 moneyMarketSetterFactory;
+    ESMFactory                               esmFactory;
+    CoinSavingsAccountFactory                coinSavingsAccountFactory;
+    SettlementSurplusAuctioneerFactory       settlementSurplusAuctioneerFactory;
+    PauseFactory                             pauseFactory;
 
     GebDeploy gebDeploy;
 
@@ -215,23 +216,24 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CollateralJoin ethJoin;
     CollateralJoin colJoin;
 
-    CDPEngine                     cdpEngine;
-    TaxCollector                  taxCollector;
-    AccountingEngine              accountingEngine;
-    LiquidationEngine             liquidationEngine;
-    StabilityFeeTreasury          stabilityFeeTreasury;
-    Coin                          coin;
-    CoinJoin                      coinJoin;
-    SurplusAuctionHouseOne        surplusAuctionHouse;
-    DebtAuctionHouse              debtAuctionHouse;
-    OracleRelayer                 oracleRelayer;
-    RedemptionRateSetter          redemptionRateSetter;
-    EmergencyRateSetter           emergencyRateSetter;
-    MoneyMarketSetter             moneyMarketSetter;
-    CoinSavingsAccount            coinSavingsAccount;
-    GlobalSettlement              globalSettlement;
-    SettlementSurplusAuctioner    settlementSurplusAuctioner;
-    ESM                           esm;
+    CDPEngine                         cdpEngine;
+    TaxCollector                      taxCollector;
+    AccountingEngine                  accountingEngine;
+    LiquidationEngine                 liquidationEngine;
+    StabilityFeeTreasury              stabilityFeeTreasury;
+    Coin                              coin;
+    CoinJoin                          coinJoin;
+    PreSettlementSurplusAuctionHouse  preSettlementSurplusAuctionHouse;
+    PostSettlementSurplusAuctionHouse postSettlementSurplusAuctionHouse;
+    DebtAuctionHouse                  debtAuctionHouse;
+    OracleRelayer                     oracleRelayer;
+    RedemptionRateSetter              redemptionRateSetter;
+    EmergencyRateSetter               emergencyRateSetter;
+    MoneyMarketSetter                 moneyMarketSetter;
+    CoinSavingsAccount                coinSavingsAccount;
+    GlobalSettlement                  globalSettlement;
+    SettlementSurplusAuctioneer       settlementSurplusAuctioneer;
+    ESM                               esm;
 
     CollateralAuctionHouse ethCollateralAuctionHouse;
 
@@ -261,7 +263,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         liquidationEngineFactory = new LiquidationEngineFactory();
         coinFactory = new CoinFactory();
         coinJoinFactory = new CoinJoinFactory();
-        surplusAuctionHouseFactory = new SurplusAuctionHouseFactory();
+        preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseOneFactory();
+        postSettlementSurplusAuctionHouseFactory = new PostSettlementSurplusAuctionHouseOneFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         collateralAuctionHouseFactory = new CollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
@@ -269,7 +272,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         emergencyRateSetterFactory = new EmergencyRateSetterFactory();
         moneyMarketSetterFactory = new MoneyMarketSetterFactory();
         stabilityFeeTreasuryFactory = new StabilityFeeTreasuryFactory();
-        settlementSurplusAuctionerFactory = new SettlementSurplusAuctionerFactory();
+        settlementSurplusAuctioneerFactory = new SettlementSurplusAuctioneerFactory();
         globalSettlementFactory = new GlobalSettlementFactory();
         pauseFactory = new PauseFactory();
         govActions = new GovActions();
@@ -286,21 +289,22 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           coinFactory,
           coinJoinFactory,
           coinSavingsAccountFactory,
-          settlementSurplusAuctionerFactory
+          settlementSurplusAuctioneerFactory
         );
 
         gebDeploy.setSecondFactoryBatch(
-          surplusAuctionHouseFactory,
+          preSettlementSurplusAuctionHouseFactory,
+          postSettlementSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
           collateralAuctionHouseFactory,
           oracleRelayerFactory,
           redemptionRateSetterFactory,
           globalSettlementFactory,
-          esmFactory,
-          pauseFactory
+          esmFactory
         );
 
         gebDeploy.setThirdFactoryBatch(
+          pauseFactory,
           emergencyRateSetterFactory,
           moneyMarketSetterFactory,
           stabilityFeeTreasuryFactory
@@ -335,7 +339,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
-        gebDeploy.deploySettlementSurplusAuctioner();
+        gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
@@ -344,7 +348,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
-        surplusAuctionHouse = gebDeploy.surplusAuctionHouse();
+        preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
+        postSettlementSurplusAuctionHouse = gebDeploy.postSettlementSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coin = gebDeploy.coin();
         coinJoin = gebDeploy.coinJoin();
@@ -353,7 +358,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         esm = gebDeploy.esm();
         pause = gebDeploy.pause();
         redemptionRateSetter = gebDeploy.redemptionRateSetter();
-        settlementSurplusAuctioner = gebDeploy.settlementSurplusAuctioner();
+        settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
         authority.setRootUser(address(pause.proxy()), true);
@@ -409,7 +414,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
-        gebDeploy.deploySettlementSurplusAuctioner();
+        gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
@@ -418,7 +423,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
-        surplusAuctionHouse = gebDeploy.surplusAuctionHouse();
+        preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
+        postSettlementSurplusAuctionHouse = gebDeploy.postSettlementSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coinSavingsAccount = gebDeploy.coinSavingsAccount();
         coin = gebDeploy.coin();
@@ -429,7 +435,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         pause = gebDeploy.pause();
         emergencyRateSetter = gebDeploy.emergencyRateSetter();
         moneyMarketSetter = gebDeploy.moneyMarketSetter();
-        settlementSurplusAuctioner = gebDeploy.settlementSurplusAuctioner();
+        settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
         authority.setRootUser(address(pause.proxy()), true);
@@ -501,5 +507,5 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.releaseAuth();
     }
 
-    function() external payable {}
+    receive() external payable {}
 }

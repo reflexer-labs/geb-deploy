@@ -1,4 +1,4 @@
-/// ComplexTokenAdapters.sol
+/// AdvancedTokenAdapters.sol
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
@@ -15,19 +15,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.15;
+pragma solidity ^0.6.7;
 
 import "geb/Logging.sol";
 
-contract CDPEngineLike {
-    function modifyCollateralBalance(bytes32,address,int) public;
+abstract contract CDPEngineLike {
+    function modifyCollateralBalance(bytes32,address,int) virtual public;
 }
 
 // CollateralJoin1
-contract CollateralLike {
-    function decimals() public view returns (uint);
-    function transfer(address,uint) public returns (bool);
-    function transferFrom(address,address,uint) public returns (bool);
+abstract contract CollateralLike {
+    function decimals() virtual public view returns (uint);
+    function transfer(address,uint) virtual public returns (bool);
+    function transferFrom(address,address,uint) virtual public returns (bool);
 }
 
 contract CollateralJoin is Logging {
@@ -95,12 +95,12 @@ contract CollateralJoin is Logging {
 // For a token that does not return a bool on transfer or transferFrom (like OMG)
 // This is one way of doing it. Check the balances before and after calling a transfer
 
-contract CollateralLike2 {
-    function decimals() public view returns (uint);
-    function transfer(address,uint) public;
-    function transferFrom(address,address,uint) public;
-    function balanceOf(address) public view returns (uint);
-    function allowance(address,address) public view returns (uint);
+abstract contract CollateralLike2 {
+    function decimals() virtual public view returns (uint);
+    function transfer(address,uint) virtual public;
+    function transferFrom(address,address,uint) virtual public;
+    function balanceOf(address) virtual public view returns (uint);
+    function allowance(address,address) virtual public view returns (uint);
 }
 
 contract CollateralJoin2 is Logging {
@@ -194,9 +194,9 @@ contract CollateralJoin2 is Logging {
 // CollateralJoin3
 // For a token that has a lower precision than 18 and doesn't have decimals field in place
 
-contract CollateralLike3 {
-    function transfer(address,uint) public returns (bool);
-    function transferFrom(address,address,uint) public returns (bool);
+abstract contract CollateralLike3 {
+    function transfer(address,uint) virtual public returns (bool);
+    function transferFrom(address,address,uint) virtual public returns (bool);
 }
 
 contract CollateralJoin3 is Logging {
@@ -287,10 +287,10 @@ contract CollateralJoin3 is Logging {
 // tokens to it, and then call `CollateralJoin4.join`, which transfer the collateral from the
 // bag to the adapter.
 
-contract CollateralLike4 {
-    function decimals() public view returns (uint);
-    function balanceOf(address) public returns (uint256);
-    function transfer(address, uint256) public returns (bool);
+abstract contract CollateralLike4 {
+    function decimals() virtual public view returns (uint);
+    function balanceOf(address) virtual public returns (uint256);
+    function transfer(address, uint256) virtual public returns (bool);
 }
 
 contract GemBag {
@@ -376,10 +376,10 @@ contract CollateralJoin4 is Logging {
 
 // CollateralLike5
 // For a token that has a lower precision than 18 and it has decimals (like USDC)
-contract CollateralLike5 {
-    function decimals() public view returns (uint8);
-    function transfer(address,uint) public returns (bool);
-    function transferFrom(address,address,uint) public returns (bool);
+abstract contract CollateralLike5 {
+    function decimals() virtual public view returns (uint8);
+    function transfer(address,uint) virtual public returns (bool);
+    function transferFrom(address,address,uint) virtual public returns (bool);
 }
 
 contract CollateralJoin5 is Logging {

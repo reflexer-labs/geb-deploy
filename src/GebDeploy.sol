@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.5.15;
+pragma solidity ^0.6.7;
 
 import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
 import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
@@ -30,11 +30,11 @@ import {TaxCollector} from "geb/TaxCollector.sol";
 import {AccountingEngine} from "geb/AccountingEngine.sol";
 import {LiquidationEngine} from "geb/LiquidationEngine.sol";
 import {CoinJoin} from "geb/BasicTokenAdapters.sol";
-import {SurplusAuctionHouseOne} from "geb/SurplusAuctionHouse.sol";
+import {PreSettlementSurplusAuctionHouse, PostSettlementSurplusAuctionHouse} from "geb/SurplusAuctionHouse.sol";
 import {DebtAuctionHouse} from "geb/DebtAuctionHouse.sol";
 import {CollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
 import {Coin} from "geb/Coin.sol";
-import {SettlementSurplusAuctioner} from "geb/SettlementSurplusAuctioner.sol";
+import {SettlementSurplusAuctioneer} from "geb/SettlementSurplusAuctioneer.sol";
 import {GlobalSettlement} from "geb/GlobalSettlement.sol";
 import {ESM} from "esm/ESM.sol";
 import {StabilityFeeTreasury} from "geb/StabilityFeeTreasury.sol";
@@ -88,21 +88,29 @@ contract CoinJoinFactory {
     }
 }
 
-contract SurplusAuctionHouseFactory {
-    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (SurplusAuctionHouseOne surplusAuctionHouse) {
-        surplusAuctionHouse = new SurplusAuctionHouseOne(cdpEngine, prot);
+contract PreSettlementSurplusAuctionHouseFactory {
+    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (PreSettlementSurplusAuctionHouse surplusAuctionHouse) {
+        surplusAuctionHouse = new PreSettlementSurplusAuctionHouse(cdpEngine, prot);
         surplusAuctionHouse.addAuthorization(msg.sender);
         surplusAuctionHouse.removeAuthorization(address(this));
     }
 }
 
-contract SettlementSurplusAuctionerFactory {
-    function newSettlementSurplusAuctioner(
+contract PostSettlementSurplusAuctionHouseFactory {
+    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (PostSettlementSurplusAuctionHouse surplusAuctionHouse) {
+        surplusAuctionHouse = new SurplusAuctionHouseTwo(cdpEngine, prot);
+        surplusAuctionHouse.addAuthorization(msg.sender);
+        surplusAuctionHouse.removeAuthorization(address(this));
+    }
+}
+
+contract SettlementSurplusAuctioneerFactory {
+    function newSettlementSurplusAuctioneer(
       address accountingEngine
-    ) public returns (SettlementSurplusAuctioner settlementSurplusAuctioner) {
-        settlementSurplusAuctioner = new SettlementSurplusAuctioner(accountingEngine);
-        settlementSurplusAuctioner.addAuthorization(msg.sender);
-        settlementSurplusAuctioner.removeAuthorization(address(this));
+    ) public returns (SettlementSurplusAuctioneer settlementSurplusAuctioneer) {
+        settlementSurplusAuctioneer = new SettlementSurplusAuctioneer(accountingEngine);
+        settlementSurplusAuctioneer.addAuthorization(msg.sender);
+        settlementSurplusAuctioneer.removeAuthorization(address(this));
     }
 }
 
@@ -168,10 +176,9 @@ contract StabilityFeeTreasuryFactory {
     function newStabilityFeeTreasury(
       address cdpEngine,
       address accountingEngine,
-      address coinJoin,
-      uint surplusTransferDelay
+      address coinJoin
     ) public returns (StabilityFeeTreasury stabilityFeeTreasury) {
-        stabilityFeeTreasury = new StabilityFeeTreasury(cdpEngine, accountingEngine, coinJoin, surplusTransferDelay);
+        stabilityFeeTreasury = new StabilityFeeTreasury(cdpEngine, accountingEngine, coinJoin);
         stabilityFeeTreasury.addAuthorization(msg.sender);
         stabilityFeeTreasury.removeAuthorization(address(this));
     }
@@ -200,44 +207,46 @@ contract PauseFactory {
 }
 
 contract GebDeploy is DSAuth, Logging {
-    CDPEngineFactory                  public cdpEngineFactory;
-    TaxCollectorFactory               public taxCollectorFactory;
-    AccountingEngineFactory           public accountingEngineFactory;
-    LiquidationEngineFactory          public liquidationEngineFactory;
-    CoinFactory                       public coinFactory;
-    CoinJoinFactory                   public coinJoinFactory;
-    StabilityFeeTreasuryFactory       public stabilityFeeTreasuryFactory;
-    SurplusAuctionHouseFactory        public surplusAuctionHouseFactory;
-    DebtAuctionHouseFactory           public debtAuctionHouseFactory;
-    CollateralAuctionHouseFactory     public collateralAuctionHouseFactory;
-    OracleRelayerFactory              public oracleRelayerFactory;
-    RedemptionRateSetterFactory       public redemptionRateSetterFactory;
-    EmergencyRateSetterFactory        public emergencyRateSetterFactory;
-    MoneyMarketSetterFactory          public moneyMarketSetterFactory;
-    GlobalSettlementFactory           public globalSettlementFactory;
-    ESMFactory                        public esmFactory;
-    PauseFactory                      public pauseFactory;
-    CoinSavingsAccountFactory         public coinSavingsAccountFactory;
-    SettlementSurplusAuctionerFactory public settlementSurplusAuctionerFactory;
+    CDPEngineFactory                         public cdpEngineFactory;
+    TaxCollectorFactory                      public taxCollectorFactory;
+    AccountingEngineFactory                  public accountingEngineFactory;
+    LiquidationEngineFactory                 public liquidationEngineFactory;
+    CoinFactory                              public coinFactory;
+    CoinJoinFactory                          public coinJoinFactory;
+    StabilityFeeTreasuryFactory              public stabilityFeeTreasuryFactory;
+    PreSettlementSurplusAuctionHouseFactory  public preSettlementSurplusAuctionHouseFactory;
+    PostSettlementSurplusAuctionHouseFactory public postSettlementSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                  public debtAuctionHouseFactory;
+    CollateralAuctionHouseFactory            public collateralAuctionHouseFactory;
+    OracleRelayerFactory                     public oracleRelayerFactory;
+    RedemptionRateSetterFactory              public redemptionRateSetterFactory;
+    EmergencyRateSetterFactory               public emergencyRateSetterFactory;
+    MoneyMarketSetterFactory                 public moneyMarketSetterFactory;
+    GlobalSettlementFactory                  public globalSettlementFactory;
+    ESMFactory                               public esmFactory;
+    PauseFactory                             public pauseFactory;
+    CoinSavingsAccountFactory                public coinSavingsAccountFactory;
+    SettlementSurplusAuctioneerFactory       public settlementSurplusAuctioneerFactory;
 
-    CDPEngine                     public cdpEngine;
-    TaxCollector                  public taxCollector;
-    AccountingEngine              public accountingEngine;
-    LiquidationEngine             public liquidationEngine;
-    StabilityFeeTreasury          public stabilityFeeTreasury;
-    Coin                          public coin;
-    CoinJoin                      public coinJoin;
-    SurplusAuctionHouseOne        public surplusAuctionHouse;
-    DebtAuctionHouse              public debtAuctionHouse;
-    OracleRelayer                 public oracleRelayer;
-    RedemptionRateSetter          public redemptionRateSetter;
-    EmergencyRateSetter           public emergencyRateSetter;
-    MoneyMarketSetter             public moneyMarketSetter;
-    CoinSavingsAccount            public coinSavingsAccount;
-    GlobalSettlement              public globalSettlement;
-    SettlementSurplusAuctioner    public settlementSurplusAuctioner;
-    ESM                           public esm;
-    DSPause                       public pause;
+    CDPEngine                         public cdpEngine;
+    TaxCollector                      public taxCollector;
+    AccountingEngine                  public accountingEngine;
+    LiquidationEngine                 public liquidationEngine;
+    StabilityFeeTreasury              public stabilityFeeTreasury;
+    Coin                              public coin;
+    CoinJoin                          public coinJoin;
+    PreSettlementSurplusAuctionHouse  public preSettlementSurplusAuctionHouse;
+    PostSettlementSurplusAuctionHouse public postSettlementSurplusAuctionHouse;
+    DebtAuctionHouse                  public debtAuctionHouse;
+    OracleRelayer                     public oracleRelayer;
+    RedemptionRateSetter              public redemptionRateSetter;
+    EmergencyRateSetter               public emergencyRateSetter;
+    MoneyMarketSetter                 public moneyMarketSetter;
+    CoinSavingsAccount                public coinSavingsAccount;
+    GlobalSettlement                  public globalSettlement;
+    SettlementSurplusAuctioneer       public settlementSurplusAuctioneer;
+    ESM                               public esm;
+    DSPause                           public pause;
 
     mapping(bytes32 => CollateralType) public collateralTypes;
 
@@ -264,7 +273,7 @@ contract GebDeploy is DSAuth, Logging {
         CoinFactory coinFactory_,
         CoinJoinFactory coinJoinFactory_,
         CoinSavingsAccountFactory coinSavingsAccountFactory_,
-        SettlementSurplusAuctionerFactory settlementSurplusAuctionerFactory_
+        SettlementSurplusAuctioneerFactory settlementSurplusAuctioneerFactory_
     ) public auth {
         require(address(cdpEngineFactory) == address(0), "CDPEngine Factory already set");
         cdpEngineFactory = cdpEngineFactory_;
@@ -274,35 +283,38 @@ contract GebDeploy is DSAuth, Logging {
         coinFactory = coinFactory_;
         coinJoinFactory = coinJoinFactory_;
         coinSavingsAccountFactory = coinSavingsAccountFactory_;
-        settlementSurplusAuctionerFactory = settlementSurplusAuctionerFactory_;
+        settlementSurplusAuctioneerFactory = settlementSurplusAuctioneerFactory_;
     }
     function setSecondFactoryBatch(
-        SurplusAuctionHouseFactory surplusAuctionHouseFactory_,
+        PreSettlementSurplusAuctionHouseFactory preSettlementSurplusAuctionHouseFactory_,
+        PostSettlementSurplusAuctionHouseFactory postSettlementSurplusAuctionHouseFactory_,
         DebtAuctionHouseFactory debtAuctionHouseFactory_,
         CollateralAuctionHouseFactory collateralAuctionHouseFactory_,
         OracleRelayerFactory oracleRelayerFactory_,
         RedemptionRateSetterFactory redemptionRateSetterFactory_,
         GlobalSettlementFactory globalSettlementFactory_,
-        ESMFactory esmFactory_,
-        PauseFactory pauseFactory_
+        ESMFactory esmFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
-        require(address(surplusAuctionHouseFactory) == address(0), "SurplusAuctionHouse Factory already set");
-        surplusAuctionHouseFactory = surplusAuctionHouseFactory_;
+        require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
+        require(address(postSettlementSurplusAuctionHouseFactory) == address(0), "PostSettlementSurplusAuctionHouse Factory already set");
+        preSettlementSurplusAuctionHouseFactory = preSettlementSurplusAuctionHouseFactory_;
+        postSettlementSurplusAuctionHouseFactory = postSettlementSurplusAuctionHouseFactory_;
         debtAuctionHouseFactory = debtAuctionHouseFactory_;
         collateralAuctionHouseFactory = collateralAuctionHouseFactory_;
         oracleRelayerFactory = oracleRelayerFactory_;
         redemptionRateSetterFactory = redemptionRateSetterFactory_;
         globalSettlementFactory = globalSettlementFactory_;
         esmFactory = esmFactory_;
-        pauseFactory = pauseFactory_;
     }
     function setThirdFactoryBatch(
+        PauseFactory pauseFactory_,
         EmergencyRateSetterFactory emergencyRateSetterFactory_,
         MoneyMarketSetterFactory moneyMarketSetterFactory_,
         StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        pauseFactory = pauseFactory_;
         emergencyRateSetterFactory = emergencyRateSetterFactory_;
         moneyMarketSetterFactory = moneyMarketSetterFactory_;
         stabilityFeeTreasuryFactory = stabilityFeeTreasuryFactory_;
@@ -406,7 +418,8 @@ contract GebDeploy is DSAuth, Logging {
         require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
-        surplusAuctionHouse = surplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
+        preSettlementSurplusAuctionHouse = preSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
+        postSettlementSurplusAuctionHouse = postSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
         debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(cdpEngine), prot);
 
         // Internal auth
@@ -414,14 +427,14 @@ contract GebDeploy is DSAuth, Logging {
     }
 
     function deployAccountingEngine() public auth {
-        accountingEngine = accountingEngineFactory.newAccountingEngine(address(cdpEngine), address(surplusAuctionHouse), address(debtAuctionHouse));
+        accountingEngine = accountingEngineFactory.newAccountingEngine(address(cdpEngine), address(preSettlementSurplusAuctionHouse), address(debtAuctionHouse));
 
         // Setup
         debtAuctionHouse.modifyParameters("accountingEngine", address(accountingEngine));
         taxCollector.modifyParameters("accountingEngine", address(accountingEngine));
 
         // Internal auth
-        surplusAuctionHouse.addAuthorization(address(accountingEngine));
+        preSettlementSurplusAuctionHouse.addAuthorization(address(accountingEngine));
         debtAuctionHouse.addAuthorization(address(accountingEngine));
     }
 
@@ -439,17 +452,17 @@ contract GebDeploy is DSAuth, Logging {
         );
     }
 
-    function deploySettlementSurplusAuctioner() public auth {
+    function deploySettlementSurplusAuctioneer() public auth {
         require(address(accountingEngine) != address(0), "Missing previous step");
 
         // Deploy
-        settlementSurplusAuctioner = settlementSurplusAuctionerFactory.newSettlementSurplusAuctioner(address(accountingEngine));
+        settlementSurplusAuctioneer = settlementSurplusAuctioneerFactory.newSettlementSurplusAuctioneer(address(accountingEngine));
 
         // Set
-        accountingEngine.modifyParameters("settlementSurplusAuctioner", address(settlementSurplusAuctioner));
+        accountingEngine.modifyParameters("settlementSurplusAuctioneer", address(settlementSurplusAuctioneer));
 
         // Internal auth
-        surplusAuctionHouse.addAuthorization(address(settlementSurplusAuctioner));
+        postSettlementSurplusAuctionHouse.addAuthorization(address(settlementSurplusAuctioneer));
     }
 
     function deployLiquidator() public auth {
@@ -471,9 +484,6 @@ contract GebDeploy is DSAuth, Logging {
 
         // Deploy
         globalSettlement = globalSettlementFactory.newGlobalSettlement();
-
-        // Internal references set up
-        surplusAuctionHouse.modifyParameters("globalSettlement", address(globalSettlement));
 
         globalSettlement.modifyParameters("cdpEngine", address(cdpEngine));
         globalSettlement.modifyParameters("liquidationEngine", address(liquidationEngine));
@@ -526,9 +536,11 @@ contract GebDeploy is DSAuth, Logging {
         accountingEngine.addAuthorization(address(usr));
         taxCollector.addAuthorization(address(usr));
         oracleRelayer.addAuthorization(address(usr));
-        surplusAuctionHouse.addAuthorization(address(usr));
+        preSettlementSurplusAuctionHouse.addAuthorization(address(usr));
+        postSettlementSurplusAuctionHouse.addAuthorization(address(usr));
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
+        esm.addAuthorization(address(usr));
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.addAuthorization(address(usr));
         }
@@ -538,8 +550,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(moneyMarketSetter) != address(0)) {
           moneyMarketSetter.addAuthorization(address(usr));
         }
-        if (address(settlementSurplusAuctioner) != address(0)) {
-          settlementSurplusAuctioner.addAuthorization(address(usr));
+        if (address(settlementSurplusAuctioneer) != address(0)) {
+          settlementSurplusAuctioneer.addAuthorization(address(usr));
         }
         if (address(redemptionRateSetter) != address(0)) {
           redemptionRateSetter.addAuthorization(address(usr));
@@ -555,9 +567,11 @@ contract GebDeploy is DSAuth, Logging {
         accountingEngine.removeAuthorization(address(usr));
         taxCollector.removeAuthorization(address(usr));
         oracleRelayer.removeAuthorization(address(usr));
-        surplusAuctionHouse.removeAuthorization(address(usr));
+        preSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
+        postSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
         debtAuctionHouse.removeAuthorization(address(usr));
         globalSettlement.removeAuthorization(address(usr));
+        esm.removeAuthorization(address(usr));
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(usr));
         }
@@ -573,8 +587,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(moneyMarketSetter) != address(0)) {
           moneyMarketSetter.removeAuthorization(address(usr));
         }
-        if (address(settlementSurplusAuctioner) != address(0)) {
-          settlementSurplusAuctioner.removeAuthorization(address(usr));
+        if (address(settlementSurplusAuctioneer) != address(0)) {
+          settlementSurplusAuctioneer.removeAuthorization(address(usr));
         }
     }
 
@@ -623,9 +637,11 @@ contract GebDeploy is DSAuth, Logging {
         taxCollector.removeAuthorization(address(this));
         coin.removeAuthorization(address(this));
         oracleRelayer.removeAuthorization(address(this));
-        surplusAuctionHouse.removeAuthorization(address(this));
+        preSettlementSurplusAuctionHouse.removeAuthorization(address(this));
+        postSettlementSurplusAuctionHouse.removeAuthorization(address(this));
         debtAuctionHouse.removeAuthorization(address(this));
         globalSettlement.removeAuthorization(address(this));
+        esm.removeAuthorization(address(this));
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(this));
         }
@@ -641,8 +657,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(moneyMarketSetter) != address(0)) {
           moneyMarketSetter.removeAuthorization(address(address(this)));
         }
-        if (address(settlementSurplusAuctioner) != address(0)) {
-          settlementSurplusAuctioner.removeAuthorization(address(address(this)));
+        if (address(settlementSurplusAuctioneer) != address(0)) {
+          settlementSurplusAuctioneer.removeAuthorization(address(address(this)));
         }
     }
 

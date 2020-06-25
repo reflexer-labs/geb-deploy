@@ -1,4 +1,4 @@
-pragma solidity ^0.5.15;
+pragma solidity ^0.6.7;
 
 import "./GebDeploy.t.base.sol";
 
@@ -336,7 +336,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(cdpEngine.debtBalance(address(accountingEngine)), 0);
     }
 
-    function testSurplusAuctionHouse() public {
+    function testPreSettlementSurplusAuctionHouse() public {
         deployBond();
 
         this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
@@ -351,26 +351,26 @@ contract GebDeployTest is GebDeployTestBase {
         this.modifyParameters(address(accountingEngine), bytes32("surplusAuctionAmountToSell"), rad(0.05 ether));
         uint batchId = accountingEngine.auctionSurplus();
 
-        (,uint amountSold,,,) = surplusAuctionHouse.bids(batchId);
+        (,uint amountSold,,,) = preSettlementSurplusAuctionHouse.bids(batchId);
         assertEq(amountSold, rad(0.05 ether));
-        user1.doApprove(address(prot), address(surplusAuctionHouse));
-        user2.doApprove(address(prot), address(surplusAuctionHouse));
+        user1.doApprove(address(prot), address(preSettlementSurplusAuctionHouse));
+        user2.doApprove(address(prot), address(preSettlementSurplusAuctionHouse));
         prot.transfer(address(user1), 1 ether);
         prot.transfer(address(user2), 1 ether);
 
         assertEq(coin.balanceOf(address(user1)), 0);
         assertEq(prot.balanceOf(address(0)), 0);
 
-        user1.doIncreaseBidSize(address(surplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
-        user2.doIncreaseBidSize(address(surplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
-        user1.doIncreaseBidSize(address(surplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
+        user1.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
+        user2.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
+        user1.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
 
         assertEq(prot.balanceOf(address(user1)), 1 ether - 0.0016 ether);
         assertEq(prot.balanceOf(address(user2)), 1 ether);
-        hevm.warp(now + surplusAuctionHouse.totalAuctionLength() + 1);
-        assertEq(prot.balanceOf(address(surplusAuctionHouse)), 0.0016 ether);
-        user1.doSettleAuction(address(surplusAuctionHouse), batchId);
-        assertEq(prot.balanceOf(address(surplusAuctionHouse)), 0);
+        hevm.warp(now + preSettlementSurplusAuctionHouse.totalAuctionLength() + 1);
+        assertEq(prot.balanceOf(address(preSettlementSurplusAuctionHouse)), 0.0016 ether);
+        user1.doSettleAuction(address(preSettlementSurplusAuctionHouse), batchId);
+        assertEq(prot.balanceOf(address(preSettlementSurplusAuctionHouse)), 0);
         user1.doCDPApprove(address(cdpEngine), address(coinJoin));
         user1.doCoinExit(address(coinJoin), address(user1), 0.05 ether);
         assertEq(coin.balanceOf(address(user1)), 0.05 ether);
@@ -634,14 +634,14 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioner
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(pause.proxy())), 1);
+        // settlementSurplusAuctioneer
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
 
-        // surplusAuctionHouse
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // preSettlementSurplusAuctionHouse
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -678,13 +678,13 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(redemptionRateSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
     }
 
     function testStableAuth() public {
@@ -722,9 +722,9 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioner
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(pause.proxy())), 1);
+        // settlementSurplusAuctioneer
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
 
         // moneyMarketSetter
         assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 1);
@@ -741,10 +741,17 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(oracleRelayer.authorizedAccounts(address(pause.proxy())), 1);
 
-        // surplusAuctionHouse
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // preSettlementSurplusAuctionHouse
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 0);
+
+        // postSettlementSurplusAuctionHouse
+        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 1);
+        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 0);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -768,6 +775,10 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(address(pause.authority()), address(authority));
         assertEq(pause.owner(), address(0));
 
+        // esm
+        assertEq(esm.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(esm.authorizedAccounts(address(pause.proxy())), 1);
+
         // root
         assertTrue(authority.isUserRoot(address(this)));
 
@@ -781,14 +792,16 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coinSavingsAccount.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(surplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioner.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 }
