@@ -256,7 +256,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         z = x * 10 ** 9;
     }
 
-    function setUp() public {
+    function setUp() virtual public {
         cdpEngineFactory = new CDPEngineFactory();
         taxCollectorFactory = new TaxCollectorFactory();
         accountingEngineFactory = new AccountingEngineFactory();
@@ -331,7 +331,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         return wad * 10 ** 27;
     }
 
-    function deployBondKeepAuth() public {
+    function deployBondKeepAuth() virtual public {
         gebDeploy.deployCDPEngine();
         gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
         gebDeploy.deployTaxation();
@@ -405,7 +405,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         prot.mint(100 ether);
     }
 
-    function deployStableKeepAuth() public {
+    function deployStableKeepAuth() virtual public {
         gebDeploy.deployCDPEngine();
         gebDeploy.deployCoin("Rai Stable Coin", "RAI", 99);
         gebDeploy.deployTaxation();
@@ -483,29 +483,29 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     }
 
     // Bond
-    function deployBond() public {
+    function deployBond() virtual public {
         deployBondKeepAuth();
         gebDeploy.releaseAuth();
     }
-    function deployBondWithCreatorPermissions() public {
+    function deployBondWithCreatorPermissions() virtual public {
         deployBondKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
     }
 
     // Stablecoin
-    function deployStable() public {
+    function deployStable() virtual public {
         deployStableKeepAuth();
         gebDeploy.releaseAuth();
     }
-    function deployStableWithCreatorPermissions() public {
+    function deployStableWithCreatorPermissions() virtual public {
         deployStableKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
     }
 
     // Utils
-    function release() public {
+    function release() virtual public {
         gebDeploy.releaseAuth();
     }
 
