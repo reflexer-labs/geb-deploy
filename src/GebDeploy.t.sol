@@ -5,7 +5,6 @@ import "./GebDeploy.t.base.sol";
 import "./AdvancedTokenAdapters.sol";
 
 contract GebDeployTest is GebDeployTestBase {
-    uint constant ONE = 10 ** 27;
     uint constant HUNDRED = 10 ** 29;
 
     function testDeployBond() public {
@@ -48,7 +47,7 @@ contract GebDeployTest is GebDeployTestBase {
     function testJoinETH() public {
         deployBond();
         assertEq(cdpEngine.tokenCollateral("ETH", address(this)), 0);
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         assertEq(weth.balanceOf(address(this)), 1 ether);
         weth.approve(address(ethJoin), 1 ether);
         ethJoin.join(address(this), 1 ether);
@@ -69,7 +68,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testExitETH() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         ethJoin.exit(address(this), 1 ether);
@@ -89,7 +88,7 @@ contract GebDeployTest is GebDeployTestBase {
     function testModifyCDPCollateralizationDrawCoin() public {
         deployBond();
         assertEq(coin.balanceOf(address(this)), 0);
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -119,7 +118,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testModifyCDPCollateralizationDrawCoinLimit() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // 0.5 * 300 / 1.5 = 100 COIN max
@@ -135,7 +134,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailModifyCDPCollateralizationDrawCoinLimit() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether + 1);
@@ -150,8 +149,8 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifyCDPCollateralizationPaybackDebt() public {
-        deployBondWithCDPEnginePermissions();
-        weth.deposit.value(1 ether)();
+        deployBondWithCreatorPermissions();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.5 ether, 60 ether);
@@ -169,7 +168,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testModifyCDPCollateralizationFromAnotherUser() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.approveCDPModification(address(user1));
@@ -178,7 +177,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailModifyCDPCollateralizationDust() public {
         deployBond();
-        weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
+        weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 
@@ -188,7 +187,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailModifyCDPCollateralizationFromAnotherUser() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         user1.doModifyCDPCollateralization(address(cdpEngine), "ETH", address(this), address(this), address(this), 0.5 ether, 60 ether);
@@ -196,7 +195,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailLiquidateCDP() public {
         deployBond();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.5 ether, 100 ether); // Maximum COIN
@@ -208,7 +207,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
@@ -229,7 +228,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
-        weth.deposit.value(10 ether)();
+        weth.deposit{value: 10 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 10 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 10 ether, 2000 ether); // Maximun COIN generated
@@ -250,7 +249,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
@@ -287,7 +286,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
@@ -315,7 +314,7 @@ contract GebDeployTest is GebDeployTestBase {
 
         accountingEngine.popDebtFromQueue(eraLiquidateCDP);
         accountingEngine.settleDebt(rad(180 ether));
-        this.modifyParameters(address(accountingEngine), "initialDebtAuctionAmount", 0.65 ether);
+        this.modifyParameters(address(accountingEngine), "initialDebtAuctionMintedTokens", 0.65 ether);
         this.modifyParameters(address(accountingEngine), bytes32("debtAuctionBidSize"), rad(20 ether));
         batchId = accountingEngine.auctionDebt();
 
@@ -340,7 +339,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
 
         this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
-        weth.deposit.value(0.5 ether)();
+        weth.deposit{value: 0.5 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 0.5 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.1 ether, 10 ether);
@@ -376,6 +375,48 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coin.balanceOf(address(user1)), 0.05 ether);
     }
 
+    function testPostSettlementSurplusAuctionHouse() public {
+        deployBondWithCreatorPermissions();
+
+        this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
+        weth.deposit{value: 0.5 ether}();
+        weth.approve(address(ethJoin), uint(-1));
+        ethJoin.join(address(this), 0.5 ether);
+        cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 0.1 ether, 10 ether);
+        hevm.warp(now + 1);
+        this.modifyParameters(address(accountingEngine), bytes32("surplusAuctionAmountToSell"), rad(0.05 ether));
+
+        accountingEngine.disableContract();
+        cdpEngine.createUnbackedDebt(address(this), address(settlementSurplusAuctioneer), rad(10 * 0.05 ether));
+        assertEq(cdpEngine.coinBalance(address(settlementSurplusAuctioneer)), rad(10 * 0.05 ether));
+
+        uint batchId = settlementSurplusAuctioneer.auctionSurplus();
+
+        (,uint amountSold,,,) = postSettlementSurplusAuctionHouse.bids(batchId);
+        assertEq(amountSold, rad(0.05 ether));
+        user1.doApprove(address(prot), address(postSettlementSurplusAuctionHouse));
+        user2.doApprove(address(prot), address(postSettlementSurplusAuctionHouse));
+        prot.transfer(address(user1), 1 ether);
+        prot.transfer(address(user2), 1 ether);
+
+        assertEq(coin.balanceOf(address(user1)), 0);
+        assertEq(prot.balanceOf(address(0)), 0);
+
+        user1.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
+        user2.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
+        user1.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
+
+        assertEq(prot.balanceOf(address(user1)), 1 ether - 0.0016 ether);
+        assertEq(prot.balanceOf(address(user2)), 1 ether);
+        hevm.warp(now + postSettlementSurplusAuctionHouse.totalAuctionLength() + 1);
+        assertEq(prot.balanceOf(address(postSettlementSurplusAuctionHouse)), 0.0016 ether);
+        user1.doSettleAuction(address(postSettlementSurplusAuctionHouse), batchId);
+        assertEq(prot.balanceOf(address(postSettlementSurplusAuctionHouse)), 0);
+        user1.doCDPApprove(address(cdpEngine), address(coinJoin));
+        user1.doCoinExit(address(coinJoin), address(user1), 0.05 ether);
+        assertEq(coin.balanceOf(address(user1)), 0.05 ether);
+    }
+
     // TODO
     function testBondRedemptionRateSetter() public {
         deployBond();
@@ -385,7 +426,7 @@ contract GebDeployTest is GebDeployTestBase {
         deployBond();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
-        weth.deposit.value(2 ether)();
+        weth.deposit{value: 2 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 2 ether);
         cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
@@ -468,7 +509,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testTransferCDPCollateralAndDebt() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -491,7 +532,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebt() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -502,7 +543,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testTransferCDPCollateralAndDebtFromOtherUsr() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -514,7 +555,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebtFromOtherUsr() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -525,7 +566,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebtUnsafeSrc() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -535,7 +576,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebtUnsafeDst() public {
         deployBondKeepAuth();
-        weth.deposit.value(1 ether)();
+        weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
 
@@ -545,7 +586,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebtDustSrc() public {
         deployBondKeepAuth();
-        weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
+        weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 
@@ -558,7 +599,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailTransferCDPCollateralAndDebtDustDst() public {
         deployBondKeepAuth();
-        weth.deposit.value(100 ether)(); // Big number just to make sure to avoid unsafe situation
+        weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
 

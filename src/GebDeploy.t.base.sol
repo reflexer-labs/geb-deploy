@@ -39,7 +39,7 @@ contract FakeUser {
     }
 
     function doEthJoin(address payable obj, address collateralSource, address cdp, uint wad) public {
-        WETH9_(obj).deposit.value(wad)();
+        WETH9_(obj).deposit{value: wad}();
         WETH9_(obj).approve(address(collateralSource), uint(-1));
         CollateralJoin(collateralSource).join(cdp, wad);
     }
@@ -94,8 +94,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("modifyParameters(address,bytes32,uint256)", who, parameter, data);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function modifyParameters(address who, bytes32 collateralType, bytes32 parameter, uint256 data) external {
@@ -104,8 +104,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("modifyParameters(address,bytes32,bytes32,uint256)", who, collateralType, parameter, data);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function updateRateAndModifyParameters(address who, bytes32 parameter, uint256 data) external {
@@ -114,8 +114,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("updateRateAndModifyParameters(address,bytes32,uint256)", who, parameter, data);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function taxAllAndModifyParameters(address who, bytes32 parameter, uint256 data) external {
@@ -124,8 +124,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("taxAllAndModifyParameters(address,bytes32,uint256)", who, parameter, data);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function taxSingleAndModifyParameters(address who, bytes32 collateralType, bytes32 parameter, uint256 data) external {
@@ -134,8 +134,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("taxSingleAndModifyParameters(address,bytes32,bytes32,uint256)", who, collateralType, parameter, data);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function shutdownSystem(address globalSettlement) external {
@@ -144,8 +144,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("shutdownSystem(address)", globalSettlement);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function setAuthority(address newAuthority) external {
@@ -154,8 +154,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("setAuthority(address,address)", pause, newAuthority);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function setDelay(uint newDelay) external {
@@ -164,8 +164,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("setDelay(address,uint256)", pause, newDelay);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 
     function setAuthorityAndDelay(address newAuthority, uint newDelay) external {
@@ -174,8 +174,8 @@ contract ProxyActions {
         bytes memory fax = abi.encodeWithSignature("setAuthorityAndDelay(address,address,uint256)", pause, newAuthority, newDelay);
         uint         eta = now;
 
-        pause.plot(usr, tag, fax, eta);
-        pause.exec(usr, tag, fax, eta);
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
     }
 }
 
@@ -263,8 +263,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         liquidationEngineFactory = new LiquidationEngineFactory();
         coinFactory = new CoinFactory();
         coinJoinFactory = new CoinJoinFactory();
-        preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseOneFactory();
-        postSettlementSurplusAuctionHouseFactory = new PostSettlementSurplusAuctionHouseOneFactory();
+        preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseFactory();
+        postSettlementSurplusAuctionHouseFactory = new PostSettlementSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         collateralAuctionHouseFactory = new CollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
@@ -399,7 +399,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         assertEq(safetyPrice, liquidationPrice);
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(surplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
 
         prot.mint(100 ether);
     }
@@ -475,7 +476,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         assertEq(safetyPrice, liquidationPrice);
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(surplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
 
         prot.mint(100 ether);
     }
@@ -485,7 +487,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         deployBondKeepAuth();
         gebDeploy.releaseAuth();
     }
-    function deployBondWithCDPEnginePermissions() public {
+    function deployBondWithCreatorPermissions() public {
         deployBondKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
@@ -496,7 +498,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         deployStableKeepAuth();
         gebDeploy.releaseAuth();
     }
-    function deployStableWithCDPEnginePermissions() public {
+    function deployStableWithCreatorPermissions() public {
         deployStableKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();

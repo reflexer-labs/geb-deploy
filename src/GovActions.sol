@@ -1,26 +1,26 @@
 pragma solidity ^0.6.7;
 
-contract Setter {
-    function modifyParameters(bytes32, address) public;
-    function modifyParameters(bytes32, uint) public;
-    function modifyParameters(bytes32, bytes32, uint) public;
-    function modifyParameters(bytes32, bytes32, address) public;
-    function addAuthorization(address) public;
-    function removeAuthorization(address) public;
-    function initializeCollateralType(bytes32) public;
-    function updateAccumulatedRate() public;
-    function taxAll() public;
-    function taxSingle(bytes32) public;
+abstract contract Setter {
+    function modifyParameters(bytes32, address) virtual public;
+    function modifyParameters(bytes32, uint) virtual public;
+    function modifyParameters(bytes32, bytes32, uint) virtual public;
+    function modifyParameters(bytes32, bytes32, address) virtual public;
+    function addAuthorization(address) virtual public;
+    function removeAuthorization(address) virtual public;
+    function initializeCollateralType(bytes32) virtual public;
+    function updateAccumulatedRate() virtual public;
+    function taxAll() virtual public;
+    function taxSingle(bytes32) virtual public;
 }
 
-contract GlobalSettlementLike {
-    function shutdownSystem() public;
-    function freezeCollateralType(bytes32) public;
+abstract contract GlobalSettlementLike {
+    function shutdownSystem() virtual public;
+    function freezeCollateralType(bytes32) virtual public;
 }
 
-contract PauseLike {
-    function setAuthority(address) public;
-    function setDelay(uint) public;
+abstract contract PauseLike {
+    function setAuthority(address) virtual public;
+    function setDelay(uint) virtual public;
 }
 
 contract GovActions {

@@ -98,7 +98,7 @@ contract PreSettlementSurplusAuctionHouseFactory {
 
 contract PostSettlementSurplusAuctionHouseFactory {
     function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (PostSettlementSurplusAuctionHouse surplusAuctionHouse) {
-        surplusAuctionHouse = new SurplusAuctionHouseTwo(cdpEngine, prot);
+        surplusAuctionHouse = new PostSettlementSurplusAuctionHouse(cdpEngine, prot);
         surplusAuctionHouse.addAuthorization(msg.sender);
         surplusAuctionHouse.removeAuthorization(address(this));
     }
@@ -106,9 +106,10 @@ contract PostSettlementSurplusAuctionHouseFactory {
 
 contract SettlementSurplusAuctioneerFactory {
     function newSettlementSurplusAuctioneer(
-      address accountingEngine
+      address accountingEngine,
+      address surplusAuctionHouse
     ) public returns (SettlementSurplusAuctioneer settlementSurplusAuctioneer) {
-        settlementSurplusAuctioneer = new SettlementSurplusAuctioneer(accountingEngine);
+        settlementSurplusAuctioneer = new SettlementSurplusAuctioneer(accountingEngine, surplusAuctionHouse);
         settlementSurplusAuctioneer.addAuthorization(msg.sender);
         settlementSurplusAuctioneer.removeAuthorization(address(this));
     }
@@ -189,6 +190,8 @@ contract ESMFactory {
         address prot, address globalSettlement, address tokenBurner, uint threshold
     ) public returns (ESM esm) {
         esm = new ESM(prot, globalSettlement, tokenBurner, threshold);
+        esm.addAuthorization(msg.sender);
+        esm.removeAuthorization(address(this));
     }
 }
 
@@ -251,8 +254,6 @@ contract GebDeploy is DSAuth, Logging {
     mapping(bytes32 => CollateralType) public collateralTypes;
 
     uint8 public step = 0;
-
-    uint256 constant ONE = 10 ** 27;
 
     struct CollateralType {
         CollateralAuctionHouse collateralAuctionHouse;
@@ -447,8 +448,7 @@ contract GebDeploy is DSAuth, Logging {
         stabilityFeeTreasury = stabilityFeeTreasuryFactory.newStabilityFeeTreasury(
           address(cdpEngine),
           address(accountingEngine),
-          address(coinJoin),
-          0
+          address(coinJoin)
         );
     }
 
@@ -456,7 +456,10 @@ contract GebDeploy is DSAuth, Logging {
         require(address(accountingEngine) != address(0), "Missing previous step");
 
         // Deploy
-        settlementSurplusAuctioneer = settlementSurplusAuctioneerFactory.newSettlementSurplusAuctioneer(address(accountingEngine));
+        settlementSurplusAuctioneer = settlementSurplusAuctioneerFactory.newSettlementSurplusAuctioneer(
+          address(accountingEngine),
+          address(postSettlementSurplusAuctionHouse)
+        );
 
         // Set
         accountingEngine.modifyParameters("settlementSurplusAuctioneer", address(settlementSurplusAuctioneer));
@@ -664,5 +667,6 @@ contract GebDeploy is DSAuth, Logging {
 
     function addCreatorAuth() public auth {
         cdpEngine.addAuthorization(msg.sender);
+        accountingEngine.addAuthorization(msg.sender);
     }
 }
