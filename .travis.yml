@@ -11,4 +11,4 @@ before_install:
   - git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools
   - nix-env -f $HOME/.dapp/dapptools -iA dapp solc
 script:
-  - dapp --use solc:0.5.15 test
+  - dapp --use solc:0.6.7 test
