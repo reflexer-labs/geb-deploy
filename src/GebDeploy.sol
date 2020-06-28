@@ -432,7 +432,7 @@ contract GebDeploy is DSAuth, Logging {
 
         // Setup
         debtAuctionHouse.modifyParameters("accountingEngine", address(accountingEngine));
-        taxCollector.modifyParameters("accountingEngine", address(accountingEngine));
+        taxCollector.modifyParameters("primaryTaxReceiver", address(accountingEngine));
 
         // Internal auth
         preSettlementSurplusAuctionHouse.addAuthorization(address(accountingEngine));

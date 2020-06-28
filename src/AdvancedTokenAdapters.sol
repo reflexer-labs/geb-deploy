@@ -30,7 +30,7 @@ abstract contract CollateralLike {
     function transferFrom(address,address,uint) virtual public returns (bool);
 }
 
-contract CollateralJoin is Logging {
+contract CollateralJoin1 is Logging {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
     /**
@@ -51,7 +51,7 @@ contract CollateralJoin is Logging {
     * @notice Checks whether msg.sender can call an authed function
     **/
     modifier isAuthorized {
-        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin/account-not-authorized");
+        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin1/account-not-authorized");
         _;
     }
 
@@ -78,15 +78,15 @@ contract CollateralJoin is Logging {
         contractEnabled = 0;
     }
     function join(address usr, uint wad) external emitLog {
-        require(contractEnabled == 1, "CollateralJoin/not-contractEnabled");
-        require(int(wad) >= 0, "CollateralJoin/overflow");
+        require(contractEnabled == 1, "CollateralJoin1/not-contractEnabled");
+        require(int(wad) >= 0, "CollateralJoin1/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
-        require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin/failed-transfer");
+        require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin1/failed-transfer");
     }
     function exit(address usr, uint wad) external emitLog {
-        require(wad <= 2 ** 255, "CollateralJoin/overflow");
+        require(wad <= 2 ** 255, "CollateralJoin1/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
-        require(collateral.transfer(usr, wad), "CollateralJoin/failed-transfer");
+        require(collateral.transfer(usr, wad), "CollateralJoin1/failed-transfer");
     }
 }
 
