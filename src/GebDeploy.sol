@@ -462,7 +462,7 @@ contract GebDeploy is DSAuth, Logging {
         );
 
         // Set
-        accountingEngine.modifyParameters("settlementSurplusAuctioneer", address(settlementSurplusAuctioneer));
+        accountingEngine.modifyParameters("postSettlementSurplusDrain", address(settlementSurplusAuctioneer));
 
         // Internal auth
         postSettlementSurplusAuctionHouse.addAuthorization(address(settlementSurplusAuctioneer));
