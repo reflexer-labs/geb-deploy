@@ -25,6 +25,25 @@ abstract contract CDPApprovalLike {
     function approveCDPModification(address guy) virtual public;
 }
 
+contract ProtocolTokenAuthority {
+    mapping (address => uint) public authorizedAccounts;
+
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external {
+        authorizedAccounts[account] = 1;
+    }
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external {
+        authorizedAccounts[account] = 0;
+    }
+}
+
 contract FakeUser {
     function doApprove(address token, address guy) public {
         DSToken(token).approve(guy);
@@ -76,9 +95,9 @@ contract FakeUser {
         GlobalSettlement(globalSettlement).freeCollateral(collateralType);
     }
 
-    function doESMBurnTokens(address collateralSource, address esm, uint256 wad) public {
+    function doESMShutdown(address collateralSource, address esm, uint256 wad) public {
         DSToken(collateralSource).approve(esm, uint256(-1));
-        ESM(esm).burnTokens(wad);
+        ESM(esm).shutdown();
     }
 
     receive() external payable {}
@@ -237,8 +256,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
     CollateralAuctionHouse ethCollateralAuctionHouse;
 
-    DSToken col;
+    DSToken                col;
     CollateralAuctionHouse colAuctionHouse;
+
+    ProtocolTokenAuthority tokenAuthority;
 
     FakeUser user1;
     FakeUser user2;
@@ -310,6 +331,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           stabilityFeeTreasuryFactory
         );
 
+        tokenAuthority = new ProtocolTokenAuthority();
         prot = new DSToken("PROT");
         prot.setAuthority(new DSGuard());
         orclETH = new DSValue();
@@ -332,6 +354,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     }
 
     function deployBondKeepAuth() virtual public {
+        prot.mint(100 ether);
+
         gebDeploy.deployCDPEngine();
         gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
         gebDeploy.deployTaxation();
@@ -341,7 +365,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
-        gebDeploy.deployShutdown(address(prot), address(0x0), 10);
+        gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
 
         cdpEngine = gebDeploy.cdpEngine();
@@ -401,11 +425,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
-
-        prot.mint(100 ether);
     }
 
     function deployStableKeepAuth() virtual public {
+        prot.mint(100 ether);
+
         gebDeploy.deployCDPEngine();
         gebDeploy.deployCoin("Rai Stable Coin", "RAI", 99);
         gebDeploy.deployTaxation();
@@ -417,7 +441,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
-        gebDeploy.deployShutdown(address(prot), address(0x0), 10);
+        gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
 
         cdpEngine = gebDeploy.cdpEngine();
@@ -478,8 +502,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
-
-        prot.mint(100 ether);
     }
 
     // Bond
@@ -491,6 +513,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         deployBondKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
+        accountingEngine.modifyParameters("protocolTokenAuthority", address(tokenAuthority));
+        tokenAuthority.addAuthorization(address(debtAuctionHouse));
     }
 
     // Stablecoin
@@ -502,6 +526,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         deployStableKeepAuth();
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
+        accountingEngine.modifyParameters("protocolTokenAuthority", address(tokenAuthority));
+        tokenAuthority.addAuthorization(address(debtAuctionHouse));
     }
 
     // Utils

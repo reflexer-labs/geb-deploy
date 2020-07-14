@@ -32,7 +32,7 @@ contract GebDeployTest is GebDeployTestBase {
         gebDeploy.deployTaxation();
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
-        gebDeploy.deployShutdown(address(prot), address(0x0), 10);
+        gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
     }
 
     function testFailMissingEnd() public {
@@ -283,7 +283,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testDebtAuctionHouse() public {
-        deployBond();
+        deployBondWithCreatorPermissions();
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 1 ether}();
@@ -502,9 +502,7 @@ contract GebDeployTest is GebDeployTestBase {
     function testFireESM() public {
         deployBondKeepAuth();
         prot.mint(address(user1), 10);
-
-        user1.doESMBurnTokens(address(prot), address(esm), 10);
-        esm.shutdown();
+        user1.doESMShutdown(address(prot), address(esm), 10);
     }
 
     function testTransferCDPCollateralAndDebt() public {

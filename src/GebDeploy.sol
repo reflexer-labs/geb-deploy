@@ -187,9 +187,9 @@ contract StabilityFeeTreasuryFactory {
 
 contract ESMFactory {
     function newESM(
-        address prot, address globalSettlement, address tokenBurner, uint threshold
+        address prot, address globalSettlement, address tokenBurner, address thresholdSetter, uint threshold
     ) public returns (ESM esm) {
-        esm = new ESM(prot, globalSettlement, tokenBurner, threshold);
+        esm = new ESM(prot, globalSettlement, tokenBurner, thresholdSetter, threshold);
         esm.addAuthorization(msg.sender);
         esm.removeAuthorization(address(this));
     }
@@ -482,7 +482,7 @@ contract GebDeploy is DSAuth, Logging {
         accountingEngine.addAuthorization(address(liquidationEngine));
     }
 
-    function deployShutdown(address prot, address tokenBurner, uint256 threshold) public auth {
+    function deployShutdown(address prot, address tokenBurner, address thresholdSetter, uint256 threshold) public auth {
         require(address(liquidationEngine) != address(0), "Missing previous step");
 
         // Deploy
@@ -522,7 +522,7 @@ contract GebDeploy is DSAuth, Logging {
         }
 
         // Deploy ESM
-        esm = esmFactory.newESM(prot, address(globalSettlement), address(tokenBurner), threshold);
+        esm = esmFactory.newESM(prot, address(globalSettlement), address(tokenBurner), address(thresholdSetter), threshold);
         globalSettlement.addAuthorization(address(esm));
     }
 
