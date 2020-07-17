@@ -408,10 +408,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colAuctionHouse,) = gebDeploy.collateralTypes("COL");
-        this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
-        this.modifyParameters(address(oracleRelayer), "COL", "liquidationCRatio", uint(1100000000 ether));
+        this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
+
         this.modifyParameters(address(oracleRelayer), "COL", "safetyCRatio", uint(1100000000 ether));
+        this.modifyParameters(address(oracleRelayer), "COL", "liquidationCRatio", uint(1100000000 ether));
 
         oracleRelayer.updateCollateralPrice("ETH");
         oracleRelayer.updateCollateralPrice("COL");
@@ -486,10 +487,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
         (ethCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colAuctionHouse,) = gebDeploy.collateralTypes("COL");
-        this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
-        this.modifyParameters(address(oracleRelayer), "COL", "liquidationCRatio", uint(1100000000 ether));
+        this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
+
         this.modifyParameters(address(oracleRelayer), "COL", "safetyCRatio", uint(1100000000 ether));
+        this.modifyParameters(address(oracleRelayer), "COL", "liquidationCRatio", uint(1100000000 ether));
+
         oracleRelayer.updateCollateralPrice("ETH");
         oracleRelayer.updateCollateralPrice("COL");
         (,,uint safetyPrice,,,uint liquidationPrice) = cdpEngine.collateralTypes("ETH");
