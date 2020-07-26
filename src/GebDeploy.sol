@@ -41,6 +41,11 @@ import {StabilityFeeTreasury} from "geb/StabilityFeeTreasury.sol";
 import {CoinSavingsAccount} from "geb/CoinSavingsAccount.sol";
 import {OracleRelayer} from "geb/OracleRelayer.sol";
 
+contract CollateralAuctionHouse {
+    function modifyParameters(bytes32, uint256) virtual external;
+    function modifyParameters(bytes32, address) virtual external;
+}
+
 contract CDPEngineFactory {
     function newCDPEngine() public returns (CDPEngine cdpEngine) {
         cdpEngine = new CDPEngine();
@@ -123,11 +128,19 @@ contract DebtAuctionHouseFactory {
     }
 }
 
-contract CollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (CollateralAuctionHouse collateralAuctionHouse) {
-        collateralAuctionHouse = new CollateralAuctionHouse(cdpEngine, collateralType);
-        collateralAuctionHouse.addAuthorization(msg.sender);
-        collateralAuctionHouse.removeAuthorization(address(this));
+contract EnglishCollateralAuctionHouseFactory {
+    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (EnglishCollateralAuctionHouse englishCollateralAuctionHouse) {
+        englishCollateralAuctionHouse = new EnglishCollateralAuctionHouse(cdpEngine, collateralType);
+        englishCollateralAuctionHouse.addAuthorization(msg.sender);
+        englishCollateralAuctionHouse.removeAuthorization(address(this));
+    }
+}
+
+contract FixedDiscountCollateralAuctionHouseFactory {
+    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
+        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(cdpEngine, collateralType);
+        fixedDiscountCollateralAuctionHouse.addAuthorization(msg.sender);
+        fixedDiscountCollateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
@@ -210,26 +223,27 @@ contract PauseFactory {
 }
 
 contract GebDeploy is DSAuth, Logging {
-    CDPEngineFactory                         public cdpEngineFactory;
-    TaxCollectorFactory                      public taxCollectorFactory;
-    AccountingEngineFactory                  public accountingEngineFactory;
-    LiquidationEngineFactory                 public liquidationEngineFactory;
-    CoinFactory                              public coinFactory;
-    CoinJoinFactory                          public coinJoinFactory;
-    StabilityFeeTreasuryFactory              public stabilityFeeTreasuryFactory;
-    PreSettlementSurplusAuctionHouseFactory  public preSettlementSurplusAuctionHouseFactory;
-    PostSettlementSurplusAuctionHouseFactory public postSettlementSurplusAuctionHouseFactory;
-    DebtAuctionHouseFactory                  public debtAuctionHouseFactory;
-    CollateralAuctionHouseFactory            public collateralAuctionHouseFactory;
-    OracleRelayerFactory                     public oracleRelayerFactory;
-    RedemptionRateSetterFactory              public redemptionRateSetterFactory;
-    EmergencyRateSetterFactory               public emergencyRateSetterFactory;
-    MoneyMarketSetterFactory                 public moneyMarketSetterFactory;
-    GlobalSettlementFactory                  public globalSettlementFactory;
-    ESMFactory                               public esmFactory;
-    PauseFactory                             public pauseFactory;
-    CoinSavingsAccountFactory                public coinSavingsAccountFactory;
-    SettlementSurplusAuctioneerFactory       public settlementSurplusAuctioneerFactory;
+    CDPEngineFactory                           public cdpEngineFactory;
+    TaxCollectorFactory                        public taxCollectorFactory;
+    AccountingEngineFactory                    public accountingEngineFactory;
+    LiquidationEngineFactory                   public liquidationEngineFactory;
+    CoinFactory                                public coinFactory;
+    CoinJoinFactory                            public coinJoinFactory;
+    StabilityFeeTreasuryFactory                public stabilityFeeTreasuryFactory;
+    PreSettlementSurplusAuctionHouseFactory    public preSettlementSurplusAuctionHouseFactory;
+    PostSettlementSurplusAuctionHouseFactory   public postSettlementSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                    public debtAuctionHouseFactory;
+    EnglishCollateralAuctionHouseFactory       public englishCollateralAuctionHouseFactory;
+    FixedDiscountCollateralAuctionHouseFactory public fixedDiscountCollateralAuctionHouseFactory;
+    OracleRelayerFactory                       public oracleRelayerFactory;
+    RedemptionRateSetterFactory                public redemptionRateSetterFactory;
+    EmergencyRateSetterFactory                 public emergencyRateSetterFactory;
+    MoneyMarketSetterFactory                   public moneyMarketSetterFactory;
+    GlobalSettlementFactory                    public globalSettlementFactory;
+    ESMFactory                                 public esmFactory;
+    PauseFactory                               public pauseFactory;
+    CoinSavingsAccountFactory                  public coinSavingsAccountFactory;
+    SettlementSurplusAuctioneerFactory         public settlementSurplusAuctioneerFactory;
 
     CDPEngine                         public cdpEngine;
     TaxCollector                      public taxCollector;
@@ -253,10 +267,9 @@ contract GebDeploy is DSAuth, Logging {
 
     mapping(bytes32 => CollateralType) public collateralTypes;
 
-    uint8 public step = 0;
-
     struct CollateralType {
-        CollateralAuctionHouse collateralAuctionHouse;
+        EnglishCollateralAuctionHouse englishCollateralAuctionHouse;
+        FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse;
         address adapter;
     }
 
@@ -290,11 +303,11 @@ contract GebDeploy is DSAuth, Logging {
         PreSettlementSurplusAuctionHouseFactory preSettlementSurplusAuctionHouseFactory_,
         PostSettlementSurplusAuctionHouseFactory postSettlementSurplusAuctionHouseFactory_,
         DebtAuctionHouseFactory debtAuctionHouseFactory_,
-        CollateralAuctionHouseFactory collateralAuctionHouseFactory_,
+        EnglishCollateralAuctionHouseFactory englishCollateralAuctionHouseFactory_,
+        FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory_,
         OracleRelayerFactory oracleRelayerFactory_,
         RedemptionRateSetterFactory redemptionRateSetterFactory_,
         GlobalSettlementFactory globalSettlementFactory_,
-        ESMFactory esmFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
         require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
@@ -302,19 +315,21 @@ contract GebDeploy is DSAuth, Logging {
         preSettlementSurplusAuctionHouseFactory = preSettlementSurplusAuctionHouseFactory_;
         postSettlementSurplusAuctionHouseFactory = postSettlementSurplusAuctionHouseFactory_;
         debtAuctionHouseFactory = debtAuctionHouseFactory_;
-        collateralAuctionHouseFactory = collateralAuctionHouseFactory_;
+        englishCollateralAuctionHouseFactory = englishCollateralAuctionHouseFactory_;
+        fixedDiscountCollateralAuctionHouseFactory = fixedDiscountCollateralAuctionHouseFactory_;
         oracleRelayerFactory = oracleRelayerFactory_;
         redemptionRateSetterFactory = redemptionRateSetterFactory_;
         globalSettlementFactory = globalSettlementFactory_;
-        esmFactory = esmFactory_;
     }
     function setThirdFactoryBatch(
+        ESMFactory esmFactory_,
         PauseFactory pauseFactory_,
         EmergencyRateSetterFactory emergencyRateSetterFactory_,
         MoneyMarketSetterFactory moneyMarketSetterFactory_,
         StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        esmFactory = esmFactory_;
         pauseFactory = pauseFactory_;
         emergencyRateSetterFactory = emergencyRateSetterFactory_;
         moneyMarketSetterFactory = moneyMarketSetterFactory_;
@@ -596,41 +611,67 @@ contract GebDeploy is DSAuth, Logging {
     }
 
     function addAuthToCollateralAuctionHouse(bytes32 collateralType, address usr) public auth {
-        require(address(collateralTypes[collateralType].collateralAuctionHouse) != address(0), "CollateralAuctionHouse not initialized");
-        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(usr);
+        require(
+          address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0) ||
+          address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0),
+          "Collateral auction houses not initialized"
+        );
+        if (address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(usr);
+        } else if (address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(usr);
+        }
     }
 
     function releaseAuthCollateralAuctionHouse(bytes32 collateralType, address usr) public auth {
-        collateralTypes[collateralType].collateralAuctionHouse.removeAuthorization(usr);
+        if (address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].englishCollateralAuctionHouse.removeAuthorization(usr);
+        } else if (address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.removeAuthorization(usr);
+        }
     }
 
     function deployCollateral(
-      bytes32 collateralType, address adapter, address orcl, uint bidToMarketPriceRatio
+      bytes32 auctionHouseType, bytes32 collateralType, address adapter, address orcl, uint bidToMarketPriceRatio
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
         require(orcl != address(0), "Missing PIP address");
 
         // Deploy
-        collateralTypes[collateralType].collateralAuctionHouse =
-          collateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+        address auctionHouse;
+
+        cdpEngine.addAuthorization(adapter);
+
+        if (auctionHouseType == "ENGLISH") {
+          collateralTypes[collateralType].englishCollateralAuctionHouse =
+            englishCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+          liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].englishCollateralAuctionHouse));
+          // Internal auth
+          collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
+          collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(globalSettlement));
+          auctionHouse = address(collateralTypes[collateralType].englishCollateralAuctionHouse);
+        } else {
+          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
+            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+          liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
+          // Internal auth
+          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
+          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(globalSettlement));
+          auctionHouse = address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse);
+        }
+
         collateralTypes[collateralType].adapter = adapter;
         OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(orcl));
 
         // Internal references set up
-        liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].collateralAuctionHouse));
         cdpEngine.initializeCollateralType(collateralType);
         taxCollector.initializeCollateralType(collateralType);
 
-        // Internal auth
-        cdpEngine.addAuthorization(adapter);
-        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(address(liquidationEngine));
-        collateralTypes[collateralType].collateralAuctionHouse.addAuthorization(address(globalSettlement));
-
         // Set bid restrictions
-        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
-        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("oracleRelayer", address(oracleRelayer));
-        CollateralAuctionHouse(address(collateralTypes[collateralType].collateralAuctionHouse)).modifyParameters("orcl", address(orcl));
+        CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
+        CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
+        CollateralAuctionHouse(auctionHouse).modifyParameters("orcl", address(orcl));
     }
 
     function releaseAuth() public auth {
