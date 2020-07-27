@@ -137,10 +137,10 @@ contract ProxyActions {
         pause.executeTransaction(usr, tag, fax, eta);
     }
 
-    function taxAllAndModifyParameters(address who, bytes32 parameter, uint256 data) external {
+    function taxManyAndModifyParameters(address who, bytes32 parameter, uint256 data) external {
         address      usr = address(govActions);
         bytes32      tag;  assembly { tag := extcodehash(usr) }
-        bytes memory fax = abi.encodeWithSignature("taxAllAndModifyParameters(address,bytes32,uint256)", who, parameter, data);
+        bytes memory fax = abi.encodeWithSignature("taxManyAndModifyParameters(address,bytes32,uint256)", who, parameter, data);
         uint         eta = now;
 
         pause.scheduleTransaction(usr, tag, fax, eta);
@@ -201,26 +201,27 @@ contract ProxyActions {
 contract GebDeployTestBase is DSTest, ProxyActions {
     Hevm hevm;
 
-    CDPEngineFactory                         cdpEngineFactory;
-    TaxCollectorFactory                      taxCollectorFactory;
-    AccountingEngineFactory                  accountingEngineFactory;
-    LiquidationEngineFactory                 liquidationEngineFactory;
-    StabilityFeeTreasuryFactory              stabilityFeeTreasuryFactory;
-    CoinFactory                              coinFactory;
-    CoinJoinFactory                          coinJoinFactory;
-    PreSettlementSurplusAuctionHouseFactory  preSettlementSurplusAuctionHouseFactory;
-    PostSettlementSurplusAuctionHouseFactory postSettlementSurplusAuctionHouseFactory;
-    DebtAuctionHouseFactory                  debtAuctionHouseFactory;
-    CollateralAuctionHouseFactory            collateralAuctionHouseFactory;
-    OracleRelayerFactory                     oracleRelayerFactory;
-    GlobalSettlementFactory                  globalSettlementFactory;
-    RedemptionRateSetterFactory              redemptionRateSetterFactory;
-    EmergencyRateSetterFactory               emergencyRateSetterFactory;
-    MoneyMarketSetterFactory                 moneyMarketSetterFactory;
-    ESMFactory                               esmFactory;
-    CoinSavingsAccountFactory                coinSavingsAccountFactory;
-    SettlementSurplusAuctioneerFactory       settlementSurplusAuctioneerFactory;
-    PauseFactory                             pauseFactory;
+    CDPEngineFactory                           cdpEngineFactory;
+    TaxCollectorFactory                        taxCollectorFactory;
+    AccountingEngineFactory                    accountingEngineFactory;
+    LiquidationEngineFactory                   liquidationEngineFactory;
+    StabilityFeeTreasuryFactory                stabilityFeeTreasuryFactory;
+    CoinFactory                                coinFactory;
+    CoinJoinFactory                            coinJoinFactory;
+    PreSettlementSurplusAuctionHouseFactory    preSettlementSurplusAuctionHouseFactory;
+    PostSettlementSurplusAuctionHouseFactory   postSettlementSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                    debtAuctionHouseFactory;
+    EnglishCollateralAuctionHouseFactory       englishCollateralAuctionHouseFactory;
+    FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
+    OracleRelayerFactory                       oracleRelayerFactory;
+    GlobalSettlementFactory                    globalSettlementFactory;
+    RedemptionRateSetterFactory                redemptionRateSetterFactory;
+    EmergencyRateSetterFactory                 emergencyRateSetterFactory;
+    MoneyMarketSetterFactory                   moneyMarketSetterFactory;
+    ESMFactory                                 esmFactory;
+    CoinSavingsAccountFactory                  coinSavingsAccountFactory;
+    SettlementSurplusAuctioneerFactory         settlementSurplusAuctioneerFactory;
+    PauseFactory                               pauseFactory;
 
     GebDeploy gebDeploy;
 
@@ -254,10 +255,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     SettlementSurplusAuctioneer       settlementSurplusAuctioneer;
     ESM                               esm;
 
-    CollateralAuctionHouse ethCollateralAuctionHouse;
+    EnglishCollateralAuctionHouse ethEnglishCollateralAuctionHouse;
+    FixedDiscountCollateralAuctionHouse ethFixedDiscountCollateralAuctionHouse;
 
-    DSToken                col;
-    CollateralAuctionHouse colAuctionHouse;
+    DSToken                             col;
+    EnglishCollateralAuctionHouse       colEnglishCollateralAuctionHouse;
+    FixedDiscountCollateralAuctionHouse colFixedDiscountCollateralAuctionHouse;
 
     ProtocolTokenAuthority tokenAuthority;
 
@@ -287,7 +290,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseFactory();
         postSettlementSurplusAuctionHouseFactory = new PostSettlementSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
-        collateralAuctionHouseFactory = new CollateralAuctionHouseFactory();
+        englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
+        fixedDiscountCollateralAuctionHouseFactory = new FixedDiscountCollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
         redemptionRateSetterFactory = new RedemptionRateSetterFactory();
         emergencyRateSetterFactory = new EmergencyRateSetterFactory();
@@ -317,14 +321,15 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           preSettlementSurplusAuctionHouseFactory,
           postSettlementSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
-          collateralAuctionHouseFactory,
+          englishCollateralAuctionHouseFactory,
+          fixedDiscountCollateralAuctionHouseFactory,
           oracleRelayerFactory,
           redemptionRateSetterFactory,
-          globalSettlementFactory,
-          esmFactory
+          globalSettlementFactory
         );
 
         gebDeploy.setThirdFactoryBatch(
+          esmFactory,
           pauseFactory,
           emergencyRateSetterFactory,
           moneyMarketSetterFactory,
@@ -353,7 +358,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         return wad * 10 ** 27;
     }
 
-    function deployBondKeepAuth() virtual public {
+    function deployBondKeepAuth(bytes32 auctionType) virtual public {
         prot.mint(100 ether);
 
         gebDeploy.deployCDPEngine();
@@ -390,12 +395,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral("ETH", address(ethJoin), address(orclETH), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
-        gebDeploy.deployCollateral("COL", address(colJoin), address(orclCOL), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
         // Set CDPEngine Params
@@ -404,10 +409,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
         orclETH.updateResult(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
-        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
-        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
-        (ethCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
-        (colAuctionHouse,) = gebDeploy.collateralTypes("COL");
+        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18)));  // Price 45 COIN = 1 COL (precision 18)
+        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18)));  // Price 1 COIN = 1 USD
+        (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
+        (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
 
@@ -428,11 +433,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
-    function deployStableKeepAuth() virtual public {
+    function deployStableKeepAuth(bytes32 auctionType) virtual public {
         prot.mint(100 ether);
 
         gebDeploy.deployCDPEngine();
-        gebDeploy.deployCoin("Rai Stable Coin", "RAI", 99);
+        gebDeploy.deployCoin("Stable Coin", "STABL", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deploySavingsAccount();
         gebDeploy.deployEmergencyRateSetter(address(orclCOIN));
@@ -469,12 +474,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral("ETH", address(ethJoin), address(orclETH), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
-        gebDeploy.deployCollateral("COL", address(colJoin), address(orclCOL), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
         // Set CDPEngine Params
@@ -483,10 +488,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
         orclETH.updateResult(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
-        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18))); // Price 45 COIN = 1 COL (precision 18)
-        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18))); // Price 1 COIN = 1 USD
-        (ethCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
-        (colAuctionHouse,) = gebDeploy.collateralTypes("COL");
+        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18)));  // Price 45 COIN = 1 COL (precision 18)
+        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18)));  // Price 1 COIN = 1 USD
+        (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
+        (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
 
@@ -508,12 +513,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     }
 
     // Bond
-    function deployBond() virtual public {
-        deployBondKeepAuth();
+    function deployBond(bytes32 auctionType) virtual public {
+        deployBondKeepAuth(auctionType);
         gebDeploy.releaseAuth();
     }
-    function deployBondWithCreatorPermissions() virtual public {
-        deployBondKeepAuth();
+    function deployBondWithCreatorPermissions(bytes32 auctionType) virtual public {
+        deployBondKeepAuth(auctionType);
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
         accountingEngine.modifyParameters("protocolTokenAuthority", address(tokenAuthority));
@@ -521,12 +526,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     }
 
     // Stablecoin
-    function deployStable() virtual public {
-        deployStableKeepAuth();
+    function deployStable(bytes32 auctionType) virtual public {
+        deployStableKeepAuth(auctionType);
         gebDeploy.releaseAuth();
     }
-    function deployStableWithCreatorPermissions() virtual public {
-        deployStableKeepAuth();
+    function deployStableWithCreatorPermissions(bytes32 auctionType) virtual public {
+        deployStableKeepAuth(auctionType);
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
         accountingEngine.modifyParameters("protocolTokenAuthority", address(tokenAuthority));

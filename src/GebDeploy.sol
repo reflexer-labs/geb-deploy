@@ -32,7 +32,7 @@ import {LiquidationEngine} from "geb/LiquidationEngine.sol";
 import {CoinJoin} from "geb/BasicTokenAdapters.sol";
 import {PreSettlementSurplusAuctionHouse, PostSettlementSurplusAuctionHouse} from "geb/SurplusAuctionHouse.sol";
 import {DebtAuctionHouse} from "geb/DebtAuctionHouse.sol";
-import {CollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
+import {EnglishCollateralAuctionHouse, FixedDiscountCollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
 import {Coin} from "geb/Coin.sol";
 import {SettlementSurplusAuctioneer} from "geb/SettlementSurplusAuctioneer.sol";
 import {GlobalSettlement} from "geb/GlobalSettlement.sol";
@@ -41,7 +41,7 @@ import {StabilityFeeTreasury} from "geb/StabilityFeeTreasury.sol";
 import {CoinSavingsAccount} from "geb/CoinSavingsAccount.sol";
 import {OracleRelayer} from "geb/OracleRelayer.sol";
 
-contract CollateralAuctionHouse {
+abstract contract CollateralAuctionHouse {
     function modifyParameters(bytes32, uint256) virtual external;
     function modifyParameters(bytes32, address) virtual external;
 }
@@ -307,7 +307,7 @@ contract GebDeploy is DSAuth, Logging {
         FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory_,
         OracleRelayerFactory oracleRelayerFactory_,
         RedemptionRateSetterFactory redemptionRateSetterFactory_,
-        GlobalSettlementFactory globalSettlementFactory_,
+        GlobalSettlementFactory globalSettlementFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
         require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
@@ -651,6 +651,8 @@ contract GebDeploy is DSAuth, Logging {
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(globalSettlement));
           auctionHouse = address(collateralTypes[collateralType].englishCollateralAuctionHouse);
+          // Set bid restrictions
+          CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
         } else {
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
             fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
@@ -669,7 +671,6 @@ contract GebDeploy is DSAuth, Logging {
         taxCollector.initializeCollateralType(collateralType);
 
         // Set bid restrictions
-        CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
         CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
         CollateralAuctionHouse(auctionHouse).modifyParameters("orcl", address(orcl));
     }

@@ -9,7 +9,7 @@ abstract contract Setter {
     function removeAuthorization(address) virtual public;
     function initializeCollateralType(bytes32) virtual public;
     function updateAccumulatedRate() virtual public;
-    function taxAll() virtual public;
+    function taxMany(uint start, uint end) virtual public;
     function taxSingle(bytes32) virtual public;
 }
 
@@ -45,8 +45,8 @@ contract GovActions {
         Setter(targetContract).modifyParameters(parameter, data);
     }
 
-    function taxAllAndModifyParameters(address targetContract, bytes32 parameter, uint data) public {
-        Setter(targetContract).taxAll();
+    function taxManyAndModifyParameters(address targetContract, uint start, uint end, bytes32 parameter, uint data) public {
+        Setter(targetContract).taxMany(start, end);
         Setter(targetContract).modifyParameters(parameter, data);
     }
 
