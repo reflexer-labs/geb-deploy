@@ -90,6 +90,7 @@ contract CoinFactory {
 contract CoinJoinFactory {
     function newCoinJoin(address cdpEngine, address coin) public returns (CoinJoin coinJoin) {
         coinJoin = new CoinJoin(cdpEngine, coin);
+        coinJoin.removeAuthorization(address(this));
     }
 }
 
