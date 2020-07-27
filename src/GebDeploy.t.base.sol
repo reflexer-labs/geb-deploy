@@ -17,6 +17,7 @@ abstract contract Hevm {
 
 abstract contract AuctionLike {
     function increaseBidSize(uint, uint, uint) virtual public;
+    function buyCollateral(uint, uint, uint) virtual public;
     function decreaseSoldAmount(uint, uint, uint) virtual public;
     function settleAuction(uint) virtual public;
 }
@@ -81,6 +82,10 @@ contract FakeUser {
 
     function doIncreaseBidSize(address auction, uint id, uint amountToBuy, uint bid) public {
         AuctionLike(auction).increaseBidSize(id, amountToBuy, bid);
+    }
+
+    function doBuyCollateral(address auction, uint id, uint amountToBuy, uint bid) public {
+        AuctionLike(auction).buyCollateral(id, amountToBuy, bid);
     }
 
     function doDecreaseSoldAmount(address obj, uint id, uint amountToBuy, uint bid) public {

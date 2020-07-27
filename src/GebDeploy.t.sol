@@ -245,7 +245,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(generatedDebt, 1800 ether);
     }
 
-    function testCollateralAuctionHouse() public {
+    function testEnglishCollateralAuctionHouse() public {
         deployBond(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
@@ -280,6 +280,31 @@ contract GebDeployTest is GebDeployTestBase {
         user1.doDecreaseSoldAmount(address(ethEnglishCollateralAuctionHouse), batchId, 0.6 ether, rad(200 ether));
         hevm.warp(now + ethEnglishCollateralAuctionHouse.totalAuctionLength());
         user1.doSettleAuction(address(ethEnglishCollateralAuctionHouse), batchId);
+    }
+
+    function testFixedDiscountCollateralAuctionHouse() public {
+        deployBond(bytes32("FIXED_DISCOUNT"));
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
+        weth.deposit{value: 1 ether}();
+        weth.approve(address(ethJoin), uint(-1));
+        ethJoin.join(address(this), 1 ether);
+        cdpEngine.modifyCDPCollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
+        orclETH.updateResult(bytes32(uint(300 * 10 ** 18 - 1))); // Decrease price in 1 wei
+        oracleRelayer.updateCollateralPrice("ETH");
+        assertEq(cdpEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 0);
+        uint batchId = liquidationEngine.liquidateCDP("ETH", address(this));
+        assertEq(cdpEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 1 ether);
+        address(user1).transfer(10 ether);
+        user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
+        user1.doModifyCDPCollateralization(address(cdpEngine), "ETH", address(user1), address(user1), address(user1), 10 ether, 1000 ether);
+
+        address(user2).transfer(10 ether);
+        user2.doEthJoin(address(weth), address(ethJoin), address(user2), 10 ether);
+        user2.doModifyCDPCollateralization(address(cdpEngine), "ETH", address(user2), address(user2), address(user2), 10 ether, 1000 ether);
+
+        user1.doCDPApprove(address(cdpEngine), address(ethFixedDiscountCollateralAuctionHouse));
+        user1.doBuyCollateral(address(ethFixedDiscountCollateralAuctionHouse), batchId, 0, 200 ether);
     }
 
     function testDebtAuctionHouse() public {
