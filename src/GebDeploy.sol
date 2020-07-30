@@ -633,11 +633,11 @@ contract GebDeploy is DSAuth, Logging {
     }
 
     function deployCollateral(
-      bytes32 auctionHouseType, bytes32 collateralType, address adapter, address orcl, uint bidToMarketPriceRatio
+      bytes32 auctionHouseType, bytes32 collateralType, address adapter, address osm, address median, uint bidToMarketPriceRatio
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
-        require(orcl != address(0), "Missing PIP address");
+        require(osm != address(0), "Missing PIP address");
 
         // Deploy
         address auctionHouse;
@@ -665,7 +665,7 @@ contract GebDeploy is DSAuth, Logging {
         }
 
         collateralTypes[collateralType].adapter = adapter;
-        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(orcl));
+        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(osm));
 
         // Internal references set up
         cdpEngine.initializeCollateralType(collateralType);
@@ -673,7 +673,10 @@ contract GebDeploy is DSAuth, Logging {
 
         // Set bid restrictions
         CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
-        CollateralAuctionHouse(auctionHouse).modifyParameters("orcl", address(orcl));
+        CollateralAuctionHouse(auctionHouse).modifyParameters("osm", address(osm));
+        if (auctionHouseType != "ENGLISH") {
+          CollateralAuctionHouse(auctionHouse).modifyParameters("median", address(median));
+        }
     }
 
     function releaseAuth() public auth {
