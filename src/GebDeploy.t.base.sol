@@ -17,7 +17,7 @@ abstract contract Hevm {
 
 abstract contract AuctionLike {
     function increaseBidSize(uint, uint, uint) virtual public;
-    function buyCollateral(uint, uint, uint) virtual public;
+    function buyCollateral(uint, uint) virtual public;
     function decreaseSoldAmount(uint, uint, uint) virtual public;
     function settleAuction(uint) virtual public;
 }
@@ -84,8 +84,8 @@ contract FakeUser {
         AuctionLike(auction).increaseBidSize(id, amountToBuy, bid);
     }
 
-    function doBuyCollateral(address auction, uint id, uint amountToBuy, uint bid) public {
-        AuctionLike(auction).buyCollateral(id, amountToBuy, bid);
+    function doBuyCollateral(address auction, uint id, uint bid) public {
+        AuctionLike(auction).buyCollateral(id, bid);
     }
 
     function doDecreaseSoldAmount(address obj, uint id, uint amountToBuy, uint bid) public {
@@ -356,7 +356,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCDPEngine();
         gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployRateSetter(address(orclCOIN));
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
@@ -431,8 +430,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCoin("Stable Coin", "STABL", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deploySavingsAccount();
-        gebDeploy.deployEmergencyRateSetter(address(orclCOIN));
-        gebDeploy.deployMoneyMarketSetter(address(orclCOIN));
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();

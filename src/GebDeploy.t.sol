@@ -304,7 +304,7 @@ contract GebDeployTest is GebDeployTestBase {
         user2.doModifyCDPCollateralization(address(cdpEngine), "ETH", address(user2), address(user2), address(user2), 10 ether, 1000 ether);
 
         user1.doCDPApprove(address(cdpEngine), address(ethFixedDiscountCollateralAuctionHouse));
-        user1.doBuyCollateral(address(ethFixedDiscountCollateralAuctionHouse), batchId, 0, 200 ether);
+        user1.doBuyCollateral(address(ethFixedDiscountCollateralAuctionHouse), batchId, 200 ether);
     }
 
     function testDebtAuctionHouse() public {
