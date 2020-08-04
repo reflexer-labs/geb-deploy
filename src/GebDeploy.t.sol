@@ -683,10 +683,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(taxCollector.authorizedAccounts(address(pause.proxy())), 1);
 
-        // redemptionRateSetter
-        assertEq(redemptionRateSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(redemptionRateSetter.authorizedAccounts(address(pause.proxy())), 1);
-
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
 
@@ -739,7 +735,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(liquidationEngine.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(accountingEngine.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(redemptionRateSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -777,10 +772,6 @@ contract GebDeployTest is GebDeployTestBase {
         // taxCollector
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(taxCollector.authorizedAccounts(address(pause.proxy())), 1);
-
-        // redemptionRateSetter
-        assertEq(redemptionRateSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(redemptionRateSetter.authorizedAccounts(address(pause.proxy())), 1);
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
@@ -834,7 +825,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(liquidationEngine.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(accountingEngine.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(redemptionRateSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -885,14 +875,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
 
-        // moneyMarketSetter
-        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(moneyMarketSetter.authorizedAccounts(address(pause.proxy())), 1);
-
-        // emergencyRateSetter
-        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(emergencyRateSetter.authorizedAccounts(address(pause.proxy())), 1);
-
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
 
@@ -959,8 +941,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(colEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 
@@ -1002,14 +982,6 @@ contract GebDeployTest is GebDeployTestBase {
         // settlementSurplusAuctioneer
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
-
-        // moneyMarketSetter
-        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(moneyMarketSetter.authorizedAccounts(address(pause.proxy())), 1);
-
-        // emergencyRateSetter
-        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(emergencyRateSetter.authorizedAccounts(address(pause.proxy())), 1);
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
@@ -1077,8 +1049,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(moneyMarketSetter.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(emergencyRateSetter.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 }

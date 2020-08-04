@@ -220,9 +220,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
     OracleRelayerFactory                       oracleRelayerFactory;
     GlobalSettlementFactory                    globalSettlementFactory;
-    RedemptionRateSetterFactory                redemptionRateSetterFactory;
-    EmergencyRateSetterFactory                 emergencyRateSetterFactory;
-    MoneyMarketSetterFactory                   moneyMarketSetterFactory;
     ESMFactory                                 esmFactory;
     CoinSavingsAccountFactory                  coinSavingsAccountFactory;
     SettlementSurplusAuctioneerFactory         settlementSurplusAuctioneerFactory;
@@ -252,9 +249,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     PostSettlementSurplusAuctionHouse postSettlementSurplusAuctionHouse;
     DebtAuctionHouse                  debtAuctionHouse;
     OracleRelayer                     oracleRelayer;
-    RedemptionRateSetter              redemptionRateSetter;
-    EmergencyRateSetter               emergencyRateSetter;
-    MoneyMarketSetter                 moneyMarketSetter;
     CoinSavingsAccount                coinSavingsAccount;
     GlobalSettlement                  globalSettlement;
     SettlementSurplusAuctioneer       settlementSurplusAuctioneer;
@@ -297,9 +291,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
         fixedDiscountCollateralAuctionHouseFactory = new FixedDiscountCollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
-        redemptionRateSetterFactory = new RedemptionRateSetterFactory();
-        emergencyRateSetterFactory = new EmergencyRateSetterFactory();
-        moneyMarketSetterFactory = new MoneyMarketSetterFactory();
         stabilityFeeTreasuryFactory = new StabilityFeeTreasuryFactory();
         settlementSurplusAuctioneerFactory = new SettlementSurplusAuctioneerFactory();
         globalSettlementFactory = new GlobalSettlementFactory();
@@ -328,15 +319,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           englishCollateralAuctionHouseFactory,
           fixedDiscountCollateralAuctionHouseFactory,
           oracleRelayerFactory,
-          redemptionRateSetterFactory,
-          globalSettlementFactory
+          globalSettlementFactory,
+          esmFactory
         );
 
         gebDeploy.setThirdFactoryBatch(
-          esmFactory,
           pauseFactory,
-          emergencyRateSetterFactory,
-          moneyMarketSetterFactory,
           stabilityFeeTreasuryFactory
         );
 
@@ -390,7 +378,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
         pause = gebDeploy.pause();
-        redemptionRateSetter = gebDeploy.redemptionRateSetter();
         settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
@@ -468,8 +455,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
         pause = gebDeploy.pause();
-        emergencyRateSetter = gebDeploy.emergencyRateSetter();
-        moneyMarketSetter = gebDeploy.moneyMarketSetter();
         settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 

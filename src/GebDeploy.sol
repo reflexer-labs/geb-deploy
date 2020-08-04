@@ -20,10 +20,6 @@ pragma solidity ^0.6.7;
 import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
 import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
 
-import {RedemptionRateSetter} from "geb-redemption-feedback-mechanism/RedemptionRateSetter.sol";
-import {EmergencyRateSetter} from "geb-redemption-feedback-mechanism/EmergencyRateSetter.sol";
-import {MoneyMarketSetter} from "geb-money-market-setter/MoneyMarketSetter.sol";
-
 import {Logging} from "geb/Logging.sol";
 import {CDPEngine} from "geb/CDPEngine.sol";
 import {TaxCollector} from "geb/TaxCollector.sol";
@@ -161,32 +157,6 @@ contract CoinSavingsAccountFactory {
     }
 }
 
-contract RedemptionRateSetterFactory {
-    function newRedemptionRateSetter(address oracleRelayer) public returns (RedemptionRateSetter redemptionRateSetter) {
-        redemptionRateSetter = new RedemptionRateSetter(oracleRelayer);
-        redemptionRateSetter.addAuthorization(msg.sender);
-        redemptionRateSetter.removeAuthorization(address(this));
-    }
-}
-
-contract EmergencyRateSetterFactory {
-    function newEmergencyRateSetter(address oracleRelayer) public returns (EmergencyRateSetter emergencyRateSetter) {
-        emergencyRateSetter = new EmergencyRateSetter(oracleRelayer);
-        emergencyRateSetter.addAuthorization(msg.sender);
-        emergencyRateSetter.removeAuthorization(address(this));
-    }
-}
-
-contract MoneyMarketSetterFactory {
-    function newMoneyMarketSetter(
-      address oracleRelayer, address coinSavingsAccount, address taxCollector
-    ) public returns (MoneyMarketSetter moneyMarketSetter) {
-        moneyMarketSetter = new MoneyMarketSetter(oracleRelayer, coinSavingsAccount, taxCollector);
-        moneyMarketSetter.addAuthorization(msg.sender);
-        moneyMarketSetter.removeAuthorization(address(this));
-    }
-}
-
 contract StabilityFeeTreasuryFactory {
     function newStabilityFeeTreasury(
       address cdpEngine,
@@ -237,9 +207,6 @@ contract GebDeploy is DSAuth, Logging {
     EnglishCollateralAuctionHouseFactory       public englishCollateralAuctionHouseFactory;
     FixedDiscountCollateralAuctionHouseFactory public fixedDiscountCollateralAuctionHouseFactory;
     OracleRelayerFactory                       public oracleRelayerFactory;
-    RedemptionRateSetterFactory                public redemptionRateSetterFactory;
-    EmergencyRateSetterFactory                 public emergencyRateSetterFactory;
-    MoneyMarketSetterFactory                   public moneyMarketSetterFactory;
     GlobalSettlementFactory                    public globalSettlementFactory;
     ESMFactory                                 public esmFactory;
     PauseFactory                               public pauseFactory;
@@ -257,9 +224,6 @@ contract GebDeploy is DSAuth, Logging {
     PostSettlementSurplusAuctionHouse public postSettlementSurplusAuctionHouse;
     DebtAuctionHouse                  public debtAuctionHouse;
     OracleRelayer                     public oracleRelayer;
-    RedemptionRateSetter              public redemptionRateSetter;
-    EmergencyRateSetter               public emergencyRateSetter;
-    MoneyMarketSetter                 public moneyMarketSetter;
     CoinSavingsAccount                public coinSavingsAccount;
     GlobalSettlement                  public globalSettlement;
     SettlementSurplusAuctioneer       public settlementSurplusAuctioneer;
@@ -273,8 +237,6 @@ contract GebDeploy is DSAuth, Logging {
         FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse;
         address adapter;
     }
-
-    constructor() public {}
 
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
@@ -307,8 +269,8 @@ contract GebDeploy is DSAuth, Logging {
         EnglishCollateralAuctionHouseFactory englishCollateralAuctionHouseFactory_,
         FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory_,
         OracleRelayerFactory oracleRelayerFactory_,
-        RedemptionRateSetterFactory redemptionRateSetterFactory_,
-        GlobalSettlementFactory globalSettlementFactory_
+        GlobalSettlementFactory globalSettlementFactory_,
+        ESMFactory esmFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
         require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
@@ -319,21 +281,15 @@ contract GebDeploy is DSAuth, Logging {
         englishCollateralAuctionHouseFactory = englishCollateralAuctionHouseFactory_;
         fixedDiscountCollateralAuctionHouseFactory = fixedDiscountCollateralAuctionHouseFactory_;
         oracleRelayerFactory = oracleRelayerFactory_;
-        redemptionRateSetterFactory = redemptionRateSetterFactory_;
         globalSettlementFactory = globalSettlementFactory_;
+        esmFactory = esmFactory_;
     }
     function setThirdFactoryBatch(
-        ESMFactory esmFactory_,
         PauseFactory pauseFactory_,
-        EmergencyRateSetterFactory emergencyRateSetterFactory_,
-        MoneyMarketSetterFactory moneyMarketSetterFactory_,
         StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
     ) public auth {
         require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
-        esmFactory = esmFactory_;
         pauseFactory = pauseFactory_;
-        emergencyRateSetterFactory = emergencyRateSetterFactory_;
-        moneyMarketSetterFactory = moneyMarketSetterFactory_;
         stabilityFeeTreasuryFactory = stabilityFeeTreasuryFactory_;
     }
 
@@ -374,59 +330,6 @@ contract GebDeploy is DSAuth, Logging {
 
         // Internal auth
         cdpEngine.addAuthorization(address(coinSavingsAccount));
-    }
-
-    function deployRateSetter(
-        address orcl
-    ) public auth {
-        require(address(taxCollector) != address(0), "Missing previous step");
-        require(address(oracleRelayer) != address(0), "Missing previous step");
-        require(address(emergencyRateSetter) == address(0), "Rate setter already set");
-
-        // Deploy
-        redemptionRateSetter = redemptionRateSetterFactory.newRedemptionRateSetter(address(oracleRelayer));
-
-        // Setup
-        redemptionRateSetter.modifyParameters("orcl", orcl);
-
-        // Internal auth
-        oracleRelayer.addAuthorization(address(redemptionRateSetter));
-    }
-
-    function deployEmergencyRateSetter(
-        address orcl
-    ) public auth {
-        require(address(taxCollector) != address(0), "Missing previous step");
-        require(address(oracleRelayer) != address(0), "Missing previous step");
-        require(address(redemptionRateSetter) == address(0), "Rate setter already set");
-
-        // Deploy
-        emergencyRateSetter = emergencyRateSetterFactory.newEmergencyRateSetter(address(oracleRelayer));
-
-        // Setup
-        emergencyRateSetter.modifyParameters("orcl", orcl);
-
-        // Internal auth
-        oracleRelayer.addAuthorization(address(emergencyRateSetter));
-    }
-
-    function deployMoneyMarketSetter(
-        address orcl
-    ) public auth {
-        require(address(taxCollector) != address(0), "Missing previous step");
-        require(address(coinSavingsAccount) != address(0), "Missing previous step");
-
-        // Setup
-        moneyMarketSetter = moneyMarketSetterFactory.newMoneyMarketSetter(
-          address(oracleRelayer), address(coinSavingsAccount), address(taxCollector)
-        );
-
-        // Setup
-        moneyMarketSetter.modifyParameters("orcl", orcl);
-
-        // Internal auth
-        taxCollector.addAuthorization(address(moneyMarketSetter));
-        coinSavingsAccount.addAuthorization(address(moneyMarketSetter));
     }
 
     function deployAuctions(address prot) public auth {
@@ -514,11 +417,6 @@ contract GebDeploy is DSAuth, Logging {
         if (address(stabilityFeeTreasury) != address(0)) {
           globalSettlement.modifyParameters("stabilityFeeTreasury", address(stabilityFeeTreasury));
         }
-        if (address(redemptionRateSetter) != address(0)) {
-          globalSettlement.modifyParameters("rateSetter", address(redemptionRateSetter));
-        } else if (address(emergencyRateSetter) != address(0)) {
-          globalSettlement.modifyParameters("rateSetter", address(emergencyRateSetter));
-        }
 
         // Internal auth
         cdpEngine.addAuthorization(address(globalSettlement));
@@ -530,11 +428,6 @@ contract GebDeploy is DSAuth, Logging {
         }
         if (address(stabilityFeeTreasury) != address(0)) {
           stabilityFeeTreasury.addAuthorization(address(globalSettlement));
-        }
-        if (address(redemptionRateSetter) != address(0)) {
-          redemptionRateSetter.addAuthorization(address(globalSettlement));
-        } else if (address(emergencyRateSetter) != address(0)) {
-          emergencyRateSetter.addAuthorization(address(globalSettlement));
         }
 
         // Deploy ESM
@@ -566,17 +459,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(stabilityFeeTreasury) != address(0)) {
           stabilityFeeTreasury.addAuthorization(address(usr));
         }
-        if (address(moneyMarketSetter) != address(0)) {
-          moneyMarketSetter.addAuthorization(address(usr));
-        }
         if (address(settlementSurplusAuctioneer) != address(0)) {
           settlementSurplusAuctioneer.addAuthorization(address(usr));
-        }
-        if (address(redemptionRateSetter) != address(0)) {
-          redemptionRateSetter.addAuthorization(address(usr));
-        }
-        if (address(emergencyRateSetter) != address(0)) {
-          emergencyRateSetter.addAuthorization(address(usr));
         }
     }
 
@@ -594,17 +478,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(usr));
         }
-        if (address(redemptionRateSetter) != address(0)) {
-          redemptionRateSetter.removeAuthorization(address(usr));
-        }
-        if (address(emergencyRateSetter) != address(0)) {
-          emergencyRateSetter.removeAuthorization(address(usr));
-        }
         if (address(stabilityFeeTreasury) != address(0)) {
           stabilityFeeTreasury.removeAuthorization(address(usr));
-        }
-        if (address(moneyMarketSetter) != address(0)) {
-          moneyMarketSetter.removeAuthorization(address(usr));
         }
         if (address(settlementSurplusAuctioneer) != address(0)) {
           settlementSurplusAuctioneer.removeAuthorization(address(usr));
@@ -694,17 +569,8 @@ contract GebDeploy is DSAuth, Logging {
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(this));
         }
-        if (address(redemptionRateSetter) != address(0)) {
-          redemptionRateSetter.removeAuthorization(address(this));
-        }
-        if (address(emergencyRateSetter) != address(0)) {
-          emergencyRateSetter.removeAuthorization(address(this));
-        }
         if (address(stabilityFeeTreasury) != address(0)) {
           stabilityFeeTreasury.removeAuthorization(address(address(this)));
-        }
-        if (address(moneyMarketSetter) != address(0)) {
-          moneyMarketSetter.removeAuthorization(address(address(this)));
         }
         if (address(settlementSurplusAuctioneer) != address(0)) {
           settlementSurplusAuctioneer.removeAuthorization(address(address(this)));

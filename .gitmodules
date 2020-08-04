@@ -19,12 +19,6 @@
 [submodule "lib/esm"]
 	path = lib/esm
 	url = https://github.com/reflexer-labs/esm.git
-[submodule "lib/geb-money-market-setter"]
-	path = lib/geb-money-market-setter
-	url = https://github.com/reflexer-labs/geb-money-market-setter.git
-[submodule "lib/geb-redemption-feedback-mechanism"]
-	path = lib/geb-redemption-feedback-mechanism
-	url = https://github.com/reflexer-labs/geb-redemption-feedback-mechanism.git
 [submodule "lib/geb"]
 	path = lib/geb
 	url = https://github.com/reflexer-labs/geb.git
