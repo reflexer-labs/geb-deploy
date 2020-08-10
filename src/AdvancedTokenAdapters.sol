@@ -284,11 +284,11 @@ contract CollateralJoin3 is Logging {
         require(y == 0 || (z = x * int256(y)) / int256(y) == x, "CollateralJoin3/overflow");
     }
 
-    function join(address urn, uint wad) public emitLog {
+    function join(address usr, uint wad) public emitLog {
         require(contractEnabled == 1, "CollateralJoin3/contract-not-enabled");
         uint wad18 = mul(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, urn, int(wad18));
+        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin3/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
@@ -297,7 +297,7 @@ contract CollateralJoin3 is Logging {
         uint wad18 = mul(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
-        require(collateral.transfer(guy, wad), "CollateralJoin3/failed-transfer");
+        require(collateral.transfer(usr, wad), "CollateralJoin3/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }
 }
@@ -417,11 +417,11 @@ contract CollateralJoin4 is Logging {
     }
 
     // -- collateral --
-    function join(address urn, uint256 wad) external emitLog {
+    function join(address usr, uint256 wad) external emitLog {
         require(contractEnabled == 1, "CollateralJoin4/contract-not-enabled");
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
         GemBag(bags[msg.sender]).exit(address(this), wad);
-        cdpEngine.modifyCollateralBalance(collateralType, urn, int256(wad));
+        cdpEngine.modifyCollateralBalance(collateralType, usr, int256(wad));
         emit Join(msg.sender, bags[msg.sender], usr, wad);
     }
 

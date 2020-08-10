@@ -508,11 +508,17 @@ contract GebDeploy is DSAuth, Logging {
     }
 
     function deployCollateral(
-      bytes32 auctionHouseType, bytes32 collateralType, address adapter, address osm, address median, uint bidToMarketPriceRatio
+        bytes32 auctionHouseType,
+        bytes32 collateralType,
+        address adapter,
+        address collateralOSM,
+        address collateralMedian,
+        address systemCoinOracle,
+        uint bidToMarketPriceRatio
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
-        require(osm != address(0), "Missing PIP address");
+        require(collateralOSM != address(0), "Missing OSM address");
 
         // Deploy
         address auctionHouse;
@@ -540,7 +546,7 @@ contract GebDeploy is DSAuth, Logging {
         }
 
         collateralTypes[collateralType].adapter = adapter;
-        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(osm));
+        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(collateralOSM));
 
         // Internal references set up
         cdpEngine.initializeCollateralType(collateralType);
@@ -548,9 +554,12 @@ contract GebDeploy is DSAuth, Logging {
 
         // Set bid restrictions
         CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
-        CollateralAuctionHouse(auctionHouse).modifyParameters("osm", address(osm));
-        if (auctionHouseType != "ENGLISH") {
-          CollateralAuctionHouse(auctionHouse).modifyParameters("median", address(median));
+        if (auctionHouseType == "ENGLISH") {
+          CollateralAuctionHouse(auctionHouse).modifyParameters("osm", address(collateralOSM));
+        } else {
+          CollateralAuctionHouse(auctionHouse).modifyParameters("collateralOSM", address(collateralOSM));
+          CollateralAuctionHouse(auctionHouse).modifyParameters("collateralMedian", address(collateralMedian));
+          CollateralAuctionHouse(auctionHouse).modifyParameters("systemCoinOracle", address(systemCoinOracle));
         }
     }
 

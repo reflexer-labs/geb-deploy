@@ -385,12 +385,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
         // Set CDPEngine Params
@@ -460,12 +460,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
         // Set CDPEngine Params
