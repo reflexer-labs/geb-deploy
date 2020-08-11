@@ -20,7 +20,6 @@ pragma solidity ^0.6.7;
 import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
 import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
 
-import {Logging} from "geb/Logging.sol";
 import {CDPEngine} from "geb/CDPEngine.sol";
 import {TaxCollector} from "geb/TaxCollector.sol";
 import {AccountingEngine} from "geb/AccountingEngine.sol";
@@ -193,7 +192,7 @@ contract PauseFactory {
     }
 }
 
-contract GebDeploy is DSAuth, Logging {
+contract GebDeploy is DSAuth {
     CDPEngineFactory                           public cdpEngineFactory;
     TaxCollectorFactory                        public taxCollectorFactory;
     AccountingEngineFactory                    public accountingEngineFactory;
