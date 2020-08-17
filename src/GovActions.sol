@@ -56,7 +56,7 @@ contract GovActions {
         Setter(targetContract).modifyParameters(collateralType, parameter, data);
     }
 
-    function updateRedemptionPriceAndModifyParameters(address targetContract, bytes32 parameter, uint data) public {
+    function updateRedemptionRate(address targetContract, bytes32 parameter, uint data) public {
         Setter(targetContract).redemptionPrice();
         Setter(targetContract).modifyParameters(parameter, data);
     }
