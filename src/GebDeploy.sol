@@ -41,6 +41,11 @@ abstract contract CollateralAuctionHouse {
     function modifyParameters(bytes32, address) virtual external;
 }
 
+abstract contract AuthorizableContract {
+    function addAuthorization(address) virtual external;
+    function removeAuthorization(address) virtual external;
+}
+
 contract CDPEngineFactory {
     function newCDPEngine() public returns (CDPEngine cdpEngine) {
         cdpEngine = new CDPEngine();
@@ -463,6 +468,10 @@ contract GebDeploy is DSAuth {
         }
     }
 
+    function giveControl(address usr, address target) public auth {
+        AuthorizableContract(target).addAuthorization(usr);
+    }
+
     function takeControl(address usr) public auth {
         cdpEngine.removeAuthorization(address(usr));
         liquidationEngine.removeAuthorization(address(usr));
@@ -483,6 +492,10 @@ contract GebDeploy is DSAuth {
         if (address(settlementSurplusAuctioneer) != address(0)) {
           settlementSurplusAuctioneer.removeAuthorization(address(usr));
         }
+    }
+
+    function takeControl(address usr, address target) public auth {
+        AuthorizableContract(target).removeAuthorization(usr);
     }
 
     function addAuthToCollateralAuctionHouse(bytes32 collateralType, address usr) public auth {
