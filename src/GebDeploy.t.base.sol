@@ -398,9 +398,9 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         this.modifyParameters(address(cdpEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
         this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
-        orclETH.updateResult(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
-        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18)));  // Price 45 COIN = 1 COL (precision 18)
-        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18)));  // Price 1 COIN = 1 USD
+        orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
+        orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
+        orclCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
         (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
@@ -473,9 +473,9 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         this.modifyParameters(address(cdpEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
         this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
-        orclETH.updateResult(bytes32(uint(300 * 10 ** 18))); // Price 300 COIN = 1 ETH (precision 18)
-        orclCOL.updateResult(bytes32(uint(45 * 10 ** 18)));  // Price 45 COIN = 1 COL (precision 18)
-        orclCOIN.updateResult(bytes32(uint(1 * 10 ** 18)));  // Price 1 COIN = 1 USD
+        orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
+        orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
+        orclCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
         (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
