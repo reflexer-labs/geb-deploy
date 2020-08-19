@@ -77,15 +77,21 @@ contract CollateralJoin1 {
         decimals = collateral.decimals();
         emit AddAuthorization(msg.sender);
     }
-    function add(uint x, int y) internal pure returns (uint z) {
+
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y >= 0 || z <= x);
         require(y <= 0 || z >= x);
     }
+
+    // --- Administration ---
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
+
+    // --- Collateral Gateway ---
     function join(address usr, uint wad) external {
         require(contractEnabled == 1, "CollateralJoin1/not-contractEnabled");
         require(int(wad) >= 0, "CollateralJoin1/overflow");
@@ -164,21 +170,23 @@ contract CollateralJoin2 {
         emit AddAuthorization(msg.sender);
     }
 
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
+    }
+    function multiply(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x, "CollateralJoin2/overflow");
+    }
+
+    // --- Administration ---
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
-    function add(uint x, int y) internal pure returns (uint z) {
-        z = x + uint(y);
-        require(y >= 0 || z <= x);
-        require(y <= 0 || z >= x);
-    }
-
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x, "CollateralJoin2/overflow");
-    }
-
+    // --- Collateral Gateway ---
     function transfer(int wad, address guy) internal {
         int256 prevBalance = int(collateral.balanceOf(address(this)));
         require(prevBalance >= wad, "CollateralJoin2/no-funds");
@@ -188,7 +196,6 @@ contract CollateralJoin2 {
         require(ok, "CollateralJoin2/failed-transfer");
         require(uint(prevBalance + wad) == collateral.balanceOf(address(this)), "CollateralJoin2/failed-transfer");
     }
-
     function transferFrom(int wad) internal {
         int256 prevBalance = int(collateral.balanceOf(msg.sender));
         require(prevBalance >= wad, "CollateralJoin2/no-funds");
@@ -206,7 +213,6 @@ contract CollateralJoin2 {
         transferFrom(int256(wad));
         emit Join(msg.sender, usr, wad);
     }
-
     function exit(address usr, uint wad) public {
         require(wad <= 2 ** 255, "CollateralJoin2/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
@@ -263,36 +269,36 @@ contract CollateralJoin3 {
         emit AddAuthorization(msg.sender);
     }
 
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
+    }
+    function multiply(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x, "CollateralJoin3/overflow");
+    }
+    function multiply(int x, uint y) internal pure returns (int z) {
+        require(y == 0 || (z = x * int256(y)) / int256(y) == x, "CollateralJoin3/overflow");
+    }
+
+    // --- Administration ---
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
-    function add(uint x, int y) internal pure returns (uint z) {
-        z = x + uint(y);
-        require(y >= 0 || z <= x);
-        require(y <= 0 || z >= x);
-    }
-
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x, "CollateralJoin3/overflow");
-    }
-
-    function mul(int x, uint y) internal pure returns (int z) {
-        require(y == 0 || (z = x * int256(y)) / int256(y) == x, "CollateralJoin3/overflow");
-    }
-
+    // --- Collateral Gateway ---
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin3/contract-not-enabled");
-        uint wad18 = mul(wad, 10 ** (18 - decimals));
+        uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin3/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
-
     function exit(address usr, uint wad) public {
-        uint wad18 = mul(wad, 10 ** (18 - decimals));
+        uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
         require(collateral.transfer(usr, wad), "CollateralJoin3/failed-transfer");
@@ -392,29 +398,30 @@ contract CollateralJoin4 {
         emit AddAuthorization(msg.sender);
     }
 
-    function disableContract() external isAuthorized {
-        contractEnabled = 0;
-        emit DisableContract();
-    }
-
-    function add(uint x, int y) internal pure returns (uint z) {
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y >= 0 || z <= x);
         require(y <= 0 || z >= x);
     }
 
-    // -- admin --
+    // --- Administration ---
+    function disableContract() external isAuthorized {
+        contractEnabled = 0;
+        emit DisableContract();
+    }
+
+    // -- Bags --
     function make() external returns (address bag) {
         bag = make(msg.sender);
     }
-
     function make(address usr) public returns (address bag) {
         require(bags[usr] == address(0), "CollateralJoin4/bag-already-exists");
         bag = address(new GemBag(address(usr), address(collateral)));
         bags[usr] = bag;
     }
 
-    // -- collateral --
+    // -- Collateral Gateway ---
     function join(address usr, uint256 wad) external {
         require(contractEnabled == 1, "CollateralJoin4/contract-not-enabled");
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
@@ -422,7 +429,6 @@ contract CollateralJoin4 {
         cdpEngine.modifyCollateralBalance(collateralType, usr, int256(wad));
         emit Join(msg.sender, bags[msg.sender], usr, wad);
     }
-
     function exit(address usr, uint256 wad) external {
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
 
@@ -481,26 +487,28 @@ contract CollateralJoin5 {
         emit AddAuthorization(msg.sender);
     }
 
+    // --- Math ---
+    function multiply(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x, "CollateralJoin5/overflow");
+    }
+
+    // --- Administration ---
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x, "CollateralJoin5/overflow");
-    }
-
+    // --- Collateral Gateway ---
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin5/not-contractEnabled");
-        uint wad18 = mul(wad, 10 ** (18 - decimals));
+        uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(int(wad18) >= 0, "CollateralJoin5/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin5/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
-
     function exit(address usr, uint wad) public {
-        uint wad18 = mul(wad, 10 ** (18 - decimals));
+        uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(int(wad18) >= 0, "CollateralJoin5/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
         require(collateral.transfer(usr, wad), "CollateralJoin5/failed-transfer");
@@ -508,15 +516,130 @@ contract CollateralJoin5 {
     }
 }
 
-// AuthCollateralJoin
+// For whitelisting addresses who are allowed to join collateral (that has 18 decimals and implements transferFrom)
+contract CollateralJoin6 {
+    // --- Auth ---
+    mapping (address => uint) public authorizedAccounts;
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 1;
+        emit AddAuthorization(account);
+    }
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 0;
+        emit RemoveAuthorization(account);
+    }
+    /**
+    * @notice Checks whether msg.sender can call an authed function
+    **/
+    modifier isAuthorized {
+        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin6/account-not-authorized");
+        _;
+    }
 
-contract AuthCollateralJoin {
-    CDPEngineLike public cdpEngine;
-    bytes32 public collateralType;
+    // -- Whitelisting ---
+    // Allowances to join collateral into the system
+    mapping(address => uint256) public allowance;
+    // Amount of collateral already joined
+    mapping(address => int256) public collateralJoined;
+    /**
+     * @notice Change an address' allowance
+     * @param account Account to change the allowance for
+     * @param amount New allowance
+     */
+    function setAllowance(address account, uint256 amount) external isAuthorized {
+        if (both(amount == 0, allowance[account] > 0)) {
+          allowed = addition(allowed, -1);
+        } else if (both(allowance[account] == 0, amount > 0)) {
+          allowed = addition(allowed, 1);
+        }
+        allowance[account] = amount;
+        emit SetAllowance(account, amount, allowed);
+    }
+    /**
+    * @notice Checks whether msg.sender can join collateral
+    * @param amount of collateral to join
+    **/
+    function canJoin(uint256 amount) public view returns (bool) {
+        return both(allowance[msg.sender] > 0, addition(amount, collateralJoined[msg.sender]) <= allowance[msg.sender]);
+    }
+
+    CDPEngineLike  public cdpEngine;
+    bytes32        public collateralType;
     CollateralLike public collateral;
-    uint public decimals;
-    uint public contractEnabled;
+    uint           public decimals;
+    uint           public allowed;
+    uint           public contractEnabled;
 
+    // --- Events ---
+    event AddAuthorization(address account);
+    event RemoveAuthorization(address account);
+    event SetAllowance(address account, uint amount, uint allowed);
+    event DisableContract();
+    event Join(address sender, address usr, uint wad);
+    event Exit(address sender, address usr, uint wad);
+
+    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+        authorizedAccounts[msg.sender] = 1;
+        contractEnabled = 1;
+        cdpEngine = CDPEngineLike(cdpEngine_);
+        collateralType = collateralType_;
+        collateral = CollateralLike(collateral_);
+        decimals = collateral.decimals();
+        emit AddAuthorization(msg.sender);
+    }
+
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
+        z = x + uint(y);
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
+    }
+    function addition(int x, int y) internal pure returns (int z) {
+        z = x + y;
+        require(y >= 0 || z <= x);
+        require(y <= 0 || z >= x);
+    }
+
+    // --- Administration ---
+    function disableContract() external isAuthorized {
+        contractEnabled = 0;
+        emit DisableContract();
+    }
+
+    // --- Utils ---
+    function both(bool x, bool y) internal pure returns (bool z) {
+        assembly{ z := and(x, y)}
+    }
+
+    // --- Collateral Gateway ---
+    function join(address usr, uint wad) external {
+        require(contractEnabled == 1, "CollateralJoin6/not-contractEnabled");
+        require(canJoin(wad), "CollateralJoin6/cannot-join-above-allowance");
+        require(int(wad) >= 0, "CollateralJoin6/overflow");
+        collateralJoined[msg.sender] = addition(int(wad), collateralJoined[msg.sender]);
+        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
+        require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin6/failed-transfer");
+        emit Join(msg.sender, usr, wad);
+    }
+    function exit(address usr, uint wad) external {
+        require(wad <= 2 ** 255, "CollateralJoin6/overflow");
+        collateralJoined[msg.sender] = addition(-int(wad), collateralJoined[msg.sender]);
+        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
+        require(collateral.transfer(usr, wad), "CollateralJoin6/failed-transfer");
+        emit Exit(msg.sender, usr, wad);
+    }
+}
+
+// AuthCollateralJoin
+contract AuthCollateralJoin {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
     function addAuthorization(address usr) public isAuthorized {
@@ -528,6 +651,12 @@ contract AuthCollateralJoin {
         emit RemoveAuthorization(usr);
     }
     modifier isAuthorized { require(authorizedAccounts[msg.sender] == 1, "AuthCollateralJoin/non-authed"); _; }
+
+    CDPEngineLike public cdpEngine;
+    bytes32 public collateralType;
+    CollateralLike public collateral;
+    uint public decimals;
+    uint public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -546,17 +675,20 @@ contract AuthCollateralJoin {
         emit AddAuthorization(msg.sender);
     }
 
-    function disableContract() external isAuthorized {
-        contractEnabled = 0;
-        emit DisableContract();
-    }
-
-    function add(uint x, int y) internal pure returns (uint z) {
+    // --- Math ---
+    function addition(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y >= 0 || z <= x);
         require(y <= 0 || z >= x);
     }
 
+    // --- Administration ---
+    function disableContract() external isAuthorized {
+        contractEnabled = 0;
+        emit DisableContract();
+    }
+
+    // --- Collateral Gateway ---
     function join(address usr, uint wad) public isAuthorized {
         require(contractEnabled == 1, "AuthCollateralJoin/contract-not-enabled");
         require(int(wad) >= 0, "AuthCollateralJoin/overflow");
@@ -564,7 +696,6 @@ contract AuthCollateralJoin {
         require(collateral.transferFrom(msg.sender, address(this), wad), "AuthCollateralJoin/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
-
     function exit(address usr, uint wad) public isAuthorized {
         require(wad <= 2 ** 255, "AuthCollateralJoin/overflow");
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));

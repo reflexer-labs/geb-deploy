@@ -7,9 +7,9 @@ import {DSRoles} from "ds-roles/roles.sol";
 import {DSGuard} from "ds-guard/guard.sol";
 import {WETH9_} from "ds-weth/weth9.sol";
 
-import "./GebDeploy.sol";
-import {CollateralJoin1} from "./AdvancedTokenAdapters.sol";
-import {GovActions} from "./GovActions.sol";
+import "../GebDeploy.sol";
+import {CollateralJoin1} from "../AdvancedTokenAdapters.sol";
+import {GovActions} from "../GovActions.sol";
 
 abstract contract Hevm {
     function warp(uint256) virtual public;

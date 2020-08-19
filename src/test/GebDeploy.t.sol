@@ -2,7 +2,7 @@ pragma solidity ^0.6.7;
 
 import "./GebDeploy.t.base.sol";
 
-import "./AdvancedTokenAdapters.sol";
+import "../AdvancedTokenAdapters.sol";
 
 contract GebDeployTest is GebDeployTestBase {
     uint constant HUNDRED = 10 ** 29;
