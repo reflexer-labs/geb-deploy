@@ -548,7 +548,7 @@ contract CollateralJoin6 {
     // Allowances to join collateral into the system
     mapping(address => uint256) public allowance;
     // Amount of collateral already joined
-    mapping(address => int256) public collateralJoined;
+    mapping(address => uint256) public collateralJoined;
     /**
      * @notice Change an address' allowance
      * @param account Account to change the allowance for
@@ -558,7 +558,7 @@ contract CollateralJoin6 {
         if (both(amount == 0, allowance[account] > 0)) {
           allowed = addition(allowed, -1);
         } else if (both(allowance[account] == 0, amount > 0)) {
-          allowed = addition(allowed, 1);
+          allowed = addition(allowed, uint(1));
         }
         allowance[account] = amount;
         emit SetAllowance(account, amount, allowed);
@@ -597,15 +597,16 @@ contract CollateralJoin6 {
     }
 
     // --- Math ---
+    function addition(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x);
+    }
     function addition(uint x, int y) internal pure returns (uint z) {
         z = x + uint(y);
         require(y >= 0 || z <= x);
         require(y <= 0 || z >= x);
     }
-    function addition(int x, int y) internal pure returns (int z) {
-        z = x + y;
-        require(y >= 0 || z <= x);
-        require(y <= 0 || z >= x);
+    function subtract(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x);
     }
 
     // --- Administration ---
@@ -624,14 +625,16 @@ contract CollateralJoin6 {
         require(contractEnabled == 1, "CollateralJoin6/not-contractEnabled");
         require(canJoin(wad), "CollateralJoin6/cannot-join-above-allowance");
         require(int(wad) >= 0, "CollateralJoin6/overflow");
-        collateralJoined[msg.sender] = addition(int(wad), collateralJoined[msg.sender]);
+        collateralJoined[msg.sender] = addition(collateralJoined[msg.sender], wad);
         cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin6/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "CollateralJoin6/overflow");
-        collateralJoined[msg.sender] = addition(-int(wad), collateralJoined[msg.sender]);
+        if (collateralJoined[msg.sender] >= wad) {
+          collateralJoined[msg.sender] = subtract(collateralJoined[msg.sender], wad);
+        }
         cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin6/failed-transfer");
         emit Exit(msg.sender, usr, wad);

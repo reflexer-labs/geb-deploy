@@ -2,6 +2,7 @@ pragma solidity ^0.6.7;
 
 import "ds-test/test.sol";
 import "ds-weth/weth9.sol";
+import {DSToken} from "ds-token/token.sol";
 
 import "geb/CDPEngine.sol";
 
@@ -11,8 +12,33 @@ abstract contract Hevm {
     function warp(uint256) virtual public;
 }
 
+contract FakeUser {
+    function doApprove(address token, address guy, uint amount) public {
+        DSToken(token).approve(guy, amount);
+    }
+
+    function doJoin(address obj, address cdp, uint wad) public {
+        CollateralJoin6(obj).join(cdp, wad);
+    }
+
+    function doExit(address obj, address guy, uint wad) public {
+        CollateralJoin6(obj).exit(guy, wad);
+    }
+
+    function doTransferCollateral(address obj, bytes32 collateralType, address src, address dst, uint wad) public {
+        CDPEngine(obj).transferCollateral(
+            collateralType,
+            src,
+            dst,
+            wad
+        );
+    }
+}
+
 contract CollateralJoin6Test is DSTest {
     Hevm hevm;
+
+    FakeUser alice;
 
     WETH9_ weth;
 
@@ -30,8 +56,12 @@ contract CollateralJoin6Test is DSTest {
 
         collateralJoin = new CollateralJoin6(address(cdpEngine), collateralType, address(weth));
 
+        weth.approve(address(collateralJoin), uint(-1));
         cdpEngine.initializeCollateralType(collateralType);
         cdpEngine.addAuthorization(address(collateralJoin));
+
+        alice = new FakeUser();
+        weth.transfer(address(alice), wethAmount / 2);
     }
 
     function test_correct_setup() public {
@@ -57,34 +87,78 @@ contract CollateralJoin6Test is DSTest {
         collateralJoin.setAllowance(address(0x123), 0);
         assertEq(collateralJoin.allowance(address(0x123)), 0);
     }
-    // function testFail_join_when_zero_allowance() public {
-    //
-    // }
-    // function test_exit_when_zero_allowance() public {
-    //
-    // }
-    // function test_exit_when_positive_allowance() public {
-    //
-    // }
-    // function test_exit_when_negative_collateral_joined() public {
-    //
-    // }
-    // function test_exit_when_positive_collateral_joined() public {
-    //
-    // }
-    // function test_exit_when_zero_collateral_joined() public {
-    //
-    // }
-    // function test_join_above_allowance_zero_balance() public {
-    //
-    // }
-    // function test_join_above_allowance_positive_balance() public {
-    //
-    // }
-    // function testFail_join_when_negative_zero_allowance() public {
-    //
-    // }
-    // function test_join_when_negative_positive_allowance() public {
-    //
-    // }
+    function testFail_join_when_zero_allowance() public {
+        collateralJoin.join(address(this), 1);
+    }
+    function test_exit_when_zero_allowance() public {
+        collateralJoin.setAllowance(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+        collateralJoin.setAllowance(address(this), 0);
+        collateralJoin.exit(address(this), 1 ether);
+        assertEq(weth.balanceOf(address(this)), wethAmount / 2);
+    }
+    function test_exit_when_positive_allowance() public {
+        collateralJoin.setAllowance(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+        collateralJoin.exit(address(this), 1 ether);
+        assertEq(weth.balanceOf(address(this)), wethAmount / 2);
+    }
+    function test_exit_when_negative_collateral_joined() public {
+        collateralJoin.setAllowance(address(alice), 1 ether);
+        alice.doApprove(address(weth), address(collateralJoin), uint(-1));
+        alice.doJoin(address(collateralJoin), address(alice), 1 ether);
+        alice.doTransferCollateral(
+          address(cdpEngine),
+          collateralType,
+          address(alice),
+          address(this),
+          1 ether
+        );
+        collateralJoin.exit(address(this), 0.5 ether);
+        collateralJoin.exit(address(this), 0.5 ether);
+        assertEq(weth.balanceOf(address(this)), wethAmount / 2 + uint(1 ether));
+        assertEq(collateralJoin.collateralJoined(address(this)), 0);
+    }
+    function test_exit_when_positive_collateral_joined() public {
+        collateralJoin.setAllowance(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+        assertEq(collateralJoin.collateralJoined(address(this)), 1 ether);
+        collateralJoin.exit(address(this), 1 ether);
+        assertEq(weth.balanceOf(address(this)), wethAmount / 2);
+    }
+    function testFail_join_above_allowance_positive_balance() public {
+        collateralJoin.setAllowance(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+        collateralJoin.join(address(this), 1);
+    }
+    function testFail_join_when_negative_balance_zero_allowance() public {
+        collateralJoin.setAllowance(address(alice), 1 ether);
+        alice.doApprove(address(weth), address(collateralJoin), uint(-1));
+        alice.doJoin(address(collateralJoin), address(alice), 1 ether);
+        alice.doTransferCollateral(
+          address(cdpEngine),
+          collateralType,
+          address(alice),
+          address(this),
+          1 ether
+        );
+        collateralJoin.exit(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+    }
+    function test_join_when_negative_balance_positive_allowance() public {
+        collateralJoin.setAllowance(address(alice), 1 ether);
+        alice.doApprove(address(weth), address(collateralJoin), uint(-1));
+        alice.doJoin(address(collateralJoin), address(alice), 1 ether);
+        alice.doTransferCollateral(
+          address(cdpEngine),
+          collateralType,
+          address(alice),
+          address(this),
+          1 ether
+        );
+        collateralJoin.exit(address(this), 1 ether);
+        collateralJoin.setAllowance(address(this), 1 ether);
+        collateralJoin.join(address(this), 1 ether);
+        assertEq(collateralJoin.collateralJoined(address(this)), 1 ether);
+    }
 }
