@@ -22,8 +22,8 @@ abstract contract AuctionLike {
     function settleAuction(uint) virtual public;
 }
 
-abstract contract CDPApprovalLike {
-    function approveCDPModification(address guy) virtual public;
+abstract contract SAFEApprovalLike {
+    function approveSAFEModification(address guy) virtual public;
 }
 
 contract ProtocolTokenAuthority {
@@ -50,34 +50,34 @@ contract FakeUser {
         DSToken(token).approve(guy);
     }
 
-    function doCoinJoin(address obj, address cdp, uint wad) public {
-        CoinJoin(obj).join(cdp, wad);
+    function doCoinJoin(address obj, address safe, uint wad) public {
+        CoinJoin(obj).join(safe, wad);
     }
 
     function doCoinExit(address obj, address guy, uint wad) public {
         CoinJoin(obj).exit(guy, wad);
     }
 
-    function doEthJoin(address payable obj, address collateralSource, address cdp, uint wad) public {
+    function doEthJoin(address payable obj, address collateralSource, address safe, uint wad) public {
         WETH9_(obj).deposit{value: wad}();
         WETH9_(obj).approve(address(collateralSource), uint(-1));
-        CollateralJoin1(collateralSource).join(cdp, wad);
+        CollateralJoin1(collateralSource).join(safe, wad);
     }
 
-    function doModifyCDPCollateralization(
-      address obj, bytes32 collateralType, address cdp, address collateralSource, address coin, int deltaCollateral, int deltaDebt
+    function doModifySAFECollateralization(
+      address obj, bytes32 collateralType, address safe, address collateralSource, address coin, int deltaCollateral, int deltaDebt
     ) public {
-        CDPEngine(obj).modifyCDPCollateralization(collateralType, cdp, collateralSource, coin, deltaCollateral, deltaDebt);
+        SAFEEngine(obj).modifySAFECollateralization(collateralType, safe, collateralSource, coin, deltaCollateral, deltaDebt);
     }
 
-    function doTransferCDPCollateralAndDebt(
+    function doTransferSAFECollateralAndDebt(
       address obj, bytes32 collateralType, address src, address dst, int deltaCollateral, int deltaDebt
     ) public {
-        CDPEngine(obj).transferCDPCollateralAndDebt(collateralType, src, dst, deltaCollateral, deltaDebt);
+        SAFEEngine(obj).transferSAFECollateralAndDebt(collateralType, src, dst, deltaCollateral, deltaDebt);
     }
 
-    function doCDPApprove(address approval, address guy) public {
-        CDPApprovalLike(approval).approveCDPModification(guy);
+    function doSAFEApprove(address approval, address guy) public {
+        SAFEApprovalLike(approval).approveSAFEModification(guy);
     }
 
     function doIncreaseBidSize(address auction, uint id, uint amountToBuy, uint bid) public {
@@ -206,7 +206,7 @@ contract ProxyActions {
 contract GebDeployTestBase is DSTest, ProxyActions {
     Hevm hevm;
 
-    CDPEngineFactory                           cdpEngineFactory;
+    SAFEEngineFactory                           safeEngineFactory;
     TaxCollectorFactory                        taxCollectorFactory;
     AccountingEngineFactory                    accountingEngineFactory;
     LiquidationEngineFactory                   liquidationEngineFactory;
@@ -238,7 +238,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CollateralJoin1 ethJoin;
     CollateralJoin1 colJoin;
 
-    CDPEngine                         cdpEngine;
+    SAFEEngine                         safeEngine;
     TaxCollector                      taxCollector;
     AccountingEngine                  accountingEngine;
     LiquidationEngine                 liquidationEngine;
@@ -279,7 +279,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     }
 
     function setUp() virtual public {
-        cdpEngineFactory = new CDPEngineFactory();
+        safeEngineFactory = new SAFEEngineFactory();
         taxCollectorFactory = new TaxCollectorFactory();
         accountingEngineFactory = new AccountingEngineFactory();
         liquidationEngineFactory = new LiquidationEngineFactory();
@@ -302,7 +302,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy = new GebDeploy();
 
         gebDeploy.setFirstFactoryBatch(
-          cdpEngineFactory,
+          safeEngineFactory,
           taxCollectorFactory,
           accountingEngineFactory,
           liquidationEngineFactory,
@@ -353,7 +353,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     function deployBondKeepAuth(bytes32 auctionType) virtual public {
         prot.mint(100 ether);
 
-        gebDeploy.deployCDPEngine();
+        gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deployAuctions(address(prot));
@@ -364,7 +364,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
 
-        cdpEngine = gebDeploy.cdpEngine();
+        safeEngine = gebDeploy.safeEngine();
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
@@ -384,19 +384,19 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.giveControl(address(pause.proxy()));
 
         weth = new WETH9_();
-        ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
+        ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
-        colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
+        colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
-        // Set CDPEngine Params
-        this.modifyParameters(address(cdpEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
-        this.modifyParameters(address(cdpEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
-        this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
+        // Set SAFEEngine Params
+        this.modifyParameters(address(safeEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(safeEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(safeEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
         orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
         orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
@@ -411,10 +411,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         oracleRelayer.updateCollateralPrice("ETH");
         oracleRelayer.updateCollateralPrice("COL");
-        (,,uint safetyPrice,,,uint liquidationPrice) = cdpEngine.collateralTypes("ETH");
+        (,,uint safetyPrice,,,uint liquidationPrice) = safeEngine.collateralTypes("ETH");
         assertEq(safetyPrice, 300 * ONE * ONE / 1500000000 ether);
         assertEq(safetyPrice, liquidationPrice);
-        (,, safetyPrice,,,liquidationPrice) = cdpEngine.collateralTypes("COL");
+        (,, safetyPrice,,,liquidationPrice) = safeEngine.collateralTypes("COL");
         assertEq(safetyPrice, 45 * ONE * ONE / 1100000000 ether);
         assertEq(safetyPrice, liquidationPrice);
 
@@ -426,7 +426,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     function deployStableKeepAuth(bytes32 auctionType) virtual public {
         prot.mint(100 ether);
 
-        gebDeploy.deployCDPEngine();
+        gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Stable Coin", "STABL", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deploySavingsAccount();
@@ -438,7 +438,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
         gebDeploy.deployPause(0, authority);
 
-        cdpEngine = gebDeploy.cdpEngine();
+        safeEngine = gebDeploy.safeEngine();
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
@@ -459,19 +459,19 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.giveControl(address(pause.proxy()));
 
         weth = new WETH9_();
-        ethJoin = new CollateralJoin1(address(cdpEngine), "ETH", address(weth));
+        ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
 
         col = new DSToken("COL");
-        colJoin = new CollateralJoin1(address(cdpEngine), "COL", address(col));
+        colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
         gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
 
-        // Set CDPEngine Params
-        this.modifyParameters(address(cdpEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
-        this.modifyParameters(address(cdpEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
-        this.modifyParameters(address(cdpEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
+        // Set SAFEEngine Params
+        this.modifyParameters(address(safeEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(safeEngine), bytes32("ETH"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
+        this.modifyParameters(address(safeEngine), bytes32("COL"), bytes32("debtCeiling"), uint(10000 * 10 ** 45));
 
         orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
         orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
@@ -486,10 +486,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         oracleRelayer.updateCollateralPrice("ETH");
         oracleRelayer.updateCollateralPrice("COL");
-        (,,uint safetyPrice,,,uint liquidationPrice) = cdpEngine.collateralTypes("ETH");
+        (,,uint safetyPrice,,,uint liquidationPrice) = safeEngine.collateralTypes("ETH");
         assertEq(safetyPrice, 300 * ONE * ONE / 1500000000 ether);
         assertEq(safetyPrice, liquidationPrice);
-        (,, safetyPrice,,,liquidationPrice) = cdpEngine.collateralTypes("COL");
+        (,, safetyPrice,,,liquidationPrice) = safeEngine.collateralTypes("COL");
         assertEq(safetyPrice, 45 * ONE * ONE / 1100000000 ether);
         assertEq(safetyPrice, liquidationPrice);
 

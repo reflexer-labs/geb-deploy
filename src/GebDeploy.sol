@@ -20,7 +20,7 @@ pragma solidity ^0.6.7;
 import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
 import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
 
-import {CDPEngine} from "geb/CDPEngine.sol";
+import {SAFEEngine} from "geb/SAFEEngine.sol";
 import {TaxCollector} from "geb/TaxCollector.sol";
 import {AccountingEngine} from "geb/AccountingEngine.sol";
 import {LiquidationEngine} from "geb/LiquidationEngine.sol";
@@ -46,33 +46,33 @@ abstract contract AuthorizableContract {
     function removeAuthorization(address) virtual external;
 }
 
-contract CDPEngineFactory {
-    function newCDPEngine() public returns (CDPEngine cdpEngine) {
-        cdpEngine = new CDPEngine();
-        cdpEngine.addAuthorization(msg.sender);
-        cdpEngine.removeAuthorization(address(this));
+contract SAFEEngineFactory {
+    function newSAFEEngine() public returns (SAFEEngine safeEngine) {
+        safeEngine = new SAFEEngine();
+        safeEngine.addAuthorization(msg.sender);
+        safeEngine.removeAuthorization(address(this));
     }
 }
 
 contract TaxCollectorFactory {
-    function newTaxCollector(address cdpEngine) public returns (TaxCollector taxCollector) {
-        taxCollector = new TaxCollector(cdpEngine);
+    function newTaxCollector(address safeEngine) public returns (TaxCollector taxCollector) {
+        taxCollector = new TaxCollector(safeEngine);
         taxCollector.addAuthorization(msg.sender);
         taxCollector.removeAuthorization(address(this));
     }
 }
 
 contract AccountingEngineFactory {
-    function newAccountingEngine(address cdpEngine, address surplusAuctionHouse, address debtAuctionHouse) public returns (AccountingEngine accountingEngine) {
-        accountingEngine = new AccountingEngine(cdpEngine, surplusAuctionHouse, debtAuctionHouse);
+    function newAccountingEngine(address safeEngine, address surplusAuctionHouse, address debtAuctionHouse) public returns (AccountingEngine accountingEngine) {
+        accountingEngine = new AccountingEngine(safeEngine, surplusAuctionHouse, debtAuctionHouse);
         accountingEngine.addAuthorization(msg.sender);
         accountingEngine.removeAuthorization(address(this));
     }
 }
 
 contract LiquidationEngineFactory {
-    function newLiquidationEngine(address cdpEngine) public returns (LiquidationEngine liquidationEngine) {
-        liquidationEngine = new LiquidationEngine(cdpEngine);
+    function newLiquidationEngine(address safeEngine) public returns (LiquidationEngine liquidationEngine) {
+        liquidationEngine = new LiquidationEngine(safeEngine);
         liquidationEngine.addAuthorization(msg.sender);
         liquidationEngine.removeAuthorization(address(this));
     }
@@ -88,23 +88,23 @@ contract CoinFactory {
 }
 
 contract CoinJoinFactory {
-    function newCoinJoin(address cdpEngine, address coin) public returns (CoinJoin coinJoin) {
-        coinJoin = new CoinJoin(cdpEngine, coin);
+    function newCoinJoin(address safeEngine, address coin) public returns (CoinJoin coinJoin) {
+        coinJoin = new CoinJoin(safeEngine, coin);
         coinJoin.removeAuthorization(address(this));
     }
 }
 
 contract PreSettlementSurplusAuctionHouseFactory {
-    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (PreSettlementSurplusAuctionHouse surplusAuctionHouse) {
-        surplusAuctionHouse = new PreSettlementSurplusAuctionHouse(cdpEngine, prot);
+    function newSurplusAuctionHouse(address safeEngine, address prot) public returns (PreSettlementSurplusAuctionHouse surplusAuctionHouse) {
+        surplusAuctionHouse = new PreSettlementSurplusAuctionHouse(safeEngine, prot);
         surplusAuctionHouse.addAuthorization(msg.sender);
         surplusAuctionHouse.removeAuthorization(address(this));
     }
 }
 
 contract PostSettlementSurplusAuctionHouseFactory {
-    function newSurplusAuctionHouse(address cdpEngine, address prot) public returns (PostSettlementSurplusAuctionHouse surplusAuctionHouse) {
-        surplusAuctionHouse = new PostSettlementSurplusAuctionHouse(cdpEngine, prot);
+    function newSurplusAuctionHouse(address safeEngine, address prot) public returns (PostSettlementSurplusAuctionHouse surplusAuctionHouse) {
+        surplusAuctionHouse = new PostSettlementSurplusAuctionHouse(safeEngine, prot);
         surplusAuctionHouse.addAuthorization(msg.sender);
         surplusAuctionHouse.removeAuthorization(address(this));
     }
@@ -122,40 +122,40 @@ contract SettlementSurplusAuctioneerFactory {
 }
 
 contract DebtAuctionHouseFactory {
-    function newDebtAuctionHouse(address cdpEngine, address prot) public returns (DebtAuctionHouse debtAuctionHouse) {
-        debtAuctionHouse = new DebtAuctionHouse(cdpEngine, prot);
+    function newDebtAuctionHouse(address safeEngine, address prot) public returns (DebtAuctionHouse debtAuctionHouse) {
+        debtAuctionHouse = new DebtAuctionHouse(safeEngine, prot);
         debtAuctionHouse.addAuthorization(msg.sender);
         debtAuctionHouse.removeAuthorization(address(this));
     }
 }
 
 contract EnglishCollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (EnglishCollateralAuctionHouse englishCollateralAuctionHouse) {
-        englishCollateralAuctionHouse = new EnglishCollateralAuctionHouse(cdpEngine, collateralType);
+    function newCollateralAuctionHouse(address safeEngine, bytes32 collateralType) public returns (EnglishCollateralAuctionHouse englishCollateralAuctionHouse) {
+        englishCollateralAuctionHouse = new EnglishCollateralAuctionHouse(safeEngine, collateralType);
         englishCollateralAuctionHouse.addAuthorization(msg.sender);
         englishCollateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
 contract FixedDiscountCollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address cdpEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
-        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(cdpEngine, collateralType);
+    function newCollateralAuctionHouse(address safeEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
+        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(safeEngine, collateralType);
         fixedDiscountCollateralAuctionHouse.addAuthorization(msg.sender);
         fixedDiscountCollateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
 contract OracleRelayerFactory {
-    function newOracleRelayer(address cdpEngine) public returns (OracleRelayer oracleRelayer) {
-        oracleRelayer = new OracleRelayer(cdpEngine);
+    function newOracleRelayer(address safeEngine) public returns (OracleRelayer oracleRelayer) {
+        oracleRelayer = new OracleRelayer(safeEngine);
         oracleRelayer.addAuthorization(msg.sender);
         oracleRelayer.removeAuthorization(address(this));
     }
 }
 
 contract CoinSavingsAccountFactory {
-    function newCoinSavingsAccount(address cdpEngine) public returns (CoinSavingsAccount coinSavingsAccount) {
-        coinSavingsAccount = new CoinSavingsAccount(cdpEngine);
+    function newCoinSavingsAccount(address safeEngine) public returns (CoinSavingsAccount coinSavingsAccount) {
+        coinSavingsAccount = new CoinSavingsAccount(safeEngine);
         coinSavingsAccount.addAuthorization(msg.sender);
         coinSavingsAccount.removeAuthorization(address(this));
     }
@@ -163,11 +163,11 @@ contract CoinSavingsAccountFactory {
 
 contract StabilityFeeTreasuryFactory {
     function newStabilityFeeTreasury(
-      address cdpEngine,
+      address safeEngine,
       address accountingEngine,
       address coinJoin
     ) public returns (StabilityFeeTreasury stabilityFeeTreasury) {
-        stabilityFeeTreasury = new StabilityFeeTreasury(cdpEngine, accountingEngine, coinJoin);
+        stabilityFeeTreasury = new StabilityFeeTreasury(safeEngine, accountingEngine, coinJoin);
         stabilityFeeTreasury.addAuthorization(msg.sender);
         stabilityFeeTreasury.removeAuthorization(address(this));
     }
@@ -198,7 +198,7 @@ contract PauseFactory {
 }
 
 contract GebDeploy is DSAuth {
-    CDPEngineFactory                           public cdpEngineFactory;
+    SAFEEngineFactory                           public safeEngineFactory;
     TaxCollectorFactory                        public taxCollectorFactory;
     AccountingEngineFactory                    public accountingEngineFactory;
     LiquidationEngineFactory                   public liquidationEngineFactory;
@@ -217,7 +217,7 @@ contract GebDeploy is DSAuth {
     CoinSavingsAccountFactory                  public coinSavingsAccountFactory;
     SettlementSurplusAuctioneerFactory         public settlementSurplusAuctioneerFactory;
 
-    CDPEngine                         public cdpEngine;
+    SAFEEngine                         public safeEngine;
     TaxCollector                      public taxCollector;
     AccountingEngine                  public accountingEngine;
     LiquidationEngine                 public liquidationEngine;
@@ -247,7 +247,7 @@ contract GebDeploy is DSAuth {
     }
 
     function setFirstFactoryBatch(
-        CDPEngineFactory cdpEngineFactory_,
+        SAFEEngineFactory safeEngineFactory_,
         TaxCollectorFactory taxCollectorFactory_,
         AccountingEngineFactory accountingEngineFactory_,
         LiquidationEngineFactory liquidationEngineFactory_,
@@ -256,8 +256,8 @@ contract GebDeploy is DSAuth {
         CoinSavingsAccountFactory coinSavingsAccountFactory_,
         SettlementSurplusAuctioneerFactory settlementSurplusAuctioneerFactory_
     ) public auth {
-        require(address(cdpEngineFactory) == address(0), "CDPEngine Factory already set");
-        cdpEngineFactory = cdpEngineFactory_;
+        require(address(safeEngineFactory) == address(0), "SAFEEngine Factory already set");
+        safeEngineFactory = safeEngineFactory_;
         taxCollectorFactory = taxCollectorFactory_;
         accountingEngineFactory = accountingEngineFactory_;
         liquidationEngineFactory = liquidationEngineFactory_;
@@ -276,7 +276,7 @@ contract GebDeploy is DSAuth {
         GlobalSettlementFactory globalSettlementFactory_,
         ESMFactory esmFactory_
     ) public auth {
-        require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        require(address(safeEngineFactory) != address(0), "SAFEEngine Factory not set");
         require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
         require(address(postSettlementSurplusAuctionHouseFactory) == address(0), "PostSettlementSurplusAuctionHouse Factory already set");
         preSettlementSurplusAuctionHouseFactory = preSettlementSurplusAuctionHouseFactory_;
@@ -292,48 +292,48 @@ contract GebDeploy is DSAuth {
         PauseFactory pauseFactory_,
         StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
     ) public auth {
-        require(address(cdpEngineFactory) != address(0), "CDPEngine Factory not set");
+        require(address(safeEngineFactory) != address(0), "SAFEEngine Factory not set");
         pauseFactory = pauseFactory_;
         stabilityFeeTreasuryFactory = stabilityFeeTreasuryFactory_;
     }
 
-    function deployCDPEngine() public auth {
-        require(address(cdpEngine) == address(0), "CDPEngine already deployed");
-        cdpEngine = cdpEngineFactory.newCDPEngine();
-        oracleRelayer = oracleRelayerFactory.newOracleRelayer(address(cdpEngine));
+    function deploySAFEEngine() public auth {
+        require(address(safeEngine) == address(0), "SAFEEngine already deployed");
+        safeEngine = safeEngineFactory.newSAFEEngine();
+        oracleRelayer = oracleRelayerFactory.newOracleRelayer(address(safeEngine));
 
         // Internal auth
-        cdpEngine.addAuthorization(address(oracleRelayer));
+        safeEngine.addAuthorization(address(oracleRelayer));
     }
 
     function deployCoin(string memory name, string memory symbol, uint256 chainId)
       public auth {
-        require(address(cdpEngine) != address(0), "Missing previous step");
+        require(address(safeEngine) != address(0), "Missing previous step");
 
         // Deploy
         coin      = coinFactory.newCoin(name, symbol, chainId);
-        coinJoin  = coinJoinFactory.newCoinJoin(address(cdpEngine), address(coin));
+        coinJoin  = coinJoinFactory.newCoinJoin(address(safeEngine), address(coin));
         coin.addAuthorization(address(coinJoin));
     }
 
     function deployTaxation() public auth {
-        require(address(cdpEngine) != address(0), "Missing previous step");
+        require(address(safeEngine) != address(0), "Missing previous step");
 
         // Deploy
-        taxCollector = taxCollectorFactory.newTaxCollector(address(cdpEngine));
+        taxCollector = taxCollectorFactory.newTaxCollector(address(safeEngine));
 
         // Internal auth
-        cdpEngine.addAuthorization(address(taxCollector));
+        safeEngine.addAuthorization(address(taxCollector));
     }
 
     function deploySavingsAccount() public auth {
-        require(address(cdpEngine) != address(0), "Missing previous step");
+        require(address(safeEngine) != address(0), "Missing previous step");
 
         // Deploy
-        coinSavingsAccount = coinSavingsAccountFactory.newCoinSavingsAccount(address(cdpEngine));
+        coinSavingsAccount = coinSavingsAccountFactory.newCoinSavingsAccount(address(safeEngine));
 
         // Internal auth
-        cdpEngine.addAuthorization(address(coinSavingsAccount));
+        safeEngine.addAuthorization(address(coinSavingsAccount));
     }
 
     function deployAuctions(address prot) public auth {
@@ -342,16 +342,16 @@ contract GebDeploy is DSAuth {
         require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
-        preSettlementSurplusAuctionHouse = preSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
-        postSettlementSurplusAuctionHouse = postSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(cdpEngine), prot);
-        debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(cdpEngine), prot);
+        preSettlementSurplusAuctionHouse = preSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
+        postSettlementSurplusAuctionHouse = postSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
+        debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(safeEngine), prot);
 
         // Internal auth
-        cdpEngine.addAuthorization(address(debtAuctionHouse));
+        safeEngine.addAuthorization(address(debtAuctionHouse));
     }
 
     function deployAccountingEngine() public auth {
-        accountingEngine = accountingEngineFactory.newAccountingEngine(address(cdpEngine), address(preSettlementSurplusAuctionHouse), address(debtAuctionHouse));
+        accountingEngine = accountingEngineFactory.newAccountingEngine(address(safeEngine), address(preSettlementSurplusAuctionHouse), address(debtAuctionHouse));
 
         // Setup
         debtAuctionHouse.modifyParameters("accountingEngine", address(accountingEngine));
@@ -363,13 +363,13 @@ contract GebDeploy is DSAuth {
     }
 
     function deployStabilityFeeTreasury() public auth {
-        require(address(cdpEngine) != address(0), "Missing previous step");
+        require(address(safeEngine) != address(0), "Missing previous step");
         require(address(accountingEngine) != address(0), "Missing previous step");
         require(address(coinJoin) != address(0), "Missing previous step");
 
         // Deploy
         stabilityFeeTreasury = stabilityFeeTreasuryFactory.newStabilityFeeTreasury(
-          address(cdpEngine),
+          address(safeEngine),
           address(accountingEngine),
           address(coinJoin)
         );
@@ -395,13 +395,13 @@ contract GebDeploy is DSAuth {
         require(address(accountingEngine) != address(0), "Missing previous step");
 
         // Deploy
-        liquidationEngine = liquidationEngineFactory.newLiquidationEngine(address(cdpEngine));
+        liquidationEngine = liquidationEngineFactory.newLiquidationEngine(address(safeEngine));
 
         // Internal references set up
         liquidationEngine.modifyParameters("accountingEngine", address(accountingEngine));
 
         // Internal auth
-        cdpEngine.addAuthorization(address(liquidationEngine));
+        safeEngine.addAuthorization(address(liquidationEngine));
         accountingEngine.addAuthorization(address(liquidationEngine));
     }
 
@@ -411,7 +411,7 @@ contract GebDeploy is DSAuth {
         // Deploy
         globalSettlement = globalSettlementFactory.newGlobalSettlement();
 
-        globalSettlement.modifyParameters("cdpEngine", address(cdpEngine));
+        globalSettlement.modifyParameters("safeEngine", address(safeEngine));
         globalSettlement.modifyParameters("liquidationEngine", address(liquidationEngine));
         globalSettlement.modifyParameters("accountingEngine", address(accountingEngine));
         globalSettlement.modifyParameters("oracleRelayer", address(oracleRelayer));
@@ -423,7 +423,7 @@ contract GebDeploy is DSAuth {
         }
 
         // Internal auth
-        cdpEngine.addAuthorization(address(globalSettlement));
+        safeEngine.addAuthorization(address(globalSettlement));
         liquidationEngine.addAuthorization(address(globalSettlement));
         accountingEngine.addAuthorization(address(globalSettlement));
         oracleRelayer.addAuthorization(address(globalSettlement));
@@ -447,7 +447,7 @@ contract GebDeploy is DSAuth {
     }
 
     function giveControl(address usr) public auth {
-        cdpEngine.addAuthorization(address(usr));
+        safeEngine.addAuthorization(address(usr));
         liquidationEngine.addAuthorization(address(usr));
         accountingEngine.addAuthorization(address(usr));
         taxCollector.addAuthorization(address(usr));
@@ -473,7 +473,7 @@ contract GebDeploy is DSAuth {
     }
 
     function takeControl(address usr) public auth {
-        cdpEngine.removeAuthorization(address(usr));
+        safeEngine.removeAuthorization(address(usr));
         liquidationEngine.removeAuthorization(address(usr));
         accountingEngine.removeAuthorization(address(usr));
         taxCollector.removeAuthorization(address(usr));
@@ -535,11 +535,11 @@ contract GebDeploy is DSAuth {
         // Deploy
         address auctionHouse;
 
-        cdpEngine.addAuthorization(adapter);
+        safeEngine.addAuthorization(adapter);
 
         if (auctionHouseType == "ENGLISH") {
           collateralTypes[collateralType].englishCollateralAuctionHouse =
-            englishCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+            englishCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), collateralType);
           liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].englishCollateralAuctionHouse));
           // Internal auth
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
@@ -549,7 +549,7 @@ contract GebDeploy is DSAuth {
           CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
         } else {
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
-            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(cdpEngine), collateralType);
+            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), collateralType);
           liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
           // Internal auth
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
@@ -561,7 +561,7 @@ contract GebDeploy is DSAuth {
         OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(collateralOSM));
 
         // Internal references set up
-        cdpEngine.initializeCollateralType(collateralType);
+        safeEngine.initializeCollateralType(collateralType);
         taxCollector.initializeCollateralType(collateralType);
 
         // Set bid restrictions
@@ -576,7 +576,7 @@ contract GebDeploy is DSAuth {
     }
 
     function releaseAuth() public auth {
-        cdpEngine.removeAuthorization(address(this));
+        safeEngine.removeAuthorization(address(this));
         liquidationEngine.removeAuthorization(address(this));
         accountingEngine.removeAuthorization(address(this));
         taxCollector.removeAuthorization(address(this));
@@ -599,7 +599,7 @@ contract GebDeploy is DSAuth {
     }
 
     function addCreatorAuth() public auth {
-        cdpEngine.addAuthorization(msg.sender);
+        safeEngine.addAuthorization(msg.sender);
         accountingEngine.addAuthorization(msg.sender);
     }
 }

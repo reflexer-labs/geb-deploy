@@ -17,7 +17,7 @@
 
 pragma solidity ^0.6.7;
 
-abstract contract CDPEngineLike {
+abstract contract SAFEEngineLike {
     function modifyCollateralBalance(bytes32,address,int) virtual public;
 }
 
@@ -55,7 +55,7 @@ contract CollateralJoin1 {
         _;
     }
 
-    CDPEngineLike public cdpEngine;
+    SAFEEngineLike public safeEngine;
     bytes32 public collateralType;
     CollateralLike public collateral;
     uint    public decimals;
@@ -68,10 +68,10 @@ contract CollateralJoin1 {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
@@ -95,13 +95,13 @@ contract CollateralJoin1 {
     function join(address usr, uint wad) external {
         require(contractEnabled == 1, "CollateralJoin1/not-contractEnabled");
         require(int(wad) >= 0, "CollateralJoin1/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin1/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "CollateralJoin1/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin1/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }
@@ -147,7 +147,7 @@ contract CollateralJoin2 {
         _;
     }
 
-    CDPEngineLike public cdpEngine;
+    SAFEEngineLike public safeEngine;
     bytes32 public collateralType;
     CollateralLike2 public collateral;
     uint public decimals;
@@ -160,9 +160,9 @@ contract CollateralJoin2 {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         authorizedAccounts[msg.sender] = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike2(collateral_);
         decimals = collateral.decimals();
@@ -209,13 +209,13 @@ contract CollateralJoin2 {
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin2/contract-not-enabled");
         require(wad <= 2 ** 255, "CollateralJoin2/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         transferFrom(int256(wad));
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) public {
         require(wad <= 2 ** 255, "CollateralJoin2/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         transfer(int(wad), usr);
         emit Exit(msg.sender, usr, wad);
     }
@@ -245,7 +245,7 @@ contract CollateralJoin3 {
       _;
     }
 
-    CDPEngineLike public cdpEngine;
+    SAFEEngineLike public safeEngine;
     bytes32 public collateralType;
     CollateralLike3 public collateral;
     uint public decimals;
@@ -258,9 +258,9 @@ contract CollateralJoin3 {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_, uint decimals_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_, uint decimals_) public {
         authorizedAccounts[msg.sender] = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike3(collateral_);
         require(decimals_ < 18, "CollateralJoin3/decimals-higher-18");
@@ -293,14 +293,14 @@ contract CollateralJoin3 {
         require(contractEnabled == 1, "CollateralJoin3/contract-not-enabled");
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin3/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) public {
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
         require(collateral.transfer(usr, wad), "CollateralJoin3/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }
@@ -373,7 +373,7 @@ contract CollateralJoin4 {
       _;
     }
 
-    CDPEngineLike  public cdpEngine;
+    SAFEEngineLike  public safeEngine;
     bytes32  public collateralType;
     CollateralLike4 public collateral;
     uint     public decimals;
@@ -388,9 +388,9 @@ contract CollateralJoin4 {
     event Join(address sender, address bag, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         authorizedAccounts[msg.sender] = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike4(collateral_);
         decimals = collateral.decimals();
@@ -426,13 +426,13 @@ contract CollateralJoin4 {
         require(contractEnabled == 1, "CollateralJoin4/contract-not-enabled");
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
         GemBag(bags[msg.sender]).exit(address(this), wad);
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int256(wad));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int256(wad));
         emit Join(msg.sender, bags[msg.sender], usr, wad);
     }
     function exit(address usr, uint256 wad) external {
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
 
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int256(wad));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int256(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin4/failed-transfer");
 
         emit Exit(msg.sender, usr, wad);
@@ -463,7 +463,7 @@ contract CollateralJoin5 {
       _;
     }
 
-    CDPEngineLike   public cdpEngine;
+    SAFEEngineLike   public safeEngine;
     bytes32         public collateralType;
     CollateralLike5 public collateral;
     uint            public decimals;
@@ -476,13 +476,13 @@ contract CollateralJoin5 {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         collateral = CollateralLike5(collateral_);
         decimals = collateral.decimals();
         require(decimals < 18, "CollateralJoin5/decimals-18-or-higher");
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         emit AddAuthorization(msg.sender);
     }
@@ -503,14 +503,14 @@ contract CollateralJoin5 {
         require(contractEnabled == 1, "CollateralJoin5/not-contractEnabled");
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(int(wad18) >= 0, "CollateralJoin5/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad18));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin5/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) public {
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(int(wad18) >= 0, "CollateralJoin5/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad18));
         require(collateral.transfer(usr, wad), "CollateralJoin5/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }
@@ -571,7 +571,7 @@ contract CollateralJoin6 {
         return both(allowance[msg.sender] > 0, addition(amount, collateralJoined[msg.sender]) <= allowance[msg.sender]);
     }
 
-    CDPEngineLike  public cdpEngine;
+    SAFEEngineLike  public safeEngine;
     bytes32        public collateralType;
     CollateralLike public collateral;
     uint           public decimals;
@@ -586,10 +586,10 @@ contract CollateralJoin6 {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
-        cdpEngine = CDPEngineLike(cdpEngine_);
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
@@ -626,7 +626,7 @@ contract CollateralJoin6 {
         require(canJoin(wad), "CollateralJoin6/cannot-join-above-allowance");
         require(int(wad) >= 0, "CollateralJoin6/overflow");
         collateralJoined[msg.sender] = addition(collateralJoined[msg.sender], wad);
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin6/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
@@ -635,7 +635,7 @@ contract CollateralJoin6 {
         if (collateralJoined[msg.sender] >= wad) {
           collateralJoined[msg.sender] = subtract(collateralJoined[msg.sender], wad);
         }
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin6/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }
@@ -655,7 +655,7 @@ contract AuthCollateralJoin {
     }
     modifier isAuthorized { require(authorizedAccounts[msg.sender] == 1, "AuthCollateralJoin/non-authed"); _; }
 
-    CDPEngineLike public cdpEngine;
+    SAFEEngineLike public safeEngine;
     bytes32 public collateralType;
     CollateralLike public collateral;
     uint public decimals;
@@ -668,8 +668,8 @@ contract AuthCollateralJoin {
     event Join(address sender, address usr, uint wad);
     event Exit(address sender, address usr, uint wad);
 
-    constructor(address cdpEngine_, bytes32 collateralType_, address collateral_) public {
-        cdpEngine = CDPEngineLike(cdpEngine_);
+    constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
+        safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
@@ -695,13 +695,13 @@ contract AuthCollateralJoin {
     function join(address usr, uint wad) public isAuthorized {
         require(contractEnabled == 1, "AuthCollateralJoin/contract-not-enabled");
         require(int(wad) >= 0, "AuthCollateralJoin/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, usr, int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, usr, int(wad));
         require(collateral.transferFrom(msg.sender, address(this), wad), "AuthCollateralJoin/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
     function exit(address usr, uint wad) public isAuthorized {
         require(wad <= 2 ** 255, "AuthCollateralJoin/overflow");
-        cdpEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
+        safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "AuthCollateralJoin/failed-transfer");
         emit Exit(msg.sender, usr, wad);
     }

@@ -4,7 +4,7 @@ import "ds-test/test.sol";
 import "ds-weth/weth9.sol";
 import {DSToken} from "ds-token/token.sol";
 
-import "geb/CDPEngine.sol";
+import "geb/SAFEEngine.sol";
 
 import {CollateralJoin6} from "../AdvancedTokenAdapters.sol";
 
@@ -17,8 +17,8 @@ contract FakeUser {
         DSToken(token).approve(guy, amount);
     }
 
-    function doJoin(address obj, address cdp, uint wad) public {
-        CollateralJoin6(obj).join(cdp, wad);
+    function doJoin(address obj, address safe, uint wad) public {
+        CollateralJoin6(obj).join(safe, wad);
     }
 
     function doExit(address obj, address guy, uint wad) public {
@@ -26,7 +26,7 @@ contract FakeUser {
     }
 
     function doTransferCollateral(address obj, bytes32 collateralType, address src, address dst, uint wad) public {
-        CDPEngine(obj).transferCollateral(
+        SAFEEngine(obj).transferCollateral(
             collateralType,
             src,
             dst,
@@ -42,23 +42,23 @@ contract CollateralJoin6Test is DSTest {
 
     WETH9_ weth;
 
-    CDPEngine cdpEngine;
+    SAFEEngine safeEngine;
     CollateralJoin6 collateralJoin;
 
     bytes32 collateralType = bytes32("ETH-A");
     uint256 wethAmount     = 1000 ether;
 
     function setUp() virtual public {
-        cdpEngine = new CDPEngine();
+        safeEngine = new SAFEEngine();
 
         weth = new WETH9_();
         weth.deposit{value: wethAmount}();
 
-        collateralJoin = new CollateralJoin6(address(cdpEngine), collateralType, address(weth));
+        collateralJoin = new CollateralJoin6(address(safeEngine), collateralType, address(weth));
 
         weth.approve(address(collateralJoin), uint(-1));
-        cdpEngine.initializeCollateralType(collateralType);
-        cdpEngine.addAuthorization(address(collateralJoin));
+        safeEngine.initializeCollateralType(collateralType);
+        safeEngine.addAuthorization(address(collateralJoin));
 
         alice = new FakeUser();
         weth.transfer(address(alice), wethAmount / 2);
@@ -66,7 +66,7 @@ contract CollateralJoin6Test is DSTest {
 
     function test_correct_setup() public {
         assertEq(collateralJoin.allowance(address(this)), 0);
-        assertTrue(address(collateralJoin.cdpEngine()) == address(cdpEngine));
+        assertTrue(address(collateralJoin.safeEngine()) == address(safeEngine));
         assertTrue(collateralJoin.collateralType() == collateralType);
         assertTrue(address(collateralJoin.collateral()) == address(weth));
         assertEq(collateralJoin.decimals(), 18);
@@ -108,7 +108,7 @@ contract CollateralJoin6Test is DSTest {
         alice.doApprove(address(weth), address(collateralJoin), uint(-1));
         alice.doJoin(address(collateralJoin), address(alice), 1 ether);
         alice.doTransferCollateral(
-          address(cdpEngine),
+          address(safeEngine),
           collateralType,
           address(alice),
           address(this),
@@ -136,7 +136,7 @@ contract CollateralJoin6Test is DSTest {
         alice.doApprove(address(weth), address(collateralJoin), uint(-1));
         alice.doJoin(address(collateralJoin), address(alice), 1 ether);
         alice.doTransferCollateral(
-          address(cdpEngine),
+          address(safeEngine),
           collateralType,
           address(alice),
           address(this),
@@ -150,7 +150,7 @@ contract CollateralJoin6Test is DSTest {
         alice.doApprove(address(weth), address(collateralJoin), uint(-1));
         alice.doJoin(address(collateralJoin), address(alice), 1 ether);
         alice.doTransferCollateral(
-          address(cdpEngine),
+          address(safeEngine),
           collateralType,
           address(alice),
           address(this),
