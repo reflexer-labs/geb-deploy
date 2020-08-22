@@ -130,16 +130,16 @@ contract DebtAuctionHouseFactory {
 }
 
 contract EnglishCollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address safeEngine, bytes32 collateralType) public returns (EnglishCollateralAuctionHouse englishCollateralAuctionHouse) {
-        englishCollateralAuctionHouse = new EnglishCollateralAuctionHouse(safeEngine, collateralType);
+    function newCollateralAuctionHouse(address safeEngine, address liquidationEngine, bytes32 collateralType) public returns (EnglishCollateralAuctionHouse englishCollateralAuctionHouse) {
+        englishCollateralAuctionHouse = new EnglishCollateralAuctionHouse(safeEngine, liquidationEngine, collateralType);
         englishCollateralAuctionHouse.addAuthorization(msg.sender);
         englishCollateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
 contract FixedDiscountCollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address safeEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
-        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(safeEngine, collateralType);
+    function newCollateralAuctionHouse(address safeEngine, address liquidationEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
+        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(safeEngine, liquidationEngine, collateralType);
         fixedDiscountCollateralAuctionHouse.addAuthorization(msg.sender);
         fixedDiscountCollateralAuctionHouse.removeAuthorization(address(this));
     }

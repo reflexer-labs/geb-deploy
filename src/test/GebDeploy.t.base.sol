@@ -269,6 +269,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     bytes32[] collateralTypes;
 
     // --- Math ---
+    uint256 constant WAD = 10 ** 18;
     uint256 constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
