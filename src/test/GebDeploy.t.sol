@@ -205,7 +205,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testLiquidateSAFE() public {
         deployBond(bytes32("ENGLISH"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", uint256(-1) / ray(1 ether));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -226,7 +226,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testLiquidateSAFEPartial() public {
         deployBond(bytes32("ENGLISH"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", rad(1 ether) * 200); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 10 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -247,7 +247,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testEnglishCollateralAuctionHouse() public {
         deployBond(bytes32("ENGLISH"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", rad(1 ether) * 200); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -284,7 +284,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFixedDiscountCollateralAuctionHouse() public {
         deployBond(bytes32("FIXED_DISCOUNT"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", rad(1 ether) * 200);
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -309,7 +309,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testDebtAuctionHouse() public {
         deployBondWithCreatorPermissions(bytes32("ENGLISH"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", uint(-1) / ray(1 ether)); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -442,14 +442,9 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coin.balanceOf(address(user1)), 0.05 ether);
     }
 
-    // TODO
-    function testBondRedemptionRateSetter() public {
+    function test_settlement_partial_liquidation() public {
         deployBond(bytes32("ENGLISH"));
-    }
-
-    function testGlobalSettlement() public {
-        deployBond(bytes32("ENGLISH"));
-        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", 1 ether); // 1 unit of collateral per batch
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", rad(1 ether) * 200);
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
         weth.deposit{value: 2 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -457,7 +452,7 @@ contract GebDeployTest is GebDeployTestBase {
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
-        uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this)); // The SAFE recoinns unsafe after 1st batch is bitten
+        uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         address(user1).transfer(10 ether);
 
         user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
@@ -473,6 +468,83 @@ contract GebDeployTest is GebDeployTestBase {
 
         user1.doIncreaseBidSize(address(ethEnglishCollateralAuctionHouse), batchId, 1 ether, rad(150 ether));
         user2.doIncreaseBidSize(address(ethEnglishCollateralAuctionHouse), batchId, 1 ether, rad(160 ether));
+        assertEq(safeEngine.coinBalance(address(user2)), rad(840 ether));
+
+        this.shutdownSystem(address(globalSettlement));
+        globalSettlement.freezeCollateralType("ETH");
+        globalSettlement.freezeCollateralType("COL");
+
+        (uint collateralAmount, uint generatedDebt) = safeEngine.safes("ETH", address(this));
+        assertEq(collateralAmount, 1 ether);
+        assertEq(generatedDebt, 200 ether);
+
+        globalSettlement.fastTrackAuction("ETH", batchId);
+        assertEq(safeEngine.coinBalance(address(user2)), rad(1000 ether));
+        (collateralAmount, generatedDebt) = safeEngine.safes("ETH", address(this));
+        assertEq(collateralAmount, 2 ether);
+        assertEq(generatedDebt, 400 ether);
+
+        globalSettlement.processSAFE("ETH", address(this));
+        (collateralAmount, generatedDebt) = safeEngine.safes("ETH", address(this));
+        uint collateralVal = 2 ether - 400 * globalSettlement.finalCoinPerCollateralPrice("ETH") / 10 ** 9; // 2 ETH (deposited) - 400 COIN debt * ETH cage price
+        assertEq(collateralAmount, collateralVal);
+        assertEq(generatedDebt, 0);
+
+        globalSettlement.freeCollateral("ETH");
+        (collateralAmount,) = safeEngine.safes("ETH", address(this));
+        assertEq(collateralAmount, 0);
+
+        (collateralAmount, generatedDebt) = safeEngine.safes("ETH", address(user1));
+        assertEq(collateralAmount, 10 ether);
+        assertEq(generatedDebt, 1000 ether);
+
+        globalSettlement.processSAFE("ETH", address(user1));
+        globalSettlement.processSAFE("COL", address(user2));
+
+        accountingEngine.settleDebt(safeEngine.coinBalance(address(accountingEngine)));
+
+        globalSettlement.setOutstandingCoinSupply();
+
+        globalSettlement.calculateCashPrice("ETH");
+        globalSettlement.calculateCashPrice("COL");
+
+        safeEngine.approveSAFEModification(address(globalSettlement));
+        globalSettlement.prepareCoinsForRedeeming(400 ether);
+
+        assertEq(safeEngine.tokenCollateral("ETH", address(this)), collateralVal);
+        assertEq(safeEngine.tokenCollateral("COL", address(this)), 0);
+        globalSettlement.redeemCollateral("ETH", 400 ether);
+        globalSettlement.redeemCollateral("COL", 400 ether);
+        assertEq(safeEngine.tokenCollateral("ETH", address(this)), collateralVal + 400 * globalSettlement.collateralCashPrice("ETH") / 10 ** 9);
+        assertEq(safeEngine.tokenCollateral("COL", address(this)), 400 * globalSettlement.collateralCashPrice("COL") / 10 ** 9);
+    }
+
+    function test_settlement_full_liquidation() public {
+        deployBond(bytes32("ENGLISH"));
+        this.modifyParameters(address(liquidationEngine), "ETH", "collateralToSell", uint(-1) / ray(1 ether));
+        this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", ONE);
+        weth.deposit{value: 2 ether}();
+        weth.approve(address(ethJoin), uint(-1));
+        ethJoin.join(address(this), 2 ether);
+        safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
+        orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        oracleRelayer.updateCollateralPrice("ETH");
+        uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
+        address(user1).transfer(10 ether);
+
+        user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
+        user1.doModifySAFECollateralization(address(safeEngine), "ETH", address(user1), address(user1), address(user1), 10 ether, 1000 ether);
+
+        col.mint(100 ether);
+        col.approve(address(colJoin), 100 ether);
+        colJoin.join(address(user2), 100 ether);
+        user2.doModifySAFECollateralization(address(safeEngine), "COL", address(user2), address(user2), address(user2), 100 ether, 1000 ether);
+
+        user1.doSAFEApprove(address(safeEngine), address(ethEnglishCollateralAuctionHouse));
+        user2.doSAFEApprove(address(safeEngine), address(ethEnglishCollateralAuctionHouse));
+
+        user1.doIncreaseBidSize(address(ethEnglishCollateralAuctionHouse), batchId, 2 ether, rad(150 ether));
+        user2.doIncreaseBidSize(address(ethEnglishCollateralAuctionHouse), batchId, 2 ether, rad(160 ether));
         assertEq(safeEngine.coinBalance(address(user2)), rad(840 ether));
 
         this.shutdownSystem(address(globalSettlement));
