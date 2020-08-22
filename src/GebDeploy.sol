@@ -539,8 +539,10 @@ contract GebDeploy is DSAuth {
 
         if (auctionHouseType == "ENGLISH") {
           collateralTypes[collateralType].englishCollateralAuctionHouse =
-            englishCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), collateralType);
+            englishCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), address(liquidationEngine), collateralType);
           liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].englishCollateralAuctionHouse));
+          // Approve the auction house in order to reduce the currentOnAuctionSystemCoins
+          liquidationEngine.addAuthorization(address(collateralTypes[collateralType].englishCollateralAuctionHouse));
           // Internal auth
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(globalSettlement));
@@ -549,8 +551,10 @@ contract GebDeploy is DSAuth {
           CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
         } else {
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
-            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), collateralType);
+            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), address(liquidationEngine), collateralType);
           liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
+          // Approve the auction house in order to reduce the currentOnAuctionSystemCoins
+          liquidationEngine.addAuthorization(address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
           // Internal auth
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(globalSettlement));

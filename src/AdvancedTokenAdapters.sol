@@ -571,7 +571,7 @@ contract CollateralJoin6 {
         return both(allowance[msg.sender] > 0, addition(amount, collateralJoined[msg.sender]) <= allowance[msg.sender]);
     }
 
-    SAFEEngineLike  public safeEngine;
+    SAFEEngineLike public safeEngine;
     bytes32        public collateralType;
     CollateralLike public collateral;
     uint           public decimals;
