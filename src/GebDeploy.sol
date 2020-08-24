@@ -198,7 +198,7 @@ contract PauseFactory {
 }
 
 contract GebDeploy is DSAuth {
-    SAFEEngineFactory                           public safeEngineFactory;
+    SAFEEngineFactory                          public safeEngineFactory;
     TaxCollectorFactory                        public taxCollectorFactory;
     AccountingEngineFactory                    public accountingEngineFactory;
     LiquidationEngineFactory                   public liquidationEngineFactory;
@@ -217,7 +217,7 @@ contract GebDeploy is DSAuth {
     CoinSavingsAccountFactory                  public coinSavingsAccountFactory;
     SettlementSurplusAuctioneerFactory         public settlementSurplusAuctioneerFactory;
 
-    SAFEEngine                         public safeEngine;
+    SAFEEngine                        public safeEngine;
     TaxCollector                      public taxCollector;
     AccountingEngine                  public accountingEngine;
     LiquidationEngine                 public liquidationEngine;
@@ -337,7 +337,6 @@ contract GebDeploy is DSAuth {
     }
 
     function deployAuctions(address prot) public auth {
-        require(prot != address(0), "Missing PROT address");
         require(address(taxCollector) != address(0), "Missing previous step");
         require(address(coin) != address(0), "Missing COIN address");
 
@@ -435,8 +434,10 @@ contract GebDeploy is DSAuth {
         }
 
         // Deploy ESM
-        esm = esmFactory.newESM(prot, address(globalSettlement), address(tokenBurner), address(thresholdSetter), threshold);
-        globalSettlement.addAuthorization(address(esm));
+        if (prot != address(0)) {
+          esm = esmFactory.newESM(prot, address(globalSettlement), address(tokenBurner), address(thresholdSetter), threshold);
+          globalSettlement.addAuthorization(address(esm));
+        }
     }
 
     function deployPause(uint delay, DSAuthority authority) public auth {
@@ -456,7 +457,9 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.addAuthorization(address(usr));
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
-        esm.addAuthorization(address(usr));
+        if (address(esm) != address(0)) {
+          esm.addAuthorization(address(usr));
+        }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.addAuthorization(address(usr));
         }
@@ -482,7 +485,9 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
         debtAuctionHouse.removeAuthorization(address(usr));
         globalSettlement.removeAuthorization(address(usr));
-        esm.removeAuthorization(address(usr));
+        if (address(esm) != address(0)) {
+          esm.removeAuthorization(address(usr));
+        }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(usr));
         }
@@ -590,7 +595,9 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.removeAuthorization(address(this));
         debtAuctionHouse.removeAuthorization(address(this));
         globalSettlement.removeAuthorization(address(this));
-        esm.removeAuthorization(address(this));
+        if (address(esm) != address(0)) {
+          esm.removeAuthorization(address(this));
+        }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(this));
         }
