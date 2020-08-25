@@ -3,6 +3,8 @@ pragma solidity ^0.6.7;
 abstract contract Setter {
     function modifyParameters(bytes32, address) virtual public;
     function modifyParameters(bytes32, uint) virtual public;
+    function modifyParameters(bytes32, uint, uint) virtual public;
+    function modifyParameters(bytes32, uint, uint, address) virtual public;
     function modifyParameters(bytes32, bytes32, uint) virtual public;
     function modifyParameters(bytes32, bytes32, address) virtual public;
     function addAuthorization(address) virtual public;
@@ -39,6 +41,14 @@ contract GovActions {
 
     function modifyParameters(address targetContract, bytes32 collateralType, bytes32 parameter, address data) public {
         Setter(targetContract).modifyParameters(collateralType, parameter, data);
+    }
+
+    function modifyParameters(address targetContract, bytes32 parameter, uint data1, uint data2) public {
+        Setter(targetContract).modifyParameters(parameter, data1, data2);
+    }
+
+    function modifyParameters(address targetContract, bytes32 collateralType, uint data1, uint data2, address data3) public {
+        Setter(targetContract).modifyParameters(collateralType, data1, data2, data3);
     }
 
     function updateRateAndModifyParameters(address targetContract, bytes32 parameter, uint data) public {
