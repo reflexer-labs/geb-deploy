@@ -51,6 +51,42 @@ contract GovActions {
         Setter(targetContract).modifyParameters(collateralType, data1, data2, data3);
     }
 
+    function modifyTwoParameters(
+      address targetContract1,
+      address targetContract2,
+      bytes32 parameter1,
+      bytes32 parameter2,
+      uint data1,
+      uint data2
+    ) public {
+      Setter(targetContract1).modifyParameters(parameter1, data1);
+      Setter(targetContract2).modifyParameters(parameter2, data2);
+    }
+
+    function modifyTwoParameters(
+      address targetContract1,
+      address targetContract2,
+      bytes32 collateralType1,
+      bytes32 collateralType2,
+      bytes32 parameter1,
+      bytes32 parameter2,
+      uint data1,
+      uint data2
+    ) public {
+      Setter(targetContract1).modifyParameters(collateralType1, parameter1, data1);
+      Setter(targetContract2).modifyParameters(collateralType2, parameter2, data2);
+    }
+
+    function removeAuthorizationAndModify(
+      address targetContract,
+      address to
+      bytes32 parameter,
+      uint data
+    ) public {
+      Setter(targetContract).removeAuthorization(to);
+      Setter(targetContract).modifyParameters(parameter, data);
+    }
+
     function updateRateAndModifyParameters(address targetContract, bytes32 parameter, uint data) public {
         Setter(targetContract).updateAccumulatedRate();
         Setter(targetContract).modifyParameters(parameter, data);
