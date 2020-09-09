@@ -79,7 +79,7 @@ contract GovActions {
 
     function removeAuthorizationAndModify(
       address targetContract,
-      address to
+      address to,
       bytes32 parameter,
       uint data
     ) public {
