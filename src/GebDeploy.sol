@@ -465,7 +465,7 @@ contract GebDeploy is DSAuth {
         require(address(globalSettlement) != address(0), "Missing previous step");
         require(address(pause) == address(0), "Pause already deployed");
 
-        protestPause = protestPauseFactory.newPause(delay, address(0), authority);
+        protestPause = protestPauseFactory.newPause(protesterLifetime, delay, address(0), authority);
     }
 
     function giveControl(address usr) public auth {
@@ -553,8 +553,7 @@ contract GebDeploy is DSAuth {
         address adapter,
         address collateralOSM,
         address collateralMedian,
-        address systemCoinOracle,
-        uint bidToMarketPriceRatio
+        address systemCoinOracle
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
@@ -575,8 +574,6 @@ contract GebDeploy is DSAuth {
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(globalSettlement));
           auctionHouse = address(collateralTypes[collateralType].englishCollateralAuctionHouse);
-          // Set bid restrictions
-          CollateralAuctionHouse(auctionHouse).modifyParameters("bidToMarketPriceRatio", bidToMarketPriceRatio);
         } else {
           collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
             fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), address(liquidationEngine), collateralType);

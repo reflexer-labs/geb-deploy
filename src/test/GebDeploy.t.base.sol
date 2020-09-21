@@ -341,6 +341,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         settlementSurplusAuctioneerFactory = new SettlementSurplusAuctioneerFactory();
         globalSettlementFactory = new GlobalSettlementFactory();
         pauseFactory = new PauseFactory();
+        protestPauseFactory = new ProtestPauseFactory();
         govActions = new GovActions();
         esmFactory = new ESMFactory();
         coinSavingsAccountFactory = new CoinSavingsAccountFactory();
@@ -371,6 +372,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         gebDeploy.setThirdFactoryBatch(
           pauseFactory,
+          protestPauseFactory,
           stabilityFeeTreasuryFactory
         );
 
@@ -442,10 +444,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
           pause = DSPauseLike(address(gebDeploy.pause()));
-          pauseProxy = gebDeploy.pause().proxy();
+          pauseProxy = address(gebDeploy.pause().proxy());
         } else {
           pause = DSPauseLike(address(gebDeploy.protestPause()));
-          pauseProxy = gebDeploy.protestPause().proxy();
+          pauseProxy = address(gebDeploy.protestPause().proxy());
         }
 
         authority.setRootUser(pauseProxy, true);
@@ -453,12 +455,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         // Set SAFEEngine Params
@@ -531,10 +533,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
           pause = DSPauseLike(address(gebDeploy.pause()));
-          pauseProxy = gebDeploy.pause().proxy();
+          pauseProxy = address(gebDeploy.pause().proxy());
         } else {
           pause = DSPauseLike(address(gebDeploy.protestPause()));
-          pauseProxy = gebDeploy.protestPause().proxy();
+          pauseProxy = address(gebDeploy.protestPause().proxy());
         }
 
         authority.setRootUser(pauseProxy, true);
@@ -542,12 +544,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         // Set SAFEEngine Params
@@ -580,12 +582,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
-    // Bond
-    function deployBond(bytes32 auctionType) virtual public {
+    // Index
+    function deployIndex(bytes32 auctionType) virtual public {
         deployIndexKeepAuth(auctionType);
         gebDeploy.releaseAuth();
     }
-    function deployBondWithCreatorPermissions(bytes32 auctionType) virtual public {
+    function deployIndexWithCreatorPermissions(bytes32 auctionType) virtual public {
         deployIndexKeepAuth(auctionType);
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();

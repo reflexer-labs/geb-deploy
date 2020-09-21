@@ -7,8 +7,8 @@ import "../AdvancedTokenAdapters.sol";
 contract GebDeployTest is GebDeployTestBase {
     uint constant HUNDRED = 10 ** 29;
 
-    function testDeployBond() public {
-        deployBond(bytes32("ENGLISH"));
+    function testDeployIndex() public {
+        deployIndex(bytes32("ENGLISH"));
     }
 
     function testDeployStable() public {
@@ -37,7 +37,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailMissingEnd() public {
         gebDeploy.deploySAFEEngine();
-        gebDeploy.deployCoin("Rai Reflex-Bond", "RAI", 99);
+        gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
@@ -45,7 +45,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testJoinETH() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         assertEq(safeEngine.tokenCollateral("ETH", address(this)), 0);
         weth.deposit{value: 1 ether}();
         assertEq(weth.balanceOf(address(this)), 1 ether);
@@ -56,7 +56,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testJoinCollateral() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         col.mint(1 ether);
         assertEq(col.balanceOf(address(this)), 1 ether);
         assertEq(safeEngine.tokenCollateral("COL", address(this)), 0);
@@ -67,7 +67,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testExitETH() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -76,7 +76,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testExitCollateral() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -86,7 +86,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationDrawCoin() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         assertEq(coin.balanceOf(address(this)), 0);
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
@@ -103,7 +103,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationDrawCoinCollateral() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         assertEq(coin.balanceOf(address(this)), 0);
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
@@ -117,7 +117,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationDrawCoinLimit() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -125,7 +125,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationDrawCoinCollateralLimit() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -133,7 +133,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailModifySAFECollateralizationDrawCoinLimit() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -141,7 +141,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailModifySAFECollateralizationDrawCoinCollateralLimit() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         col.mint(1 ether);
         col.approve(address(colJoin), 1 ether);
         colJoin.join(address(this), 1 ether);
@@ -149,7 +149,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationPaybackDebt() public {
-        deployBondWithCreatorPermissions(bytes32("ENGLISH"));
+        deployIndexWithCreatorPermissions(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -167,7 +167,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testModifySAFECollateralizationFromAnotherUser() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -176,7 +176,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailModifySAFECollateralizationDust() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -186,7 +186,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailModifySAFECollateralizationFromAnotherUser() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -194,7 +194,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailLiquidateSAFE() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -204,7 +204,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testLiquidateSAFE() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", uint256(-1) / ray(1 ether));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 1 ether}();
@@ -225,7 +225,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testLiquidateSAFEPartial() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 10 ether}();
@@ -246,7 +246,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testEnglishCollateralAuctionHouse() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 1 ether}();
@@ -283,7 +283,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFixedDiscountCollateralAuctionHouse() public {
-        deployBond(bytes32("FIXED_DISCOUNT"));
+        deployIndex(bytes32("FIXED_DISCOUNT"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200);
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 1 ether}();
@@ -308,7 +308,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testDebtAuctionHouse() public {
-        deployBondWithCreatorPermissions(bytes32("ENGLISH"));
+        deployIndexWithCreatorPermissions(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", uint(-1) / ray(1 ether)); // 1 unit of collateral per batch
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 1 ether}();
@@ -361,7 +361,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testPreSettlementSurplusAuctionHouse() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
 
         this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
         weth.deposit{value: 0.5 ether}();
@@ -401,7 +401,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testPostSettlementSurplusAuctionHouse() public {
-        deployBondWithCreatorPermissions(bytes32("ENGLISH"));
+        deployIndexWithCreatorPermissions(bytes32("ENGLISH"));
 
         this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
         weth.deposit{value: 0.5 ether}();
@@ -443,7 +443,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testSettlementPartialLiquidation() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200);
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 2 ether}();
@@ -520,7 +520,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testSettlementFullLiquidation() public {
-        deployBond(bytes32("ENGLISH"));
+        deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(200 ether));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 2 ether}();
@@ -728,7 +728,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(pause.delay(), 5);
     }
 
-    function testBondAuthEnglishAuctionHouse() public {
+    function testIndexAuthEnglishAuctionHouse() public {
         deployIndexKeepAuth(bytes32("ENGLISH"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
@@ -818,7 +818,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
     }
 
-    function testBondAuthFixedDiscountAuctionHouse() public {
+    function testIndexAuthFixedDiscountAuctionHouse() public {
         deployIndexKeepAuth(bytes32("FIXED_DISCOUNT"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
