@@ -950,6 +950,9 @@ contract GebDeployTest is GebDeployTestBase {
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
 
+        // coin join
+        assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 1);
+
         // oracleRelayer
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(oracleRelayer.authorizedAccounts(address(pause.proxy())), 1);
@@ -1004,6 +1007,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coinSavingsAccount.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -1057,6 +1061,9 @@ contract GebDeployTest is GebDeployTestBase {
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
+
+        // coin join
+        assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 1);
 
         // oracleRelayer
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
@@ -1112,6 +1119,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coinSavingsAccount.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);

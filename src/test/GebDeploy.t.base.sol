@@ -109,6 +109,10 @@ contract FakeUser {
 }
 
 abstract contract DSPauseLike {
+    function owner() virtual public view returns (address);
+    function authority() virtual public view returns (address);
+    function delay() virtual public view returns (uint256);
+    function proxy() virtual public view returns (address);
     function getTransactionDataHash(address, bytes32, bytes memory, uint)
         virtual public pure
         returns (bytes32);

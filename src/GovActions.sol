@@ -26,6 +26,7 @@ abstract contract PauseLike {
     function setAuthority(address) virtual public;
     function setDelay(uint) virtual public;
     function setDelayMultiplier(uint) virtual public;
+    function setProtester(address) virtual public;
 }
 
 contract GovActions {
@@ -127,6 +128,10 @@ contract GovActions {
 
     function setAuthority(address pause, address newAuthority) public {
         PauseLike(pause).setAuthority(newAuthority);
+    }
+
+    function setProtester(address pause, address protester) public {
+        PauseLike(pause).setProtester(protester);
     }
 
     function setDelay(address pause, uint newDelay) public {
