@@ -22,13 +22,13 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailMissingTaxationAndAuctions() public {
         gebDeploy.deploySAFEEngine();
-        gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
+        gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployLiquidator();
     }
 
     function testFailMissingLiquidator() public {
         gebDeploy.deploySAFEEngine();
-        gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
+        gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
@@ -597,13 +597,13 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFireESM() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         prot.mint(address(user1), 10);
         user1.doESMShutdown(address(prot), address(esm), 10);
     }
 
     function testTransferSAFECollateralAndDebt() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -626,7 +626,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebt() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -637,7 +637,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testTransferSAFECollateralAndDebtFromOtherUsr() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -649,7 +649,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebtFromOtherUsr() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -660,7 +660,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebtUnsafeSrc() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -670,7 +670,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebtUnsafeDst() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 1 ether}();
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
@@ -680,7 +680,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebtDustSrc() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -693,7 +693,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testFailTransferSAFECollateralAndDebtDustDst() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         weth.deposit{value: 100 ether}(); // Big number just to make sure to avoid unsafe situation
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 100 ether);
@@ -706,21 +706,21 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testSetPauseAuthority() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         assertEq(address(pause.authority()), address(authority));
         this.setAuthority(address(123));
         assertEq(address(pause.authority()), address(123));
     }
 
     function testSetPauseDelay() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         assertEq(pause.delay(), 0);
         this.setDelay(5);
         assertEq(pause.delay(), 5);
     }
 
     function testSetPauseAuthorityAndDelay() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
         assertEq(address(pause.authority()), address(authority));
         assertEq(pause.delay(), 0);
         this.setAuthorityAndDelay(address(123), 5);
@@ -729,7 +729,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testBondAuthEnglishAuctionHouse() public {
-        deployBondKeepAuth(bytes32("ENGLISH"));
+        deployIndexKeepAuth(bytes32("ENGLISH"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(safeEngine.authorizedAccounts(address(ethJoin)), 1);
@@ -819,7 +819,7 @@ contract GebDeployTest is GebDeployTestBase {
     }
 
     function testBondAuthFixedDiscountAuctionHouse() public {
-        deployBondKeepAuth(bytes32("FIXED_DISCOUNT"));
+        deployIndexKeepAuth(bytes32("FIXED_DISCOUNT"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(safeEngine.authorizedAccounts(address(ethJoin)), 1);

@@ -14,6 +14,7 @@ abstract contract Setter {
     function redemptionPrice() virtual public;
     function taxMany(uint start, uint end) virtual public;
     function taxSingle(bytes32) virtual public;
+    function setAllowance(address, uint256) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -24,6 +25,7 @@ abstract contract GlobalSettlementLike {
 abstract contract PauseLike {
     function setAuthority(address) virtual public;
     function setDelay(uint) virtual public;
+    function setDelayMultiplier(uint) virtual public;
 }
 
 contract GovActions {
@@ -134,5 +136,19 @@ contract GovActions {
     function setAuthorityAndDelay(address pause, address newAuthority, uint newDelay) public {
         PauseLike(pause).setAuthority(newAuthority);
         PauseLike(pause).setDelay(newDelay);
+    }
+
+    function setDelayMultiplier(address pause, uint delayMultiplier) public {
+        PauseLike(pause).setDelayMultiplier(delayMultiplier);
+    }
+
+    function setAllowance(address join, address account, uint allowance) public {
+        Setter(join).setAllowance(account, allowance);
+    }
+
+    function multiSetAllowance(address join, address[] memory accounts, uint[] memory allowances) public {
+        for (uint i = 0; i < accounts.length; i++) {
+            Setter(join).setAllowance(accounts[i], allowances[i]);
+        }
     }
 }

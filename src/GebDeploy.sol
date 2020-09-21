@@ -19,6 +19,7 @@ pragma solidity ^0.6.7;
 
 import {DSAuth, DSAuthority} from "ds-auth/auth.sol";
 import {DSPause, DSPauseProxy} from "ds-pause/pause.sol";
+import {DSProtestPause} from "ds-pause/protest-pause.sol";
 
 import {SAFEEngine} from "geb/SAFEEngine.sol";
 import {TaxCollector} from "geb/TaxCollector.sol";
@@ -90,6 +91,7 @@ contract CoinFactory {
 contract CoinJoinFactory {
     function newCoinJoin(address safeEngine, address coin) public returns (CoinJoin coinJoin) {
         coinJoin = new CoinJoin(safeEngine, coin);
+        coinJoin.addAuthorization(msg.sender);
         coinJoin.removeAuthorization(address(this));
     }
 }
@@ -192,8 +194,14 @@ contract GlobalSettlementFactory {
 }
 
 contract PauseFactory {
-    function newPause(uint delay, address owner, DSAuthority authority) public returns(DSPause pause) {
+    function newPause(uint delay, address owner, DSAuthority authority) public returns (DSPause pause) {
         pause = new DSPause(delay, owner, authority);
+    }
+}
+
+contract ProtestPauseFactory {
+    function newPause(uint protesterLifetime, uint delay, address owner, DSAuthority authority) public returns (DSProtestPause pause) {
+        pause = new DSProtestPause(protesterLifetime, delay, owner, authority);
     }
 }
 
@@ -214,6 +222,7 @@ contract GebDeploy is DSAuth {
     GlobalSettlementFactory                    public globalSettlementFactory;
     ESMFactory                                 public esmFactory;
     PauseFactory                               public pauseFactory;
+    ProtestPauseFactory                        public protestPauseFactory;
     CoinSavingsAccountFactory                  public coinSavingsAccountFactory;
     SettlementSurplusAuctioneerFactory         public settlementSurplusAuctioneerFactory;
 
@@ -233,6 +242,7 @@ contract GebDeploy is DSAuth {
     SettlementSurplusAuctioneer       public settlementSurplusAuctioneer;
     ESM                               public esm;
     DSPause                           public pause;
+    DSProtestPause                    public protestPause;
 
     mapping(bytes32 => CollateralType) public collateralTypes;
 
@@ -290,10 +300,12 @@ contract GebDeploy is DSAuth {
     }
     function setThirdFactoryBatch(
         PauseFactory pauseFactory_,
+        ProtestPauseFactory protestPauseFactory_,
         StabilityFeeTreasuryFactory stabilityFeeTreasuryFactory_
     ) public auth {
         require(address(safeEngineFactory) != address(0), "SAFEEngine Factory not set");
         pauseFactory = pauseFactory_;
+        protestPauseFactory = protestPauseFactory_;
         stabilityFeeTreasuryFactory = stabilityFeeTreasuryFactory_;
     }
 
@@ -443,8 +455,17 @@ contract GebDeploy is DSAuth {
     function deployPause(uint delay, DSAuthority authority) public auth {
         require(address(coin) != address(0), "Missing previous step");
         require(address(globalSettlement) != address(0), "Missing previous step");
+        require(address(protestPause) == address(0), "Protest Pause already deployed");
 
         pause = pauseFactory.newPause(delay, address(0), authority);
+    }
+
+    function deployProtestPause(uint protesterLifetime, uint delay, DSAuthority authority) public auth {
+        require(address(coin) != address(0), "Missing previous step");
+        require(address(globalSettlement) != address(0), "Missing previous step");
+        require(address(pause) == address(0), "Pause already deployed");
+
+        protestPause = protestPauseFactory.newPause(delay, address(0), authority);
     }
 
     function giveControl(address usr) public auth {
@@ -457,6 +478,7 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.addAuthorization(address(usr));
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
+        coinJoin.addAuthorization(address(usr));
         if (address(esm) != address(0)) {
           esm.addAuthorization(address(usr));
         }
@@ -485,6 +507,7 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
         debtAuctionHouse.removeAuthorization(address(usr));
         globalSettlement.removeAuthorization(address(usr));
+        coinJoin.removeAuthorization(address(usr));
         if (address(esm) != address(0)) {
           esm.removeAuthorization(address(usr));
         }
@@ -595,6 +618,7 @@ contract GebDeploy is DSAuth {
         postSettlementSurplusAuctionHouse.removeAuthorization(address(this));
         debtAuctionHouse.removeAuthorization(address(this));
         globalSettlement.removeAuthorization(address(this));
+        coinJoin.removeAuthorization(address(this));
         if (address(esm) != address(0)) {
           esm.removeAuthorization(address(this));
         }

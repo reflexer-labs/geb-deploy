@@ -108,8 +108,22 @@ contract FakeUser {
     receive() external payable {}
 }
 
+abstract contract DSPauseLike {
+    function getTransactionDataHash(address, bytes32, bytes memory, uint)
+        virtual public pure
+        returns (bytes32);
+    function protestAgainstTransaction(address usr, bytes32 codeHash, bytes memory parameters) virtual public;
+    function scheduleTransaction(address, bytes32, bytes memory, uint) virtual public;
+    function scheduleTransaction(address, bytes32, bytes memory, uint, string memory) virtual public;
+    function attachTransactionDescription(address, bytes32, bytes memory, uint, string memory) virtual public;
+    function abandonTransaction(address, bytes32, bytes memory, uint) virtual public;
+    function executeTransaction(address usr, bytes32 codeHash, bytes memory parameters, uint earliestExecutionTime)
+        virtual public
+        returns (bytes memory);
+}
+
 contract ProxyActions {
-    DSPause pause;
+    DSPauseLike pause;
     GovActions govActions;
 
     function modifyParameters(address who, bytes32 parameter, uint256 data) external {
@@ -201,6 +215,26 @@ contract ProxyActions {
         pause.scheduleTransaction(usr, tag, fax, eta);
         pause.executeTransaction(usr, tag, fax, eta);
     }
+
+    function setAllowance(address join, address account, uint allowance) external {
+        address      usr = address(govActions);
+        bytes32      tag;  assembly { tag := extcodehash(usr) }
+        bytes memory fax = abi.encodeWithSignature("setAllowance(address,address,uint256)", join, account, allowance);
+        uint         eta = now;
+
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
+    }
+
+    function multiSetAllowance(address join, address[] calldata accounts, uint[] calldata allowances) external {
+        address      usr = address(govActions);
+        bytes32      tag;  assembly { tag := extcodehash(usr) }
+        bytes memory fax = abi.encodeWithSignature("multiSetAllowance(address,address[],uint256[])", join, accounts, allowances);
+        uint         eta = now;
+
+        pause.scheduleTransaction(usr, tag, fax, eta);
+        pause.executeTransaction(usr, tag, fax, eta);
+    }
 }
 
 contract GebDeployTestBase is DSTest, ProxyActions {
@@ -224,6 +258,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CoinSavingsAccountFactory                  coinSavingsAccountFactory;
     SettlementSurplusAuctioneerFactory         settlementSurplusAuctioneerFactory;
     PauseFactory                               pauseFactory;
+    ProtestPauseFactory                        protestPauseFactory;
 
     GebDeploy gebDeploy;
 
@@ -238,7 +273,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CollateralJoin1 ethJoin;
     CollateralJoin1 colJoin;
 
-    SAFEEngine                         safeEngine;
+    SAFEEngine                        safeEngine;
     TaxCollector                      taxCollector;
     AccountingEngine                  accountingEngine;
     LiquidationEngine                 liquidationEngine;
@@ -268,15 +303,21 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
     bytes32[] collateralTypes;
 
+    uint protesterLifetime;
+
+    bytes32 PAUSE_TYPE = keccak256(abi.encodePacked("BASIC"));
+
     // --- Math ---
     uint256 constant WAD = 10 ** 18;
     uint256 constant ONE = 10 ** 27;
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
-
     function ray(uint x) internal pure returns (uint z) {
         z = x * 10 ** 9;
+    }
+    function rad(uint wad) internal pure returns (uint) {
+        return wad * 10 ** 27;
     }
 
     function setUp() virtual public {
@@ -347,15 +388,23 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         hevm.warp(0);
     }
 
-    function rad(uint wad) internal pure returns (uint) {
-        return wad * 10 ** 27;
+    function togglePauseType() external {
+        if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
+          PAUSE_TYPE = keccak256(abi.encodePacked("PROTEST"));
+        } else {
+          PAUSE_TYPE = keccak256(abi.encodePacked("BASIC"));
+        }
     }
 
-    function deployBondKeepAuth(bytes32 auctionType) virtual public {
+    function setProtesterLifetime(uint lifetime) public {
+        protesterLifetime = lifetime;
+    }
+
+    function deployIndexKeepAuth(bytes32 auctionType) virtual public {
         prot.mint(100 ether);
 
         gebDeploy.deploySAFEEngine();
-        gebDeploy.deployCoin("Rai Reflex Bond", "RAI", 99);
+        gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
@@ -363,7 +412,14 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
-        gebDeploy.deployPause(0, authority);
+
+        if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
+          gebDeploy.deployPause(0, authority);
+        } else {
+          gebDeploy.deployProtestPause(protesterLifetime, 0, authority);
+        }
+
+        address pauseProxy;
 
         safeEngine = gebDeploy.safeEngine();
         taxCollector = gebDeploy.taxCollector();
@@ -377,22 +433,29 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         oracleRelayer = gebDeploy.oracleRelayer();
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
-        pause = gebDeploy.pause();
         settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
-        authority.setRootUser(address(pause.proxy()), true);
-        gebDeploy.giveControl(address(pause.proxy()));
+        if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
+          pause = DSPauseLike(address(gebDeploy.pause()));
+          pauseProxy = gebDeploy.pause().proxy();
+        } else {
+          pause = DSPauseLike(address(gebDeploy.protestPause()));
+          pauseProxy = gebDeploy.protestPause().proxy();
+        }
+
+        authority.setRootUser(pauseProxy, true);
+        gebDeploy.giveControl(pauseProxy);
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
-        gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
+        gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
-        gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
+        gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         // Set SAFEEngine Params
         this.modifyParameters(address(safeEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
@@ -437,7 +500,14 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
-        gebDeploy.deployPause(0, authority);
+
+        if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
+          gebDeploy.deployPause(0, authority);
+        } else {
+          gebDeploy.deployProtestPause(protesterLifetime, 0, authority);
+        }
+
+        address pauseProxy;
 
         safeEngine = gebDeploy.safeEngine();
         taxCollector = gebDeploy.taxCollector();
@@ -452,22 +522,29 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         oracleRelayer = gebDeploy.oracleRelayer();
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
-        pause = gebDeploy.pause();
         settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
-        authority.setRootUser(address(pause.proxy()), true);
-        gebDeploy.giveControl(address(pause.proxy()));
+        if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
+          pause = DSPauseLike(address(gebDeploy.pause()));
+          pauseProxy = gebDeploy.pause().proxy();
+        } else {
+          pause = DSPauseLike(address(gebDeploy.protestPause()));
+          pauseProxy = gebDeploy.protestPause().proxy();
+        }
+
+        authority.setRootUser(pauseProxy, true);
+        gebDeploy.giveControl(pauseProxy);
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0), 5 * 10**26);
-        gebDeploy.addAuthToCollateralAuctionHouse("ETH", address(pause.proxy()));
+        gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0), 5 * 10**26);
-        gebDeploy.addAuthToCollateralAuctionHouse("COL", address(pause.proxy()));
+        gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         // Set SAFEEngine Params
         this.modifyParameters(address(safeEngine), bytes32("globalDebtCeiling"), uint(10000 * 10 ** 45));
@@ -501,11 +578,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
     // Bond
     function deployBond(bytes32 auctionType) virtual public {
-        deployBondKeepAuth(auctionType);
+        deployIndexKeepAuth(auctionType);
         gebDeploy.releaseAuth();
     }
     function deployBondWithCreatorPermissions(bytes32 auctionType) virtual public {
-        deployBondKeepAuth(auctionType);
+        deployIndexKeepAuth(auctionType);
         gebDeploy.addCreatorAuth();
         gebDeploy.releaseAuth();
         accountingEngine.modifyParameters("protocolTokenAuthority", address(tokenAuthority));
