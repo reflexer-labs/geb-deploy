@@ -12,6 +12,8 @@ abstract contract Setter {
     function initializeCollateralType(bytes32) virtual public;
     function updateAccumulatedRate() virtual public;
     function redemptionPrice() virtual public;
+    function setTotalAllowance(address,uint256) virtual external;
+    function setPerBlockAllowance(address,uint256) virtual external;
     function taxMany(uint start, uint end) virtual public;
     function taxSingle(bytes32) virtual public;
     function setAllowance(address, uint256) virtual external;
@@ -108,6 +110,14 @@ contract GovActions {
     function updateRedemptionRate(address targetContract, bytes32 parameter, uint data) public {
         Setter(targetContract).redemptionPrice();
         Setter(targetContract).modifyParameters(parameter, data);
+    }
+
+    function setTotalAllowance(address targetContract, address account, uint256 rad) public {
+        Setter(targetContract).setTotalAllowance(account, rad);
+    }
+
+    function setPerBlockAllowance(address targetContract, address account, uint256 rad) public {
+        Setter(targetContract).setPerBlockAllowance(account, rad);
     }
 
     function addAuthorization(address targetContract, address to) public {
