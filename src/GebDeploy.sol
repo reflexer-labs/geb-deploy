@@ -551,13 +551,13 @@ contract GebDeploy is DSAuth {
         bytes32 auctionHouseType,
         bytes32 collateralType,
         address adapter,
-        address collateralOSM,
+        address collateralFSM,
         address collateralMedian,
         address systemCoinOracle
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
         require(adapter != address(0), "Missing adapter address");
-        require(collateralOSM != address(0), "Missing OSM address");
+        require(collateralFSM != address(0), "Missing OSM address");
 
         // Deploy
         address auctionHouse;
@@ -587,18 +587,16 @@ contract GebDeploy is DSAuth {
         }
 
         collateralTypes[collateralType].adapter = adapter;
-        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(collateralOSM));
+        OracleRelayer(oracleRelayer).modifyParameters(collateralType, "orcl", address(collateralFSM));
 
         // Internal references set up
         safeEngine.initializeCollateralType(collateralType);
         taxCollector.initializeCollateralType(collateralType);
 
         // Set bid restrictions
-        CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
-        if (auctionHouseType == "ENGLISH") {
-          CollateralAuctionHouse(auctionHouse).modifyParameters("osm", address(collateralOSM));
-        } else {
-          CollateralAuctionHouse(auctionHouse).modifyParameters("collateralOSM", address(collateralOSM));
+        if (auctionHouseType != "ENGLISH") {
+          CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
+          CollateralAuctionHouse(auctionHouse).modifyParameters("collateralFSM", address(collateralFSM));
           CollateralAuctionHouse(auctionHouse).modifyParameters("collateralMedian", address(collateralMedian));
           CollateralAuctionHouse(auctionHouse).modifyParameters("systemCoinOracle", address(systemCoinOracle));
         }
