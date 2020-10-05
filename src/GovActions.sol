@@ -7,6 +7,7 @@ abstract contract Setter {
     function modifyParameters(bytes32, uint, uint, address) virtual public;
     function modifyParameters(bytes32, bytes32, uint) virtual public;
     function modifyParameters(bytes32, bytes32, address) virtual public;
+    function setDummyPIDValidator(address) virtual public;
     function addAuthorization(address) virtual public;
     function removeAuthorization(address) virtual public;
     function initializeCollateralType(bytes32) virtual public;
@@ -17,6 +18,10 @@ abstract contract Setter {
     function taxMany(uint start, uint end) virtual public;
     function taxSingle(bytes32) virtual public;
     function setAllowance(address, uint256) virtual external;
+    function addReader(address) virtual external;
+    function removeReader(address) virtual external;
+    function addAuthority(address account) virtual external;
+    function removeAuthority(address account) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -32,6 +37,8 @@ abstract contract PauseLike {
 }
 
 contract GovActions {
+    uint constant internal RAY = 10 ** 27;
+
     function modifyParameters(address targetContract, bytes32 parameter, address data) public {
         Setter(targetContract).modifyParameters(parameter, data);
     }
@@ -110,6 +117,28 @@ contract GovActions {
     function updateRedemptionRate(address targetContract, bytes32 parameter, uint data) public {
         Setter(targetContract).redemptionPrice();
         Setter(targetContract).modifyParameters(parameter, data);
+    }
+
+    function setDummyPIDValidator(address rateSetter, address oracleRelayer, address dummyValidator) public {
+        Setter(rateSetter).modifyParameters("pidValidator", dummyValidator);
+        Setter(oracleRelayer).redemptionPrice();
+        Setter(oracleRelayer).modifyParameters("redemptionRate", RAY);
+    }
+
+    function addReader(address validator, address reader) public {
+        Setter(validator).addReader(reader);
+    }
+
+    function removeReader(address validator, address reader) public {
+        Setter(validator).removeReader(reader);
+    }
+
+    function addAuthority(address validator, address account) public {
+        Setter(validator).addAuthority(account);
+    }
+
+    function removeAuthority(address validator, address account) public {
+        Setter(validator).removeAuthority(account);
     }
 
     function setTotalAllowance(address targetContract, address account, uint256 rad) public {
