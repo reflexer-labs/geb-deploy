@@ -22,6 +22,10 @@ abstract contract Setter {
     function removeReader(address) virtual external;
     function addAuthority(address account) virtual external;
     function removeAuthority(address account) virtual external;
+    function changePriceSource(address priceSource_) virtual external;
+    function stopFsm(bytes32 collateralType) virtual external;
+    function start() virtual external;
+    function changeNextPriceDeviation(uint deviation) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -159,6 +163,22 @@ contract GovActions {
 
     function initializeCollateralType(address targetContract, bytes32 collateralType) public {
         Setter(targetContract).initializeCollateralType(collateralType);
+    }
+
+    function changePriceSource(address fsm, address priceSource) public {
+        Setter(fsm).changePriceSource(priceSource);
+    }
+
+    function stopFsm(address fsmGovInterface, bytes32 collateralType) public {
+        Setter(fsmGovInterface).stopFsm(collateralType);
+    }
+
+    function start(address fsm) public {
+        Setter(fsm).start();
+    }
+
+    function changeNextPriceDeviation(address fsm, uint deviation) public {
+        Setter(fsm).changeNextPriceDeviation(deviation);
     }
 
     function shutdownSystem(address globalSettlement) public {
