@@ -353,8 +353,10 @@ contract GebDeploy is DSAuth {
         require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
+        if (prot != address(0)) {
+          postSettlementSurplusAuctionHouse = postSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
+        }
         preSettlementSurplusAuctionHouse = preSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
-        postSettlementSurplusAuctionHouse = postSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
         debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(safeEngine), prot);
 
         // Internal auth
@@ -388,6 +390,7 @@ contract GebDeploy is DSAuth {
 
     function deploySettlementSurplusAuctioneer() public auth {
         require(address(accountingEngine) != address(0), "Missing previous step");
+        require(address(postSettlementSurplusAuctionHouse) != address(0), "Missing previous step");
 
         // Deploy
         settlementSurplusAuctioneer = settlementSurplusAuctioneerFactory.newSettlementSurplusAuctioneer(
@@ -475,12 +478,14 @@ contract GebDeploy is DSAuth {
         taxCollector.addAuthorization(address(usr));
         oracleRelayer.addAuthorization(address(usr));
         preSettlementSurplusAuctionHouse.addAuthorization(address(usr));
-        postSettlementSurplusAuctionHouse.addAuthorization(address(usr));
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
         coinJoin.addAuthorization(address(usr));
         if (address(esm) != address(0)) {
           esm.addAuthorization(address(usr));
+        }
+        if (address(postSettlementSurplusAuctionHouse) != address(0)) {
+          postSettlementSurplusAuctionHouse.addAuthorization(address(usr));
         }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.addAuthorization(address(usr));
@@ -504,12 +509,14 @@ contract GebDeploy is DSAuth {
         taxCollector.removeAuthorization(address(usr));
         oracleRelayer.removeAuthorization(address(usr));
         preSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
-        postSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
         debtAuctionHouse.removeAuthorization(address(usr));
         globalSettlement.removeAuthorization(address(usr));
         coinJoin.removeAuthorization(address(usr));
         if (address(esm) != address(0)) {
           esm.removeAuthorization(address(usr));
+        }
+        if (address(postSettlementSurplusAuctionHouse) != address(0)) {
+          postSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
         }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(usr));
@@ -610,12 +617,14 @@ contract GebDeploy is DSAuth {
         coin.removeAuthorization(address(this));
         oracleRelayer.removeAuthorization(address(this));
         preSettlementSurplusAuctionHouse.removeAuthorization(address(this));
-        postSettlementSurplusAuctionHouse.removeAuthorization(address(this));
         debtAuctionHouse.removeAuthorization(address(this));
         globalSettlement.removeAuthorization(address(this));
         coinJoin.removeAuthorization(address(this));
         if (address(esm) != address(0)) {
           esm.removeAuthorization(address(this));
+        }
+        if (address(postSettlementSurplusAuctionHouse) != address(0)) {
+          postSettlementSurplusAuctionHouse.removeAuthorization(address(this));
         }
         if (address(coinSavingsAccount) != address(0)) {
           coinSavingsAccount.removeAuthorization(address(this));
