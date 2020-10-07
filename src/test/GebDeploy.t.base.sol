@@ -252,7 +252,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CoinFactory                                coinFactory;
     CoinJoinFactory                            coinJoinFactory;
     PreSettlementSurplusAuctionHouseFactory    preSettlementSurplusAuctionHouseFactory;
-    PostSettlementSurplusAuctionHouseFactory   postSettlementSurplusAuctionHouseFactory;
     DebtAuctionHouseFactory                    debtAuctionHouseFactory;
     EnglishCollateralAuctionHouseFactory       englishCollateralAuctionHouseFactory;
     FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
@@ -260,7 +259,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     GlobalSettlementFactory                    globalSettlementFactory;
     ESMFactory                                 esmFactory;
     CoinSavingsAccountFactory                  coinSavingsAccountFactory;
-    SettlementSurplusAuctioneerFactory         settlementSurplusAuctioneerFactory;
     PauseFactory                               pauseFactory;
     ProtestPauseFactory                        protestPauseFactory;
 
@@ -285,12 +283,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     Coin                              coin;
     CoinJoin                          coinJoin;
     PreSettlementSurplusAuctionHouse  preSettlementSurplusAuctionHouse;
-    PostSettlementSurplusAuctionHouse postSettlementSurplusAuctionHouse;
     DebtAuctionHouse                  debtAuctionHouse;
     OracleRelayer                     oracleRelayer;
     CoinSavingsAccount                coinSavingsAccount;
     GlobalSettlement                  globalSettlement;
-    SettlementSurplusAuctioneer       settlementSurplusAuctioneer;
     ESM                               esm;
 
     EnglishCollateralAuctionHouse ethEnglishCollateralAuctionHouse;
@@ -332,13 +328,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         coinFactory = new CoinFactory();
         coinJoinFactory = new CoinJoinFactory();
         preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseFactory();
-        postSettlementSurplusAuctionHouseFactory = new PostSettlementSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
         fixedDiscountCollateralAuctionHouseFactory = new FixedDiscountCollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
         stabilityFeeTreasuryFactory = new StabilityFeeTreasuryFactory();
-        settlementSurplusAuctioneerFactory = new SettlementSurplusAuctioneerFactory();
         globalSettlementFactory = new GlobalSettlementFactory();
         pauseFactory = new PauseFactory();
         protestPauseFactory = new ProtestPauseFactory();
@@ -355,13 +349,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           liquidationEngineFactory,
           coinFactory,
           coinJoinFactory,
-          coinSavingsAccountFactory,
-          settlementSurplusAuctioneerFactory
+          coinSavingsAccountFactory
         );
 
         gebDeploy.setSecondFactoryBatch(
           preSettlementSurplusAuctionHouseFactory,
-          postSettlementSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
           englishCollateralAuctionHouseFactory,
           fixedDiscountCollateralAuctionHouseFactory,
@@ -415,7 +407,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
-        gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
 
@@ -432,14 +423,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
         preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
-        postSettlementSurplusAuctionHouse = gebDeploy.postSettlementSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coin = gebDeploy.coin();
         coinJoin = gebDeploy.coinJoin();
         oracleRelayer = gebDeploy.oracleRelayer();
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
-        settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
         if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
@@ -490,7 +479,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
     function deployStableKeepAuth(bytes32 auctionType) virtual public {
@@ -503,7 +491,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployAuctions(address(prot));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
-        gebDeploy.deploySettlementSurplusAuctioneer();
         gebDeploy.deployLiquidator();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
 
@@ -520,7 +507,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
         preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
-        postSettlementSurplusAuctionHouse = gebDeploy.postSettlementSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coinSavingsAccount = gebDeploy.coinSavingsAccount();
         coin = gebDeploy.coin();
@@ -528,7 +514,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         oracleRelayer = gebDeploy.oracleRelayer();
         globalSettlement = gebDeploy.globalSettlement();
         esm = gebDeploy.esm();
-        settlementSurplusAuctioneer = gebDeploy.settlementSurplusAuctioneer();
         stabilityFeeTreasury = gebDeploy.stabilityFeeTreasury();
 
         if (PAUSE_TYPE == keccak256(abi.encodePacked("BASIC"))) {
@@ -579,7 +564,6 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
         DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(postSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
     // Index

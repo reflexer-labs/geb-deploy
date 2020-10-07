@@ -400,48 +400,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coin.balanceOf(address(user1)), 0.05 ether);
     }
 
-    function testPostSettlementSurplusAuctionHouse() public {
-        deployIndexWithCreatorPermissions(bytes32("ENGLISH"));
-
-        this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
-        weth.deposit{value: 0.5 ether}();
-        weth.approve(address(ethJoin), uint(-1));
-        ethJoin.join(address(this), 0.5 ether);
-        safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 0.1 ether, 10 ether);
-        hevm.warp(now + 1);
-        this.modifyParameters(address(accountingEngine), bytes32("surplusAuctionAmountToSell"), rad(0.05 ether));
-
-        accountingEngine.disableContract();
-        safeEngine.createUnbackedDebt(address(this), address(settlementSurplusAuctioneer), rad(10 * 0.05 ether));
-        assertEq(safeEngine.coinBalance(address(settlementSurplusAuctioneer)), rad(10 * 0.05 ether));
-
-        uint batchId = settlementSurplusAuctioneer.auctionSurplus();
-
-        (,uint amountSold,,,) = postSettlementSurplusAuctionHouse.bids(batchId);
-        assertEq(amountSold, rad(0.05 ether));
-        user1.doApprove(address(prot), address(postSettlementSurplusAuctionHouse));
-        user2.doApprove(address(prot), address(postSettlementSurplusAuctionHouse));
-        prot.transfer(address(user1), 1 ether);
-        prot.transfer(address(user2), 1 ether);
-
-        assertEq(coin.balanceOf(address(user1)), 0);
-        assertEq(prot.balanceOf(address(0)), 0);
-
-        user1.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
-        user2.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
-        user1.doIncreaseBidSize(address(postSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
-
-        assertEq(prot.balanceOf(address(user1)), 1 ether - 0.0016 ether);
-        assertEq(prot.balanceOf(address(user2)), 1 ether);
-        hevm.warp(now + postSettlementSurplusAuctionHouse.totalAuctionLength() + 1);
-        assertEq(prot.balanceOf(address(postSettlementSurplusAuctionHouse)), 0.0016 ether);
-        user1.doSettleAuction(address(postSettlementSurplusAuctionHouse), batchId);
-        assertEq(prot.balanceOf(address(postSettlementSurplusAuctionHouse)), 0);
-        user1.doSAFEApprove(address(safeEngine), address(coinJoin));
-        user1.doCoinExit(address(coinJoin), address(user1), 0.05 ether);
-        assertEq(coin.balanceOf(address(user1)), 0.05 ether);
-    }
-
     function testSettlementPartialLiquidation() public {
         deployIndex(bytes32("ENGLISH"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200);
@@ -766,10 +724,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioneer
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
-
         // preSettlementSurplusAuctionHouse
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
@@ -815,7 +769,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(ethEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
     }
 
     function testIndexAuthFixedDiscountAuctionHouse() public {
@@ -856,10 +809,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioneer
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
-
         // preSettlementSurplusAuctionHouse
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
@@ -905,7 +854,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
     }
 
     function testStableAuthEnglishAuctionHouse() public {
@@ -943,10 +891,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioneer
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
-
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
 
@@ -961,13 +905,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 0);
-
-        // postSettlementSurplusAuctionHouse
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 0);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -1010,13 +947,11 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 
@@ -1055,10 +990,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // settlementSurplusAuctioneer
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(pause.proxy())), 1);
-
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
 
@@ -1073,13 +1004,6 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 0);
-
-        // postSettlementSurplusAuctionHouse
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(settlementSurplusAuctioneer)), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 0);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -1122,13 +1046,11 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(postSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(settlementSurplusAuctioneer.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 }
