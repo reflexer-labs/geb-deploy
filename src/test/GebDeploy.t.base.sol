@@ -8,7 +8,7 @@ import {DSGuard} from "ds-guard/guard.sol";
 import {WETH9_} from "ds-weth/weth9.sol";
 
 import "../GebDeploy.sol";
-import {CollateralJoin1} from "../AdvancedTokenAdapters.sol";
+import {CollateralJoin1, CollateralJoin6} from "../AdvancedTokenAdapters.sol";
 import {GovActions} from "../GovActions.sol";
 
 abstract contract Hevm {
@@ -112,7 +112,9 @@ abstract contract DSPauseLike {
     function owner() virtual public view returns (address);
     function authority() virtual public view returns (address);
     function delay() virtual public view returns (uint256);
+    function delayMultiplier() virtual public view returns (uint256);
     function proxy() virtual public view returns (address);
+    function protester() virtual public view returns (address);
     function getTransactionDataHash(address, bytes32, bytes memory, uint)
         virtual public pure
         returns (bytes32);
@@ -273,7 +275,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
     WETH9_ weth;
     CollateralJoin1 ethJoin;
-    CollateralJoin1 colJoin;
+    CollateralJoin6 colJoin;
 
     SAFEEngine                        safeEngine;
     TaxCollector                      taxCollector;
@@ -448,7 +450,9 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
-        colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
+        colJoin = new CollateralJoin6(address(safeEngine), "COL", address(col));
+        colJoin.addAuthorization(pauseProxy);
+        colJoin.removeAuthorization(address(this));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
@@ -533,8 +537,10 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL");
-        colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
+        colJoin = new CollateralJoin6(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
+        colJoin.addAuthorization(pauseProxy);
+        colJoin.removeAuthorization(address(this));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         // Set SAFEEngine Params
