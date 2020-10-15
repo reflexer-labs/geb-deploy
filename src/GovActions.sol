@@ -27,6 +27,8 @@ abstract contract Setter {
     function stopFsm(bytes32 collateralType) virtual external;
     function start() virtual external;
     function changeNextPriceDeviation(uint deviation) virtual external;
+    function setName(string calldata name) virtual external;
+    function setSymbol(string calldata symbol) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -180,6 +182,14 @@ contract GovActions {
 
     function start(address fsm) public {
         Setter(fsm).start();
+    }
+
+    function setName(address coin, string memory name) public {
+        Setter(coin).setName(name);
+    }
+
+    function setSymbol(address coin, string memory symbol) public {
+        Setter(coin).setSymbol(symbol);
     }
 
     function changeNextPriceDeviation(address fsm, uint deviation) public {

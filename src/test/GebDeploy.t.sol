@@ -294,6 +294,7 @@ contract GebDeployTest is GebDeployTestBase {
         oracleRelayer.updateCollateralPrice("ETH");
         assertEq(safeEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 0);
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
+        assertEq(liquidationEngine.currentOnAuctionSystemCoins(), 200E45);
         assertEq(safeEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 1 ether);
         address(user1).transfer(10 ether);
         user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
@@ -305,6 +306,8 @@ contract GebDeployTest is GebDeployTestBase {
 
         user1.doSAFEApprove(address(safeEngine), address(ethFixedDiscountCollateralAuctionHouse));
         user1.doBuyCollateral(address(ethFixedDiscountCollateralAuctionHouse), batchId, 200 ether);
+
+        assertEq(liquidationEngine.currentOnAuctionSystemCoins(), 0);
     }
 
     function testDebtAuctionHouse() public {
