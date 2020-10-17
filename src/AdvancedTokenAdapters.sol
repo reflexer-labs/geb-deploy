@@ -634,6 +634,8 @@ contract CollateralJoin6 {
         require(wad <= 2 ** 255, "CollateralJoin6/overflow");
         if (collateralJoined[msg.sender] >= wad) {
           collateralJoined[msg.sender] = subtract(collateralJoined[msg.sender], wad);
+        } else {
+          collateralJoined[msg.sender] = 0;
         }
         safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin6/failed-transfer");
