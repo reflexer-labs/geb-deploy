@@ -29,6 +29,7 @@ abstract contract Setter {
     function changeNextPriceDeviation(uint deviation) virtual external;
     function setName(string calldata name) virtual external;
     function setSymbol(string calldata symbol) virtual external;
+    function disableContract() virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -45,6 +46,10 @@ abstract contract PauseLike {
 
 contract GovActions {
     uint constant internal RAY = 10 ** 27;
+
+    function disableContract(address targetContract) public {
+        Setter(targetContract).disableContract();
+    }
 
     function modifyParameters(address targetContract, bytes32 parameter, address data) public {
         Setter(targetContract).modifyParameters(parameter, data);
