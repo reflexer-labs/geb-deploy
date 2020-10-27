@@ -718,6 +718,7 @@ contract GebDeployTest is GebDeployTestBase {
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(coin.authorizedAccounts(address(pause.proxy())), 1);
 
         // oracleRelayer
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
@@ -803,6 +804,7 @@ contract GebDeployTest is GebDeployTestBase {
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(coin.authorizedAccounts(address(pause.proxy())), 1);
 
         // oracleRelayer
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
@@ -896,6 +898,7 @@ contract GebDeployTest is GebDeployTestBase {
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(coin.authorizedAccounts(address(pause.proxy())), 1);
 
         // coin join
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 1);
@@ -995,6 +998,7 @@ contract GebDeployTest is GebDeployTestBase {
 
         // coin
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(coin.authorizedAccounts(address(pause.proxy())), 1);
 
         // coin join
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 1);

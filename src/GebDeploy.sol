@@ -432,6 +432,7 @@ contract GebDeploy is DSAuth {
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
         coinJoin.addAuthorization(address(usr));
+        coin.addAuthorization(address(usr));
         if (address(esm) != address(0)) {
           esm.addAuthorization(address(usr));
         }
