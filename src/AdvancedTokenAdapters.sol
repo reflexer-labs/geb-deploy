@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity ^0.6.7;
+pragma solidity 0.6.7;
 
 abstract contract SAFEEngineLike {
     function modifyCollateralBalance(bytes32,address,int) virtual public;
@@ -56,10 +56,10 @@ contract CollateralJoin1 {
     }
 
     SAFEEngineLike public safeEngine;
-    bytes32 public collateralType;
+    bytes32        public collateralType;
     CollateralLike public collateral;
-    uint    public decimals;
-    uint    public contractEnabled;  // Access Flag
+    uint           public decimals;
+    uint           public contractEnabled;  // Access Flag
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -75,6 +75,7 @@ contract CollateralJoin1 {
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
+        require(decimals == 18, "CollateralJoin1/not-18-decimals");
         emit AddAuthorization(msg.sender);
     }
 
@@ -167,6 +168,7 @@ contract CollateralJoin2 {
         collateral = CollateralLike2(collateral_);
         decimals = collateral.decimals();
         contractEnabled = 1;
+        require(decimals == 18, "CollateralJoin2/not-18-decimals");
         emit AddAuthorization(msg.sender);
     }
 
@@ -593,6 +595,7 @@ contract CollateralJoin6 {
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
+        require(decimals == 18, "CollateralJoin6/not-18-decimals");
         emit AddAuthorization(msg.sender);
     }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.7;
+pragma solidity 0.6.7;
 
 abstract contract Setter {
     function modifyParameters(bytes32, address) virtual public;
@@ -86,6 +86,18 @@ contract GovActions {
       bytes32 parameter2,
       uint data1,
       uint data2
+    ) public {
+      Setter(targetContract1).modifyParameters(parameter1, data1);
+      Setter(targetContract2).modifyParameters(parameter2, data2);
+    }
+
+    function modifyTwoParameters(
+      address targetContract1,
+      address targetContract2,
+      bytes32 parameter1,
+      bytes32 parameter2,
+      int data1,
+      int data2
     ) public {
       Setter(targetContract1).modifyParameters(parameter1, data1);
       Setter(targetContract2).modifyParameters(parameter2, data2);
