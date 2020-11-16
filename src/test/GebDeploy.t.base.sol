@@ -374,7 +374,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         );
 
         tokenAuthority = new ProtocolTokenAuthority();
-        prot = new DSToken("PROT");
+        prot = new DSToken("PROT", "PROT");
         prot.setAuthority(new DSGuard());
         orclETH = new DSValue();
         orclCOL = new DSValue();
@@ -452,12 +452,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
-        col = new DSToken("COL");
+        col = new DSToken("COL", "COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
-        col6 = new DSToken("COL6");
+        col6 = new DSToken("COL6", "COL6");
         col6Join = new CollateralJoin6(address(safeEngine), "COL6", address(col6));
         col6Join.addAuthorization(pauseProxy);
         col6Join.removeAuthorization(address(this));
@@ -542,12 +542,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
-        col = new DSToken("COL");
+        col = new DSToken("COL", "COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
         gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
-        col6 = new DSToken("COL6");
+        col6 = new DSToken("COL6", "COL6");
         col6Join = new CollateralJoin6(address(safeEngine), "COL6", address(col6));
         col6Join.addAuthorization(pauseProxy);
         col6Join.removeAuthorization(address(this));
