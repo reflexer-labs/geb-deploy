@@ -26,7 +26,7 @@ import {TaxCollector} from "geb/TaxCollector.sol";
 import {AccountingEngine} from "geb/AccountingEngine.sol";
 import {LiquidationEngine} from "geb/LiquidationEngine.sol";
 import {CoinJoin} from "geb/BasicTokenAdapters.sol";
-import {PreSettlementSurplusAuctionHouse} from "geb/SurplusAuctionHouse.sol";
+import {RecyclingSurplusAuctionHouse} from "geb/SurplusAuctionHouse.sol";
 import {DebtAuctionHouse} from "geb/DebtAuctionHouse.sol";
 import {EnglishCollateralAuctionHouse, FixedDiscountCollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
 import {Coin} from "geb/Coin.sol";
@@ -95,9 +95,9 @@ contract CoinJoinFactory {
     }
 }
 
-contract PreSettlementSurplusAuctionHouseFactory {
-    function newSurplusAuctionHouse(address safeEngine, address prot) public returns (PreSettlementSurplusAuctionHouse surplusAuctionHouse) {
-        surplusAuctionHouse = new PreSettlementSurplusAuctionHouse(safeEngine, prot);
+contract RecyclingSurplusAuctionHouseFactory {
+    function newSurplusAuctionHouse(address safeEngine, address prot) public returns (RecyclingSurplusAuctionHouse surplusAuctionHouse) {
+        surplusAuctionHouse = new RecyclingSurplusAuctionHouse(safeEngine, prot);
         surplusAuctionHouse.addAuthorization(msg.sender);
         surplusAuctionHouse.removeAuthorization(address(this));
     }
@@ -193,7 +193,7 @@ contract GebDeploy is DSAuth {
     CoinFactory                                public coinFactory;
     CoinJoinFactory                            public coinJoinFactory;
     StabilityFeeTreasuryFactory                public stabilityFeeTreasuryFactory;
-    PreSettlementSurplusAuctionHouseFactory    public preSettlementSurplusAuctionHouseFactory;
+    RecyclingSurplusAuctionHouseFactory        public recyclingSurplusAuctionHouseFactory;
     DebtAuctionHouseFactory                    public debtAuctionHouseFactory;
     EnglishCollateralAuctionHouseFactory       public englishCollateralAuctionHouseFactory;
     FixedDiscountCollateralAuctionHouseFactory public fixedDiscountCollateralAuctionHouseFactory;
@@ -211,7 +211,7 @@ contract GebDeploy is DSAuth {
     StabilityFeeTreasury              public stabilityFeeTreasury;
     Coin                              public coin;
     CoinJoin                          public coinJoin;
-    PreSettlementSurplusAuctionHouse  public preSettlementSurplusAuctionHouse;
+    RecyclingSurplusAuctionHouse      public recyclingSurplusAuctionHouse;
     DebtAuctionHouse                  public debtAuctionHouse;
     OracleRelayer                     public oracleRelayer;
     CoinSavingsAccount                public coinSavingsAccount;
@@ -251,7 +251,7 @@ contract GebDeploy is DSAuth {
         coinSavingsAccountFactory = coinSavingsAccountFactory_;
     }
     function setSecondFactoryBatch(
-        PreSettlementSurplusAuctionHouseFactory preSettlementSurplusAuctionHouseFactory_,
+        RecyclingSurplusAuctionHouseFactory recyclingSurplusAuctionHouseFactory_,
         DebtAuctionHouseFactory debtAuctionHouseFactory_,
         EnglishCollateralAuctionHouseFactory englishCollateralAuctionHouseFactory_,
         FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory_,
@@ -260,8 +260,8 @@ contract GebDeploy is DSAuth {
         ESMFactory esmFactory_
     ) public auth {
         require(address(safeEngineFactory) != address(0), "SAFEEngine Factory not set");
-        require(address(preSettlementSurplusAuctionHouseFactory) == address(0), "PreSettlementSurplusAuctionHouse Factory already set");
-        preSettlementSurplusAuctionHouseFactory = preSettlementSurplusAuctionHouseFactory_;
+        require(address(recyclingSurplusAuctionHouseFactory) == address(0), "RecyclingSurplusAuctionHouse Factory already set");
+        recyclingSurplusAuctionHouseFactory = recyclingSurplusAuctionHouseFactory_;
         debtAuctionHouseFactory = debtAuctionHouseFactory_;
         englishCollateralAuctionHouseFactory = englishCollateralAuctionHouseFactory_;
         fixedDiscountCollateralAuctionHouseFactory = fixedDiscountCollateralAuctionHouseFactory_;
@@ -319,27 +319,30 @@ contract GebDeploy is DSAuth {
         safeEngine.addAuthorization(address(coinSavingsAccount));
     }
 
-    function deployAuctions(address prot) public auth {
+    function deployAuctions(address prot, address surplusProtTokenReceiver) public auth {
         require(address(taxCollector) != address(0), "Missing previous step");
         require(address(coin) != address(0), "Missing COIN address");
 
         // Deploy
-        preSettlementSurplusAuctionHouse = preSettlementSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
+        recyclingSurplusAuctionHouse = recyclingSurplusAuctionHouseFactory.newSurplusAuctionHouse(address(safeEngine), prot);
         debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(safeEngine), prot);
+
+        // Surplus auction setup
+        recyclingSurplusAuctionHouse.modifyParameters("protocolTokenBidReceiver", surplusProtTokenReceiver);
 
         // Internal auth
         safeEngine.addAuthorization(address(debtAuctionHouse));
     }
 
     function deployAccountingEngine() public auth {
-        accountingEngine = accountingEngineFactory.newAccountingEngine(address(safeEngine), address(preSettlementSurplusAuctionHouse), address(debtAuctionHouse));
+        accountingEngine = accountingEngineFactory.newAccountingEngine(address(safeEngine), address(recyclingSurplusAuctionHouse), address(debtAuctionHouse));
 
         // Setup
         debtAuctionHouse.modifyParameters("accountingEngine", address(accountingEngine));
         taxCollector.modifyParameters("primaryTaxReceiver", address(accountingEngine));
 
         // Internal auth
-        preSettlementSurplusAuctionHouse.addAuthorization(address(accountingEngine));
+        recyclingSurplusAuctionHouse.addAuthorization(address(accountingEngine));
         debtAuctionHouse.addAuthorization(address(accountingEngine));
     }
 
@@ -428,7 +431,7 @@ contract GebDeploy is DSAuth {
         accountingEngine.addAuthorization(address(usr));
         taxCollector.addAuthorization(address(usr));
         oracleRelayer.addAuthorization(address(usr));
-        preSettlementSurplusAuctionHouse.addAuthorization(address(usr));
+        recyclingSurplusAuctionHouse.addAuthorization(address(usr));
         debtAuctionHouse.addAuthorization(address(usr));
         globalSettlement.addAuthorization(address(usr));
         coinJoin.addAuthorization(address(usr));
@@ -454,7 +457,7 @@ contract GebDeploy is DSAuth {
         accountingEngine.removeAuthorization(address(usr));
         taxCollector.removeAuthorization(address(usr));
         oracleRelayer.removeAuthorization(address(usr));
-        preSettlementSurplusAuctionHouse.removeAuthorization(address(usr));
+        recyclingSurplusAuctionHouse.removeAuthorization(address(usr));
         debtAuctionHouse.removeAuthorization(address(usr));
         globalSettlement.removeAuthorization(address(usr));
         coinJoin.removeAuthorization(address(usr));
@@ -556,7 +559,7 @@ contract GebDeploy is DSAuth {
         taxCollector.removeAuthorization(address(this));
         coin.removeAuthorization(address(this));
         oracleRelayer.removeAuthorization(address(this));
-        preSettlementSurplusAuctionHouse.removeAuthorization(address(this));
+        recyclingSurplusAuctionHouse.removeAuthorization(address(this));
         debtAuctionHouse.removeAuthorization(address(this));
         globalSettlement.removeAuthorization(address(this));
         coinJoin.removeAuthorization(address(this));

@@ -246,14 +246,14 @@ contract ProxyActions {
 contract GebDeployTestBase is DSTest, ProxyActions {
     Hevm hevm;
 
-    SAFEEngineFactory                           safeEngineFactory;
+    SAFEEngineFactory                          safeEngineFactory;
     TaxCollectorFactory                        taxCollectorFactory;
     AccountingEngineFactory                    accountingEngineFactory;
     LiquidationEngineFactory                   liquidationEngineFactory;
     StabilityFeeTreasuryFactory                stabilityFeeTreasuryFactory;
     CoinFactory                                coinFactory;
     CoinJoinFactory                            coinJoinFactory;
-    PreSettlementSurplusAuctionHouseFactory    preSettlementSurplusAuctionHouseFactory;
+    RecyclingSurplusAuctionHouseFactory        recyclingSurplusAuctionHouseFactory;
     DebtAuctionHouseFactory                    debtAuctionHouseFactory;
     EnglishCollateralAuctionHouseFactory       englishCollateralAuctionHouseFactory;
     FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
@@ -285,7 +285,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     StabilityFeeTreasury              stabilityFeeTreasury;
     Coin                              coin;
     CoinJoin                          coinJoin;
-    PreSettlementSurplusAuctionHouse  preSettlementSurplusAuctionHouse;
+    RecyclingSurplusAuctionHouse      recyclingSurplusAuctionHouse;
     DebtAuctionHouse                  debtAuctionHouse;
     OracleRelayer                     oracleRelayer;
     CoinSavingsAccount                coinSavingsAccount;
@@ -305,6 +305,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
     FakeUser user1;
     FakeUser user2;
+    FakeUser surplusProtTokenReceiver;
 
     bytes32[] collateralTypes;
 
@@ -332,7 +333,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         liquidationEngineFactory = new LiquidationEngineFactory();
         coinFactory = new CoinFactory();
         coinJoinFactory = new CoinJoinFactory();
-        preSettlementSurplusAuctionHouseFactory = new PreSettlementSurplusAuctionHouseFactory();
+        recyclingSurplusAuctionHouseFactory = new RecyclingSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
         fixedDiscountCollateralAuctionHouseFactory = new FixedDiscountCollateralAuctionHouseFactory();
@@ -358,7 +359,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         );
 
         gebDeploy.setSecondFactoryBatch(
-          preSettlementSurplusAuctionHouseFactory,
+          recyclingSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
           englishCollateralAuctionHouseFactory,
           fixedDiscountCollateralAuctionHouseFactory,
@@ -384,6 +385,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         user1 = new FakeUser();
         user2 = new FakeUser();
+        surplusProtTokenReceiver = new FakeUser();
         address(user1).transfer(100 ether);
         address(user2).transfer(100 ether);
 
@@ -409,7 +411,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot));
+        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deployLiquidator();
@@ -427,7 +429,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
-        preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
+        recyclingSurplusAuctionHouse = gebDeploy.recyclingSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coin = gebDeploy.coin();
         coinJoin = gebDeploy.coinJoin();
@@ -488,7 +490,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         assertEq(safetyPrice, liquidationPrice);
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(recyclingSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
     function deployStableKeepAuth(bytes32 auctionType) virtual public {
@@ -498,7 +500,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCoin("Stable Coin", "STABL", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deploySavingsAccount();
-        gebDeploy.deployAuctions(address(prot));
+        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deployLiquidator();
@@ -516,7 +518,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         taxCollector = gebDeploy.taxCollector();
         accountingEngine = gebDeploy.accountingEngine();
         liquidationEngine = gebDeploy.liquidationEngine();
-        preSettlementSurplusAuctionHouse = gebDeploy.preSettlementSurplusAuctionHouse();
+        recyclingSurplusAuctionHouse = gebDeploy.recyclingSurplusAuctionHouse();
         debtAuctionHouse = gebDeploy.debtAuctionHouse();
         coinSavingsAccount = gebDeploy.coinSavingsAccount();
         coin = gebDeploy.coin();
@@ -578,7 +580,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         assertEq(safetyPrice, liquidationPrice);
 
         DSGuard(address(prot.authority())).permit(address(debtAuctionHouse), address(prot), bytes4(keccak256("mint(address,uint256)")));
-        DSGuard(address(prot.authority())).permit(address(preSettlementSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
+        DSGuard(address(prot.authority())).permit(address(recyclingSurplusAuctionHouse), address(prot), bytes4(keccak256("burn(address,uint256)")));
     }
 
     // Index

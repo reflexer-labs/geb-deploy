@@ -17,7 +17,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailMissingSAFEEngine() public {
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot));
+        gebDeploy.deployAuctions(address(prot), address(0x123));
     }
 
     function testFailMissingTaxationAndAuctions() public {
@@ -30,7 +30,7 @@ contract GebDeployTest is GebDeployTestBase {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot));
+        gebDeploy.deployAuctions(address(prot), address(0x123));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
     }
@@ -39,7 +39,7 @@ contract GebDeployTest is GebDeployTestBase {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot));
+        gebDeploy.deployAuctions(address(prot), address(0x123));
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployPause(0, authority);
     }
@@ -363,7 +363,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(safeEngine.debtBalance(address(accountingEngine)), 0);
     }
 
-    function testPreSettlementSurplusAuctionHouse() public {
+    function testRecyclingSurplusAuctionHouse() public {
         deployIndex(bytes32("ENGLISH"));
 
         this.taxSingleAndModifyParameters(address(taxCollector), bytes32("ETH"), bytes32("stabilityFee"), uint(1.05 * 10 ** 27));
@@ -378,26 +378,27 @@ contract GebDeployTest is GebDeployTestBase {
         this.modifyParameters(address(accountingEngine), bytes32("surplusAuctionAmountToSell"), rad(0.05 ether));
         uint batchId = accountingEngine.auctionSurplus();
 
-        (,uint amountSold,,,) = preSettlementSurplusAuctionHouse.bids(batchId);
+        (,uint amountSold,,,) = recyclingSurplusAuctionHouse.bids(batchId);
         assertEq(amountSold, rad(0.05 ether));
-        user1.doApprove(address(prot), address(preSettlementSurplusAuctionHouse));
-        user2.doApprove(address(prot), address(preSettlementSurplusAuctionHouse));
+        user1.doApprove(address(prot), address(recyclingSurplusAuctionHouse));
+        user2.doApprove(address(prot), address(recyclingSurplusAuctionHouse));
         prot.transfer(address(user1), 1 ether);
         prot.transfer(address(user2), 1 ether);
 
         assertEq(coin.balanceOf(address(user1)), 0);
         assertEq(prot.balanceOf(address(0)), 0);
 
-        user1.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
-        user2.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
-        user1.doIncreaseBidSize(address(preSettlementSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
+        user1.doIncreaseBidSize(address(recyclingSurplusAuctionHouse), batchId, rad(0.05 ether), 0.001 ether);
+        user2.doIncreaseBidSize(address(recyclingSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0015 ether);
+        user1.doIncreaseBidSize(address(recyclingSurplusAuctionHouse), batchId, rad(0.05 ether), 0.0016 ether);
 
         assertEq(prot.balanceOf(address(user1)), 1 ether - 0.0016 ether);
         assertEq(prot.balanceOf(address(user2)), 1 ether);
-        hevm.warp(now + preSettlementSurplusAuctionHouse.totalAuctionLength() + 1);
-        assertEq(prot.balanceOf(address(preSettlementSurplusAuctionHouse)), 0.0016 ether);
-        user1.doSettleAuction(address(preSettlementSurplusAuctionHouse), batchId);
-        assertEq(prot.balanceOf(address(preSettlementSurplusAuctionHouse)), 0);
+        hevm.warp(now + recyclingSurplusAuctionHouse.totalAuctionLength() + 1);
+        assertEq(prot.balanceOf(address(recyclingSurplusAuctionHouse)), 0.0016 ether);
+        user1.doSettleAuction(address(recyclingSurplusAuctionHouse), batchId);
+        assertEq(prot.balanceOf(address(surplusProtTokenReceiver)), 0.0016 ether);
+        assertEq(prot.balanceOf(address(recyclingSurplusAuctionHouse)), 0);
         user1.doSAFEApprove(address(safeEngine), address(coinJoin));
         user1.doCoinExit(address(coinJoin), address(user1), 0.05 ether);
         assertEq(coin.balanceOf(address(user1)), 0.05 ether);
@@ -728,10 +729,10 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // preSettlementSurplusAuctionHouse
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // recyclingSurplusAuctionHouse
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -767,7 +768,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -814,10 +815,10 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(pause.proxy())), 1);
 
-        // preSettlementSurplusAuctionHouse
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // recyclingSurplusAuctionHouse
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -853,7 +854,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(taxCollector.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -907,10 +908,10 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(oracleRelayer.authorizedAccounts(address(pause.proxy())), 1);
 
-        // preSettlementSurplusAuctionHouse
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // recyclingSurplusAuctionHouse
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -952,7 +953,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethEnglishCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
@@ -1007,10 +1008,10 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(oracleRelayer.authorizedAccounts(address(pause.proxy())), 1);
 
-        // preSettlementSurplusAuctionHouse
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        // recyclingSurplusAuctionHouse
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(accountingEngine)), 1);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // debtAuctionHouse
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
@@ -1052,7 +1053,7 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(coin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(coinJoin.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(oracleRelayer.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(preSettlementSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
