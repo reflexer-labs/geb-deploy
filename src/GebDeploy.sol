@@ -328,7 +328,9 @@ contract GebDeploy is DSAuth {
         debtAuctionHouse = debtAuctionHouseFactory.newDebtAuctionHouse(address(safeEngine), prot);
 
         // Surplus auction setup
-        recyclingSurplusAuctionHouse.modifyParameters("protocolTokenBidReceiver", surplusProtTokenReceiver);
+        if (surplusProtTokenReceiver != address(0)) {
+          recyclingSurplusAuctionHouse.modifyParameters("protocolTokenBidReceiver", surplusProtTokenReceiver);
+        }
 
         // Internal auth
         safeEngine.addAuthorization(address(debtAuctionHouse));
