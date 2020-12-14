@@ -254,6 +254,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     CoinFactory                                coinFactory;
     CoinJoinFactory                            coinJoinFactory;
     RecyclingSurplusAuctionHouseFactory        recyclingSurplusAuctionHouseFactory;
+    BurningSurplusAuctionHouseFactory          burningSurplusAuctionHouseFactory;
     DebtAuctionHouseFactory                    debtAuctionHouseFactory;
     EnglishCollateralAuctionHouseFactory       englishCollateralAuctionHouseFactory;
     FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
@@ -285,6 +286,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     StabilityFeeTreasury              stabilityFeeTreasury;
     Coin                              coin;
     CoinJoin                          coinJoin;
+    BurningSurplusAuctionHouse        burningSurplusAuctionHouse;
     RecyclingSurplusAuctionHouse      recyclingSurplusAuctionHouse;
     DebtAuctionHouse                  debtAuctionHouse;
     OracleRelayer                     oracleRelayer;
@@ -333,6 +335,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         liquidationEngineFactory = new LiquidationEngineFactory();
         coinFactory = new CoinFactory();
         coinJoinFactory = new CoinJoinFactory();
+        burningSurplusAuctionHouseFactory = new BurningSurplusAuctionHouseFactory();
         recyclingSurplusAuctionHouseFactory = new RecyclingSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
@@ -360,6 +363,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         gebDeploy.setSecondFactoryBatch(
           recyclingSurplusAuctionHouseFactory,
+          burningSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
           englishCollateralAuctionHouseFactory,
           fixedDiscountCollateralAuctionHouseFactory,
@@ -411,7 +415,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver));
+        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver), "recycling");
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deployLiquidator();
@@ -500,7 +504,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         gebDeploy.deployCoin("Stable Coin", "STABL", 99);
         gebDeploy.deployTaxation();
         gebDeploy.deploySavingsAccount();
-        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver));
+        gebDeploy.deployAuctions(address(prot), address(surplusProtTokenReceiver), "recycling");
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployStabilityFeeTreasury();
         gebDeploy.deployLiquidator();

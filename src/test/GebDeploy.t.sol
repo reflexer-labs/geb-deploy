@@ -17,7 +17,7 @@ contract GebDeployTest is GebDeployTestBase {
 
     function testFailMissingSAFEEngine() public {
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot), address(0x123));
+        gebDeploy.deployAuctions(address(prot), address(0x123), "recycling");
     }
 
     function testFailMissingTaxationAndAuctions() public {
@@ -30,7 +30,7 @@ contract GebDeployTest is GebDeployTestBase {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot), address(0x123));
+        gebDeploy.deployAuctions(address(prot), address(0x123), "recycling");
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployShutdown(address(prot), address(0x0), address(0x0), 10);
     }
@@ -39,7 +39,7 @@ contract GebDeployTest is GebDeployTestBase {
         gebDeploy.deploySAFEEngine();
         gebDeploy.deployCoin("Rai Reflex Index", "RAI", 99);
         gebDeploy.deployTaxation();
-        gebDeploy.deployAuctions(address(prot), address(0x123));
+        gebDeploy.deployAuctions(address(prot), address(0x123), "recycling");
         gebDeploy.deployAccountingEngine();
         gebDeploy.deployPause(0, authority);
     }
