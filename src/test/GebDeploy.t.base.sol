@@ -128,6 +128,14 @@ abstract contract DSPauseLike {
         returns (bytes memory);
 }
 
+contract Feed is DSValue {
+    address public priceSource;
+
+    function set_price_source(address priceSource_) external {
+        priceSource = priceSource_;
+    }
+}
+
 contract ProxyActions {
     DSPauseLike pause;
     GovActions govActions;
@@ -268,9 +276,14 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     GebDeploy gebDeploy;
 
     DSToken prot;
-    DSValue orclETH;
-    DSValue orclCOL;
-    DSValue orclCOIN;
+
+    Feed orclETH;
+    Feed orclCOL;
+    Feed orclCOIN;
+
+    Feed priceSourceETH;
+    Feed priceSourceCOL;
+    Feed priceSourceCOIN;
 
     DSRoles authority;
 
@@ -381,9 +394,19 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         tokenAuthority = new ProtocolTokenAuthority();
         prot = new DSToken("PROT", "PROT");
         prot.setAuthority(new DSGuard());
-        orclETH = new DSValue();
-        orclCOL = new DSValue();
-        orclCOIN = new DSValue();
+
+        orclETH = new Feed();
+        orclCOL = new Feed();
+        orclCOIN = new Feed();
+
+        priceSourceETH = new Feed();
+        priceSourceCOL = new Feed();
+        priceSourceCOIN = new Feed();
+
+        orclETH.set_price_source(address(priceSourceETH));
+        orclCOL.set_price_source(address(priceSourceCOL));
+        orclCOIN.set_price_source(address(priceSourceCOIN));
+
         authority = new DSRoles();
         authority.setRootUser(address(this), true);
 
@@ -455,12 +478,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL", "COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         col6 = new DSToken("COL6", "COL6");
@@ -476,6 +499,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
         orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
         orclCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
+
+        priceSourceETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
+        priceSourceCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
+        priceSourceCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
+
         (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
@@ -545,12 +573,12 @@ contract GebDeployTestBase is DSTest, ProxyActions {
 
         weth = new WETH9_();
         ethJoin = new CollateralJoin1(address(safeEngine), "ETH", address(weth));
-        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(orclETH), address(0));
+        gebDeploy.deployCollateral(auctionType, "ETH", address(ethJoin), address(orclETH), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("ETH", pauseProxy);
 
         col = new DSToken("COL", "COL");
         colJoin = new CollateralJoin1(address(safeEngine), "COL", address(col));
-        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(orclCOL), address(0));
+        gebDeploy.deployCollateral(auctionType, "COL", address(colJoin), address(orclCOL), address(0));
         gebDeploy.addAuthToCollateralAuctionHouse("COL", pauseProxy);
 
         col6 = new DSToken("COL6", "COL6");
@@ -566,6 +594,11 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         orclETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
         orclCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
         orclCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
+
+        priceSourceETH.updateResult(300 * 10 ** 18); // Price 300 COIN = 1 ETH (precision 18)
+        priceSourceCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
+        priceSourceCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
+
         (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
         (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));

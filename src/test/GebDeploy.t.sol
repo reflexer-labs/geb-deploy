@@ -212,7 +212,8 @@ contract GebDeployTest is GebDeployTestBase {
         ethJoin.join(address(this), 1 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
 
-        orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        orclETH.updateResult(300 * 10 ** 18 - 1);        // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
 
         (uint collateralAmount, uint generatedDebt) = safeEngine.safes("ETH", address(this));
@@ -233,7 +234,9 @@ contract GebDeployTest is GebDeployTestBase {
         ethJoin.join(address(this), 10 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 10 ether, 2000 ether); // Maximun COIN generated
 
-        orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        orclETH.updateResult(300 * 10 ** 18 - 1);        // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+
         oracleRelayer.updateCollateralPrice("ETH");
 
         (uint collateralAmount, uint generatedDebt) = safeEngine.safes("ETH", address(this));
@@ -253,8 +256,11 @@ contract GebDeployTest is GebDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
+
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
+
         assertEq(safeEngine.tokenCollateral("ETH", address(ethEnglishCollateralAuctionHouse)), 0);
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         assertEq(safeEngine.tokenCollateral("ETH", address(ethEnglishCollateralAuctionHouse)), 1 ether);
@@ -290,8 +296,11 @@ contract GebDeployTest is GebDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
+
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
+
         assertEq(safeEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 0);
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         assertEq(liquidationEngine.currentOnAuctionSystemCoins(), 200E45);
@@ -318,9 +327,12 @@ contract GebDeployTest is GebDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 1 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 1 ether, 200 ether); // Maximun COIN generated
+
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
         uint48 eraLiquidateSAFE = uint48(now);
+
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         address(user1).transfer(10 ether);
         user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
@@ -412,8 +424,11 @@ contract GebDeployTest is GebDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 2 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
+
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
+
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         address(user1).transfer(10 ether);
 
@@ -489,8 +504,11 @@ contract GebDeployTest is GebDeployTestBase {
         weth.approve(address(ethJoin), uint(-1));
         ethJoin.join(address(this), 2 ether);
         safeEngine.modifySAFECollateralization("ETH", address(this), address(this), address(this), 2 ether, 400 ether); // Maximum COIN generated
+
         orclETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
+        priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
+
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         address(user1).transfer(10 ether);
 

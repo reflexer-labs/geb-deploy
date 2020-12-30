@@ -534,7 +534,6 @@ contract GebDeploy is DSAuth {
         bytes32 collateralType,
         address adapter,
         address collateralFSM,
-        address collateralMedian,
         address systemCoinOracle
     ) public auth {
         require(collateralType != bytes32(""), "Missing collateralType name");
@@ -579,7 +578,6 @@ contract GebDeploy is DSAuth {
         if (auctionHouseType != "ENGLISH") {
           CollateralAuctionHouse(auctionHouse).modifyParameters("oracleRelayer", address(oracleRelayer));
           CollateralAuctionHouse(auctionHouse).modifyParameters("collateralFSM", address(collateralFSM));
-          CollateralAuctionHouse(auctionHouse).modifyParameters("collateralMedian", address(collateralMedian));
           CollateralAuctionHouse(auctionHouse).modifyParameters("systemCoinOracle", address(systemCoinOracle));
         }
     }
