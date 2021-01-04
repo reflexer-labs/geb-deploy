@@ -129,8 +129,6 @@ abstract contract DSPauseLike {
 }
 
 contract Feed is DSValue {
-    address public priceSource;
-
     function set_price_source(address priceSource_) external {
         priceSource = priceSource_;
     }
