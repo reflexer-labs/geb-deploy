@@ -38,6 +38,7 @@ abstract contract GlobalSettlementLike {
 }
 
 abstract contract PauseLike {
+    function setOwner(address) virtual public;
     function setAuthority(address) virtual public;
     function setDelay(uint) virtual public;
     function setDelayMultiplier(uint) virtual public;
@@ -219,6 +220,10 @@ contract GovActions {
 
     function setAuthority(address pause, address newAuthority) public {
         PauseLike(pause).setAuthority(newAuthority);
+    }
+
+    function setOwner(address pause, address owner) public {
+        PauseLike(pause).setOwner(owner);
     }
 
     function setProtester(address pause, address protester) public {
