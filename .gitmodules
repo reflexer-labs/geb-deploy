@@ -1,9 +1,6 @@
 [submodule "lib/ds-guard"]
 	path = lib/ds-guard
 	url = https://github.com/reflexer-labs/ds-guard.git
-[submodule "lib/ds-pause"]
-	path = lib/ds-pause
-	url = https://github.com/reflexer-labs/ds-pause.git
 [submodule "lib/ds-value"]
 	path = lib/ds-value
 	url = https://github.com/reflexer-labs/ds-value.git
