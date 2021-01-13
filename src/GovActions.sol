@@ -45,11 +45,34 @@ abstract contract PauseLike {
     function setProtester(address) virtual public;
 }
 
+abstract contract StakingRewardsFactory {
+    function modifyParameters(uint256, bytes32, uint256) virtual public;
+    function transferTokenOut(address, address, uint256) virtual public;
+    function deploy(address, uint256, uint256) virtual public;
+    function notifyRewardAmount(uint256) virtual public;
+}
+
 contract GovActions {
     uint constant internal RAY = 10 ** 27;
 
     function disableContract(address targetContract) public {
         Setter(targetContract).disableContract();
+    }
+
+    function modifyParameters(address targetContract, uint256 campaign, bytes32 parameter, uint256 val) public {
+        StakingRewardsFactory(targetContract).modifyParameters(campaign, parameter, val);
+    }
+
+    function transferTokenOut(address targetContract, address token, address receiver, uint256 amount) public {
+        StakingRewardsFactory(targetContract).transferTokenOut(token, receiver, amount);
+    }
+
+    function deploy(address targetContract, address stakingToken, uint rewardAmount, uint duration) public {
+        StakingRewardsFactory(targetContract).deploy(stakingToken, rewardAmount, duration);
+    }
+
+    function notifyRewardAmount(address targetContract, uint256 campaignNumber) public {
+        StakingRewardsFactory(targetContract).notifyRewardAmount(campaignNumber);
     }
 
     function modifyParameters(address targetContract, bytes32 parameter, address data) public {
