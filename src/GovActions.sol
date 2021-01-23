@@ -52,6 +52,11 @@ abstract contract StakingRewardsFactory {
     function notifyRewardAmount(uint256) virtual public;
 }
 
+abstract contract DSTokenLike {
+    function mint(address, uint) virtual public;
+    function burn(address, uint) virtual public;
+}
+
 contract GovActions {
     uint constant internal RAY = 10 ** 27;
 
@@ -274,5 +279,13 @@ contract GovActions {
         for (uint i = 0; i < accounts.length; i++) {
             Setter(join).setAllowance(accounts[i], allowances[i]);
         }
+    }
+
+    function mint(address token, address guy, uint wad) public {
+        DSTokenLike(token).mint(guy, wad);
+    }
+
+    function burn(address token, address guy, uint wad) public {
+        DSTokenLike(token).burn(guy, wad);
     }
 }
