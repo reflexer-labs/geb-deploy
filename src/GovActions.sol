@@ -46,6 +46,7 @@ abstract contract PauseLike {
 }
 
 abstract contract StakingRewardsFactory {
+    function totalCampaignCount() virtual public view returns (uint256);
     function modifyParameters(uint256, bytes32, uint256) virtual public;
     function transferTokenOut(address, address, uint256) virtual public;
     function deploy(address, uint256, uint256) virtual public;
@@ -59,6 +60,9 @@ abstract contract DSTokenLike {
 
 contract GovActions {
     uint constant internal RAY = 10 ** 27;
+    function subtract(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x - y) <= x, "GovActions/sub-uint-uint-underflow");
+    }
 
     function disableContract(address targetContract) public {
         Setter(targetContract).disableContract();
@@ -77,6 +81,12 @@ contract GovActions {
     }
 
     function notifyRewardAmount(address targetContract, uint256 campaignNumber) public {
+        StakingRewardsFactory(targetContract).notifyRewardAmount(campaignNumber);
+    }
+
+    function deployAndNotifyRewardAmount(address targetContract, address stakingToken, uint rewardAmount, uint duration) public {
+        StakingRewardsFactory(targetContract).deploy(stakingToken, rewardAmount, duration);
+        uint256 campaignNumber = subtract(StakingRewardsFactory(targetContract).totalCampaignCount(), 1);
         StakingRewardsFactory(targetContract).notifyRewardAmount(campaignNumber);
     }
 
