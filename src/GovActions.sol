@@ -16,19 +16,21 @@ abstract contract Setter {
     function redemptionPrice() virtual public;
     function setTotalAllowance(address,uint256) virtual external;
     function setPerBlockAllowance(address,uint256) virtual external;
-    function taxMany(uint start, uint end) virtual public;
+    function taxMany(uint256, uint256) virtual public;
     function taxSingle(bytes32) virtual public;
     function setAllowance(address, uint256) virtual external;
+    function connectSAFESaviour(address) virtual external;
+    function disconnectSAFESaviour(address) virtual external;
     function addReader(address) virtual external;
     function removeReader(address) virtual external;
-    function addAuthority(address account) virtual external;
-    function removeAuthority(address account) virtual external;
-    function changePriceSource(address priceSource_) virtual external;
-    function stopFsm(bytes32 collateralType) virtual external;
+    function addAuthority(address) virtual external;
+    function removeAuthority(address) virtual external;
+    function changePriceSource(address) virtual external;
+    function stopFsm(bytes32) virtual external;
     function start() virtual external;
-    function changeNextPriceDeviation(uint deviation) virtual external;
-    function setName(string calldata name) virtual external;
-    function setSymbol(string calldata symbol) virtual external;
+    function changeNextPriceDeviation(uint) virtual external;
+    function setName(string calldata) virtual external;
+    function setSymbol(string calldata) virtual external;
     function disableContract() virtual external;
 }
 
@@ -206,6 +208,14 @@ contract GovActions {
 
     function removeAuthority(address validator, address account) public {
         Setter(validator).removeAuthority(account);
+    }
+
+    function connectSAFESaviour(address targetContract, address saviour) public {
+        Setter(targetContract).connectSAFESaviour(saviour);
+    }
+
+    function disconnectSAFESaviour(address targetContract, address saviour) public {
+        Setter(targetContract).disconnectSAFESaviour(saviour);
     }
 
     function setTotalAllowance(address targetContract, address account, uint256 rad) public {
