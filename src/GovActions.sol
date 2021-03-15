@@ -32,6 +32,7 @@ abstract contract Setter {
     function setName(string calldata) virtual external;
     function setSymbol(string calldata) virtual external;
     function disableContract() virtual external;
+    function toggleSaviour(address) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -192,6 +193,10 @@ contract GovActions {
         Setter(rateSetter).modifyParameters("pidValidator", dummyValidator);
         Setter(oracleRelayer).redemptionPrice();
         Setter(oracleRelayer).modifyParameters("redemptionRate", RAY);
+    }
+
+    function toggleSaviour(address targetContract, address saviour) public {
+        Setter(targetContract).toggleSaviour(saviour);
     }
 
     function addReader(address validator, address reader) public {
