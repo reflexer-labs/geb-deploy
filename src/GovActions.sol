@@ -48,7 +48,15 @@ abstract contract PauseLike {
     function setProtester(address) virtual public;
 }
 
-abstract contract StakingRewardsFactory {
+abstract contract MerkleDistributorFactoryLike {
+    function deployDistributor(bytes32, uint256) virtual external;
+    function sendTokensToDistributor(uint256) virtual external;
+    function sendTokensToCustom(address, uint256) virtual external;
+    function dropDistributorAuth(uint256) virtual external;
+    function getBackTokensFromDistributor(uint256, uint256) virtual external;
+}
+
+abstract contract StakingRewardsFactoryLike {
     function totalCampaignCount() virtual public view returns (uint256);
     function modifyParameters(uint256, bytes32, uint256) virtual public;
     function transferTokenOut(address, address, uint256) virtual public;
@@ -72,25 +80,25 @@ contract GovActions {
     }
 
     function modifyParameters(address targetContract, uint256 campaign, bytes32 parameter, uint256 val) public {
-        StakingRewardsFactory(targetContract).modifyParameters(campaign, parameter, val);
+        StakingRewardsFactoryLike(targetContract).modifyParameters(campaign, parameter, val);
     }
 
     function transferTokenOut(address targetContract, address token, address receiver, uint256 amount) public {
-        StakingRewardsFactory(targetContract).transferTokenOut(token, receiver, amount);
+        StakingRewardsFactoryLike(targetContract).transferTokenOut(token, receiver, amount);
     }
 
     function deploy(address targetContract, address stakingToken, uint rewardAmount, uint duration) public {
-        StakingRewardsFactory(targetContract).deploy(stakingToken, rewardAmount, duration);
+        StakingRewardsFactoryLike(targetContract).deploy(stakingToken, rewardAmount, duration);
     }
 
     function notifyRewardAmount(address targetContract, uint256 campaignNumber) public {
-        StakingRewardsFactory(targetContract).notifyRewardAmount(campaignNumber);
+        StakingRewardsFactoryLike(targetContract).notifyRewardAmount(campaignNumber);
     }
 
     function deployAndNotifyRewardAmount(address targetContract, address stakingToken, uint rewardAmount, uint duration) public {
-        StakingRewardsFactory(targetContract).deploy(stakingToken, rewardAmount, duration);
-        uint256 campaignNumber = subtract(StakingRewardsFactory(targetContract).totalCampaignCount(), 1);
-        StakingRewardsFactory(targetContract).notifyRewardAmount(campaignNumber);
+        StakingRewardsFactoryLike(targetContract).deploy(stakingToken, rewardAmount, duration);
+        uint256 campaignNumber = subtract(StakingRewardsFactoryLike(targetContract).totalCampaignCount(), 1);
+        StakingRewardsFactoryLike(targetContract).notifyRewardAmount(campaignNumber);
     }
 
     function modifyParameters(address targetContract, bytes32 parameter, address data) public {
@@ -312,5 +320,25 @@ contract GovActions {
 
     function burn(address token, address guy, uint wad) public {
         DSTokenLike(token).burn(guy, wad);
+    }
+
+    function deployDistributor(address target, bytes32 merkleRoot, uint256 amount) public {
+        MerkleDistributorFactoryLike(target).deployDistributor(merkleRoot, amount);
+    }
+
+    function sendTokensToDistributor(address target, uint256 id) public {
+        MerkleDistributorFactoryLike(target).sendTokensToDistributor(target, id);
+    }
+
+    function sendTokensToCustom(address target, address dst, uint256 amount) public {
+        MerkleDistributorFactoryLike(target).sendTokensToCustom(dst, amount);
+    }
+
+    function dropDistributorAuth(address target, uint256 id) public {
+        MerkleDistributorFactoryLike(target).dropDistributorAuth(id);
+    }
+
+    function getBackTokensFromDistributor(address target, uint256 id, uint256 amount) public {
+        MerkleDistributorFactoryLike(target).getBackTokensFromDistributor(id, amount);
     }
 }
