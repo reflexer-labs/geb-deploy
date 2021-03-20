@@ -288,8 +288,8 @@ contract GebDeployTest is GebDeployTestBase {
         user1.doSettleAuction(address(ethEnglishCollateralAuctionHouse), batchId);
     }
 
-    function testFixedDiscountCollateralAuctionHouse() public {
-        deployIndex(bytes32("FIXED_DISCOUNT"));
+    function testIncreasingDiscountCollateralAuctionHouse() public {
+        deployIndex(bytes32("INCREASING_DISCOUNT"));
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationQuantity", rad(1 ether) * 200);
         this.modifyParameters(address(liquidationEngine), "ETH", "liquidationPenalty", WAD);
         weth.deposit{value: 1 ether}();
@@ -301,10 +301,10 @@ contract GebDeployTest is GebDeployTestBase {
         priceSourceETH.updateResult(300 * 10 ** 18 - 1); // Decrease price in 1 wei
         oracleRelayer.updateCollateralPrice("ETH");
 
-        assertEq(safeEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 0);
+        assertEq(safeEngine.tokenCollateral("ETH", address(ethIncreasingDiscountCollateralAuctionHouse)), 0);
         uint batchId = liquidationEngine.liquidateSAFE("ETH", address(this));
         assertEq(liquidationEngine.currentOnAuctionSystemCoins(), 200E45);
-        assertEq(safeEngine.tokenCollateral("ETH", address(ethFixedDiscountCollateralAuctionHouse)), 1 ether);
+        assertEq(safeEngine.tokenCollateral("ETH", address(ethIncreasingDiscountCollateralAuctionHouse)), 1 ether);
         address(user1).transfer(10 ether);
         user1.doEthJoin(address(weth), address(ethJoin), address(user1), 10 ether);
         user1.doModifySAFECollateralization(address(safeEngine), "ETH", address(user1), address(user1), address(user1), 10 ether, 1000 ether);
@@ -313,8 +313,8 @@ contract GebDeployTest is GebDeployTestBase {
         user2.doEthJoin(address(weth), address(ethJoin), address(user2), 10 ether);
         user2.doModifySAFECollateralization(address(safeEngine), "ETH", address(user2), address(user2), address(user2), 10 ether, 1000 ether);
 
-        user1.doSAFEApprove(address(safeEngine), address(ethFixedDiscountCollateralAuctionHouse));
-        user1.doBuyCollateral(address(ethFixedDiscountCollateralAuctionHouse), batchId, 200 ether);
+        user1.doSAFEApprove(address(safeEngine), address(ethIncreasingDiscountCollateralAuctionHouse));
+        user1.doBuyCollateral(address(ethIncreasingDiscountCollateralAuctionHouse), batchId, 200 ether);
 
         assertEq(liquidationEngine.currentOnAuctionSystemCoins(), 0);
     }
@@ -794,8 +794,8 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
     }
 
-    function testIndexAuthFixedDiscountAuctionHouse() public {
-        deployIndexKeepAuth(bytes32("FIXED_DISCOUNT"));
+    function testIndexAuthIncreasingDiscountCollateralAuctionHouse() public {
+        deployIndexKeepAuth(bytes32("INCREASING_DISCOUNT"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(safeEngine.authorizedAccounts(address(ethJoin)), 1);
@@ -849,12 +849,12 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(globalSettlement.authorizedAccounts(address(pause.proxy())), 1);
 
         // collateralAuctionHouses
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // pause
         assertEq(address(pause.authority()), address(authority));
@@ -875,8 +875,8 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
     }
 
@@ -980,8 +980,8 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }
 
-    function testStableAuthFixedDiscountAuctionHouse() public {
-        deployStableKeepAuth(bytes32("FIXED_DISCOUNT"));
+    function testStableAuthIncreasingDiscountCollateralAuctionHouse() public {
+        deployStableKeepAuth(bytes32("INCREASING_DISCOUNT"));
 
         assertEq(safeEngine.authorizedAccounts(address(gebDeploy)), 1);
         assertEq(safeEngine.authorizedAccounts(address(ethJoin)), 1);
@@ -1042,12 +1042,12 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(globalSettlement.authorizedAccounts(address(pause.proxy())), 1);
 
         // collateralAuctionHouses
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(globalSettlement)), 1);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(pause.proxy())), 1);
 
         // pause
         assertEq(address(pause.authority()), address(authority));
@@ -1074,8 +1074,8 @@ contract GebDeployTest is GebDeployTestBase {
         assertEq(recyclingSurplusAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(debtAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(globalSettlement.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(ethFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
-        assertEq(colFixedDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(ethIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
+        assertEq(colIncreasingDiscountCollateralAuctionHouse.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(stabilityFeeTreasury.authorizedAccounts(address(gebDeploy)), 0);
         assertEq(esm.authorizedAccounts(address(gebDeploy)), 0);
     }

@@ -252,24 +252,24 @@ contract ProxyActions {
 contract GebDeployTestBase is DSTest, ProxyActions {
     Hevm hevm;
 
-    SAFEEngineFactory                          safeEngineFactory;
-    TaxCollectorFactory                        taxCollectorFactory;
-    AccountingEngineFactory                    accountingEngineFactory;
-    LiquidationEngineFactory                   liquidationEngineFactory;
-    StabilityFeeTreasuryFactory                stabilityFeeTreasuryFactory;
-    CoinFactory                                coinFactory;
-    CoinJoinFactory                            coinJoinFactory;
-    RecyclingSurplusAuctionHouseFactory        recyclingSurplusAuctionHouseFactory;
-    BurningSurplusAuctionHouseFactory          burningSurplusAuctionHouseFactory;
-    DebtAuctionHouseFactory                    debtAuctionHouseFactory;
-    EnglishCollateralAuctionHouseFactory       englishCollateralAuctionHouseFactory;
-    FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory;
-    OracleRelayerFactory                       oracleRelayerFactory;
-    GlobalSettlementFactory                    globalSettlementFactory;
-    ESMFactory                                 esmFactory;
-    CoinSavingsAccountFactory                  coinSavingsAccountFactory;
-    PauseFactory                               pauseFactory;
-    ProtestPauseFactory                        protestPauseFactory;
+    SAFEEngineFactory                               safeEngineFactory;
+    TaxCollectorFactory                             taxCollectorFactory;
+    AccountingEngineFactory                         accountingEngineFactory;
+    LiquidationEngineFactory                        liquidationEngineFactory;
+    StabilityFeeTreasuryFactory                     stabilityFeeTreasuryFactory;
+    CoinFactory                                     coinFactory;
+    CoinJoinFactory                                 coinJoinFactory;
+    RecyclingSurplusAuctionHouseFactory             recyclingSurplusAuctionHouseFactory;
+    BurningSurplusAuctionHouseFactory               burningSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                         debtAuctionHouseFactory;
+    EnglishCollateralAuctionHouseFactory            englishCollateralAuctionHouseFactory;
+    IncreasingDiscountCollateralAuctionHouseFactory increasingDiscountCollateralAuctionHouseFactory;
+    OracleRelayerFactory                            oracleRelayerFactory;
+    GlobalSettlementFactory                         globalSettlementFactory;
+    ESMFactory                                      esmFactory;
+    CoinSavingsAccountFactory                       coinSavingsAccountFactory;
+    PauseFactory                                    pauseFactory;
+    ProtestPauseFactory                             protestPauseFactory;
 
     GebDeploy gebDeploy;
 
@@ -305,14 +305,14 @@ contract GebDeployTestBase is DSTest, ProxyActions {
     GlobalSettlement                  globalSettlement;
     ESM                               esm;
 
-    EnglishCollateralAuctionHouse ethEnglishCollateralAuctionHouse;
-    FixedDiscountCollateralAuctionHouse ethFixedDiscountCollateralAuctionHouse;
+    EnglishCollateralAuctionHouse            ethEnglishCollateralAuctionHouse;
+    IncreasingDiscountCollateralAuctionHouse ethIncreasingDiscountCollateralAuctionHouse;
 
-    DSToken                             col;
-    EnglishCollateralAuctionHouse       colEnglishCollateralAuctionHouse;
-    FixedDiscountCollateralAuctionHouse colFixedDiscountCollateralAuctionHouse;
+    DSToken                                  col;
+    EnglishCollateralAuctionHouse            colEnglishCollateralAuctionHouse;
+    IncreasingDiscountCollateralAuctionHouse colIncreasingDiscountCollateralAuctionHouse;
 
-    DSToken                             col6;
+    DSToken                                  col6;
 
     ProtocolTokenAuthority tokenAuthority;
 
@@ -350,7 +350,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         recyclingSurplusAuctionHouseFactory = new RecyclingSurplusAuctionHouseFactory();
         debtAuctionHouseFactory = new DebtAuctionHouseFactory();
         englishCollateralAuctionHouseFactory = new EnglishCollateralAuctionHouseFactory();
-        fixedDiscountCollateralAuctionHouseFactory = new FixedDiscountCollateralAuctionHouseFactory();
+        increasingDiscountCollateralAuctionHouseFactory = new IncreasingDiscountCollateralAuctionHouseFactory();
         oracleRelayerFactory = new OracleRelayerFactory();
         stabilityFeeTreasuryFactory = new StabilityFeeTreasuryFactory();
         globalSettlementFactory = new GlobalSettlementFactory();
@@ -377,7 +377,7 @@ contract GebDeployTestBase is DSTest, ProxyActions {
           burningSurplusAuctionHouseFactory,
           debtAuctionHouseFactory,
           englishCollateralAuctionHouseFactory,
-          fixedDiscountCollateralAuctionHouseFactory,
+          increasingDiscountCollateralAuctionHouseFactory,
           oracleRelayerFactory,
           globalSettlementFactory,
           esmFactory
@@ -502,8 +502,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         priceSourceCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
         priceSourceCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
 
-        (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
-        (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
+        (ethEnglishCollateralAuctionHouse, ethIncreasingDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
+        (colEnglishCollateralAuctionHouse, colIncreasingDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
 
@@ -597,8 +597,8 @@ contract GebDeployTestBase is DSTest, ProxyActions {
         priceSourceCOL.updateResult(45 * 10 ** 18);  // Price 45 COIN = 1 COL (precision 18)
         priceSourceCOIN.updateResult(1 * 10 ** 18);  // Price 1 COIN = 1 USD
 
-        (ethEnglishCollateralAuctionHouse, ethFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
-        (colEnglishCollateralAuctionHouse, colFixedDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
+        (ethEnglishCollateralAuctionHouse, ethIncreasingDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("ETH");
+        (colEnglishCollateralAuctionHouse, colIncreasingDiscountCollateralAuctionHouse,) = gebDeploy.collateralTypes("COL");
         this.modifyParameters(address(oracleRelayer), "ETH", "safetyCRatio", uint(1500000000 ether));
         this.modifyParameters(address(oracleRelayer), "ETH", "liquidationCRatio", uint(1500000000 ether));
 

@@ -28,7 +28,7 @@ import {LiquidationEngine} from "geb/LiquidationEngine.sol";
 import {CoinJoin} from "geb/BasicTokenAdapters.sol";
 import {RecyclingSurplusAuctionHouse, BurningSurplusAuctionHouse} from "geb/SurplusAuctionHouse.sol";
 import {DebtAuctionHouse} from "geb/DebtAuctionHouse.sol";
-import {EnglishCollateralAuctionHouse, FixedDiscountCollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
+import {EnglishCollateralAuctionHouse, IncreasingDiscountCollateralAuctionHouse} from "geb/CollateralAuctionHouse.sol";
 import {Coin} from "geb/Coin.sol";
 import {GlobalSettlement} from "geb/GlobalSettlement.sol";
 import {ESM} from "esm/ESM.sol";
@@ -127,11 +127,11 @@ contract EnglishCollateralAuctionHouseFactory {
     }
 }
 
-contract FixedDiscountCollateralAuctionHouseFactory {
-    function newCollateralAuctionHouse(address safeEngine, address liquidationEngine, bytes32 collateralType) public returns (FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse) {
-        fixedDiscountCollateralAuctionHouse = new FixedDiscountCollateralAuctionHouse(safeEngine, liquidationEngine, collateralType);
-        fixedDiscountCollateralAuctionHouse.addAuthorization(msg.sender);
-        fixedDiscountCollateralAuctionHouse.removeAuthorization(address(this));
+contract IncreasingDiscountCollateralAuctionHouseFactory {
+    function newCollateralAuctionHouse(address safeEngine, address liquidationEngine, bytes32 collateralType) public returns (IncreasingDiscountCollateralAuctionHouse increasingDiscountCollateralAuctionHouse) {
+        increasingDiscountCollateralAuctionHouse = new IncreasingDiscountCollateralAuctionHouse(safeEngine, liquidationEngine, collateralType);
+        increasingDiscountCollateralAuctionHouse.addAuthorization(msg.sender);
+        increasingDiscountCollateralAuctionHouse.removeAuthorization(address(this));
     }
 }
 
@@ -194,24 +194,24 @@ contract ProtestPauseFactory {
 }
 
 contract GebDeploy is DSAuth {
-    SAFEEngineFactory                          public safeEngineFactory;
-    TaxCollectorFactory                        public taxCollectorFactory;
-    AccountingEngineFactory                    public accountingEngineFactory;
-    LiquidationEngineFactory                   public liquidationEngineFactory;
-    CoinFactory                                public coinFactory;
-    CoinJoinFactory                            public coinJoinFactory;
-    StabilityFeeTreasuryFactory                public stabilityFeeTreasuryFactory;
-    RecyclingSurplusAuctionHouseFactory        public recyclingSurplusAuctionHouseFactory;
-    BurningSurplusAuctionHouseFactory          public burningSurplusAuctionHouseFactory;
-    DebtAuctionHouseFactory                    public debtAuctionHouseFactory;
-    EnglishCollateralAuctionHouseFactory       public englishCollateralAuctionHouseFactory;
-    FixedDiscountCollateralAuctionHouseFactory public fixedDiscountCollateralAuctionHouseFactory;
-    OracleRelayerFactory                       public oracleRelayerFactory;
-    GlobalSettlementFactory                    public globalSettlementFactory;
-    ESMFactory                                 public esmFactory;
-    PauseFactory                               public pauseFactory;
-    ProtestPauseFactory                        public protestPauseFactory;
-    CoinSavingsAccountFactory                  public coinSavingsAccountFactory;
+    SAFEEngineFactory                               public safeEngineFactory;
+    TaxCollectorFactory                             public taxCollectorFactory;
+    AccountingEngineFactory                         public accountingEngineFactory;
+    LiquidationEngineFactory                        public liquidationEngineFactory;
+    CoinFactory                                     public coinFactory;
+    CoinJoinFactory                                 public coinJoinFactory;
+    StabilityFeeTreasuryFactory                     public stabilityFeeTreasuryFactory;
+    RecyclingSurplusAuctionHouseFactory             public recyclingSurplusAuctionHouseFactory;
+    BurningSurplusAuctionHouseFactory               public burningSurplusAuctionHouseFactory;
+    DebtAuctionHouseFactory                         public debtAuctionHouseFactory;
+    EnglishCollateralAuctionHouseFactory            public englishCollateralAuctionHouseFactory;
+    IncreasingDiscountCollateralAuctionHouseFactory public increasingDiscountCollateralAuctionHouseFactory;
+    OracleRelayerFactory                            public oracleRelayerFactory;
+    GlobalSettlementFactory                         public globalSettlementFactory;
+    ESMFactory                                      public esmFactory;
+    PauseFactory                                    public pauseFactory;
+    ProtestPauseFactory                             public protestPauseFactory;
+    CoinSavingsAccountFactory                       public coinSavingsAccountFactory;
 
     SAFEEngine                        public safeEngine;
     TaxCollector                      public taxCollector;
@@ -234,7 +234,7 @@ contract GebDeploy is DSAuth {
 
     struct CollateralType {
         EnglishCollateralAuctionHouse englishCollateralAuctionHouse;
-        FixedDiscountCollateralAuctionHouse fixedDiscountCollateralAuctionHouse;
+        IncreasingDiscountCollateralAuctionHouse increasingDiscountCollateralAuctionHouse;
         address adapter;
     }
 
@@ -265,7 +265,7 @@ contract GebDeploy is DSAuth {
         BurningSurplusAuctionHouseFactory burningSurplusAuctionHouseFactory_,
         DebtAuctionHouseFactory debtAuctionHouseFactory_,
         EnglishCollateralAuctionHouseFactory englishCollateralAuctionHouseFactory_,
-        FixedDiscountCollateralAuctionHouseFactory fixedDiscountCollateralAuctionHouseFactory_,
+        IncreasingDiscountCollateralAuctionHouseFactory increasingDiscountCollateralAuctionHouseFactory_,
         OracleRelayerFactory oracleRelayerFactory_,
         GlobalSettlementFactory globalSettlementFactory_,
         ESMFactory esmFactory_
@@ -276,7 +276,7 @@ contract GebDeploy is DSAuth {
         burningSurplusAuctionHouseFactory = burningSurplusAuctionHouseFactory_;
         debtAuctionHouseFactory = debtAuctionHouseFactory_;
         englishCollateralAuctionHouseFactory = englishCollateralAuctionHouseFactory_;
-        fixedDiscountCollateralAuctionHouseFactory = fixedDiscountCollateralAuctionHouseFactory_;
+        increasingDiscountCollateralAuctionHouseFactory = increasingDiscountCollateralAuctionHouseFactory_;
         oracleRelayerFactory = oracleRelayerFactory_;
         globalSettlementFactory = globalSettlementFactory_;
         esmFactory = esmFactory_;
@@ -511,21 +511,21 @@ contract GebDeploy is DSAuth {
     function addAuthToCollateralAuctionHouse(bytes32 collateralType, address usr) public auth {
         require(
           address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0) ||
-          address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0),
+          address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse) != address(0),
           "Collateral auction houses not initialized"
         );
         if (address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0)) {
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(usr);
-        } else if (address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0)) {
-          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(usr);
+        } else if (address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse.addAuthorization(usr);
         }
     }
 
     function releaseAuthCollateralAuctionHouse(bytes32 collateralType, address usr) public auth {
         if (address(collateralTypes[collateralType].englishCollateralAuctionHouse) != address(0)) {
           collateralTypes[collateralType].englishCollateralAuctionHouse.removeAuthorization(usr);
-        } else if (address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse) != address(0)) {
-          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.removeAuthorization(usr);
+        } else if (address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse) != address(0)) {
+          collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse.removeAuthorization(usr);
         }
     }
 
@@ -556,15 +556,15 @@ contract GebDeploy is DSAuth {
           collateralTypes[collateralType].englishCollateralAuctionHouse.addAuthorization(address(globalSettlement));
           auctionHouse = address(collateralTypes[collateralType].englishCollateralAuctionHouse);
         } else {
-          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse =
-            fixedDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), address(liquidationEngine), collateralType);
-          liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
+          collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse =
+            increasingDiscountCollateralAuctionHouseFactory.newCollateralAuctionHouse(address(safeEngine), address(liquidationEngine), collateralType);
+          liquidationEngine.modifyParameters(collateralType, "collateralAuctionHouse", address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse));
           // Approve the auction house in order to reduce the currentOnAuctionSystemCoins
-          liquidationEngine.addAuthorization(address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse));
+          liquidationEngine.addAuthorization(address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse));
           // Internal auth
-          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
-          collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse.addAuthorization(address(globalSettlement));
-          auctionHouse = address(collateralTypes[collateralType].fixedDiscountCollateralAuctionHouse);
+          collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse.addAuthorization(address(liquidationEngine));
+          collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse.addAuthorization(address(globalSettlement));
+          auctionHouse = address(collateralTypes[collateralType].increasingDiscountCollateralAuctionHouse);
         }
 
         collateralTypes[collateralType].adapter = adapter;

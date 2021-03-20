@@ -327,7 +327,7 @@ contract GovActions {
     }
 
     function sendTokensToDistributor(address target, uint256 id) public {
-        MerkleDistributorFactoryLike(target).sendTokensToDistributor(target, id);
+        MerkleDistributorFactoryLike(target).sendTokensToDistributor(id);
     }
 
     function sendTokensToCustom(address target, address dst, uint256 amount) public {
