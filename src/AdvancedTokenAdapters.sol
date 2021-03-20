@@ -518,7 +518,7 @@ contract CollateralJoin5 {
     }
 }
 
-// For whitelisting addresses who are allowed to join collateral (that has 18 decimals and implements transferFrom)
+// For whitelisting addresses that are allowed to join collateral (the collateral type has 18 decimals and implements transferFrom)
 contract CollateralJoin6 {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
