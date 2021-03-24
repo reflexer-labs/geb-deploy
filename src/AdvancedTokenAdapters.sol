@@ -724,7 +724,7 @@ contract CollateralJoin6 {
     // The name of the collateral type handled by this join contract
     bytes32         public collateralType;
     // The collateral token contract
-    CollateralLike6 public collateral;
+    CollateralLike  public collateral;
     // The number of decimals the collateral has
     uint            public decimals;
     // The number of allowed addresses that can add collateral in the system
