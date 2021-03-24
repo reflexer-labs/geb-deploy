@@ -55,11 +55,16 @@ contract CollateralJoin1 {
         _;
     }
 
+    // Safe engine contract
     SAFEEngineLike public safeEngine;
+    // The name of the collateral type handled by this join contract
     bytes32        public collateralType;
+    // The collateral token contract
     CollateralLike public collateral;
+    // The number of decimals the collateral has
     uint           public decimals;
-    uint           public contractEnabled;  // Access Flag
+    // Whether this contract is disabled or not
+    uint           public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -71,10 +76,12 @@ contract CollateralJoin1 {
     constructor(address safeEngine_, bytes32 collateralType_, address collateral_) public {
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
+
         safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
+
         require(decimals == 18, "CollateralJoin1/not-18-decimals");
         emit AddAuthorization(msg.sender);
     }
@@ -87,12 +94,21 @@ contract CollateralJoin1 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this join contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
     // --- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) external {
         require(contractEnabled == 1, "CollateralJoin1/not-contractEnabled");
         require(int(wad) >= 0, "CollateralJoin1/overflow");
@@ -100,6 +116,11 @@ contract CollateralJoin1 {
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin1/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "CollateralJoin1/overflow");
         safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
@@ -148,11 +169,16 @@ contract CollateralJoin2 {
         _;
     }
 
-    SAFEEngineLike public safeEngine;
-    bytes32 public collateralType;
+    // Safe engine contract
+    SAFEEngineLike  public safeEngine;
+    // The name of the collateral type handled by this join contract
+    bytes32         public collateralType;
+    // The collateral token contract
     CollateralLike2 public collateral;
-    uint public decimals;
-    uint public contractEnabled;
+    // The number of decimals the collateral has
+    uint            public decimals;
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -183,6 +209,9 @@ contract CollateralJoin2 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this join contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
@@ -208,6 +237,12 @@ contract CollateralJoin2 {
         require(ok, "CollateralJoin2/failed-transfer");
         require(uint(prevBalance - wad) == collateral.balanceOf(msg.sender), "CollateralJoin2/failed-transfer");
     }
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin2/contract-not-enabled");
         require(wad <= 2 ** 255, "CollateralJoin2/overflow");
@@ -215,6 +250,11 @@ contract CollateralJoin2 {
         transferFrom(int256(wad));
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) public {
         require(wad <= 2 ** 255, "CollateralJoin2/overflow");
         safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
@@ -234,24 +274,40 @@ abstract contract CollateralLike3 {
 contract CollateralJoin3 {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
-    function addAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 1;
-        emit AddAuthorization(usr);
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 1;
+        emit AddAuthorization(account);
     }
-    function removeAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 0;
-        emit RemoveAuthorization(usr);
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 0;
+        emit RemoveAuthorization(account);
     }
+    /**
+    * @notice Checks whether msg.sender can call an authed function
+    **/
     modifier isAuthorized {
-      require(authorizedAccounts[msg.sender] == 1, "CollateralJoin3/not-authorized");
-      _;
+        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin3/account-not-authorized");
+        _;
     }
 
-    SAFEEngineLike public safeEngine;
-    bytes32 public collateralType;
+    // Safe engine contract
+    SAFEEngineLike  public safeEngine;
+    // The name of the collateral type handled by this join contract
+    bytes32         public collateralType;
+    // The collateral token contract
     CollateralLike3 public collateral;
-    uint public decimals;
-    uint public contractEnabled;
+    // The number of decimals the collateral has
+    uint            public decimals;
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -285,12 +341,21 @@ contract CollateralJoin3 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this join contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
     // --- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin3/contract-not-enabled");
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
@@ -299,6 +364,11 @@ contract CollateralJoin3 {
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin3/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) public {
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(wad18 <= 2 ** 255, "CollateralJoin3/overflow");
@@ -343,8 +413,8 @@ abstract contract CollateralLike4 {
 }
 
 contract GemBag {
-    address  public ada;
-    address  public lad;
+    address         public ada;
+    address         public lad;
     CollateralLike4 public collateral;
 
     constructor(address lad_, address collateral_) public {
@@ -353,6 +423,11 @@ contract GemBag {
         collateral = CollateralLike4(collateral_);
     }
 
+    /*
+    * @notify Transfer tokens out of this bag
+    * @param usr The address that will receive tokens
+    * @param wad The amount of tokens to transfer out of the bag
+    */
     function exit(address usr, uint256 wad) external {
         require(msg.sender == ada || msg.sender == lad, "GemBag/invalid-caller");
         require(collateral.transfer(usr, wad), "GemBag/failed-transfer");
@@ -362,25 +437,42 @@ contract GemBag {
 contract CollateralJoin4 {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
-    function addAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 1;
-        emit AddAuthorization(usr);
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 1;
+        emit AddAuthorization(account);
     }
-    function removeAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 0;
-        emit RemoveAuthorization(usr);
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 0;
+        emit RemoveAuthorization(account);
     }
+    /**
+    * @notice Checks whether msg.sender can call an authed function
+    **/
     modifier isAuthorized {
-      require(authorizedAccounts[msg.sender] == 1, "CollateralJoin4/not-authorized");
-      _;
+        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin4/account-not-authorized");
+        _;
     }
 
+    // Safe engine contract
     SAFEEngineLike  public safeEngine;
-    bytes32  public collateralType;
+    // The name of the collateral type handled by this join contract
+    bytes32         public collateralType;
+    // The collateral token contract
     CollateralLike4 public collateral;
-    uint     public decimals;
-    uint public contractEnabled;
+    // The number of decimals the collateral has
+    uint            public decimals;
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
+    // Bags that store tokens joined in the system
     mapping(address => address) public bags;
 
     // --- Events ---
@@ -408,15 +500,25 @@ contract CollateralJoin4 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
     // -- Bags --
+    /*
+    * @notify Create a new bag for msg.sender
+    */
     function make() external returns (address bag) {
         bag = make(msg.sender);
     }
+    /*
+    * @notify Create a new bag for a custom address
+    * @param usr The address to create a bag for
+    */
     function make(address usr) public returns (address bag) {
         require(bags[usr] == address(0), "CollateralJoin4/bag-already-exists");
         bag = address(new GemBag(address(usr), address(collateral)));
@@ -424,6 +526,12 @@ contract CollateralJoin4 {
     }
 
     // -- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint256 wad) external {
         require(contractEnabled == 1, "CollateralJoin4/contract-not-enabled");
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
@@ -431,6 +539,11 @@ contract CollateralJoin4 {
         safeEngine.modifyCollateralBalance(collateralType, usr, int256(wad));
         emit Join(msg.sender, bags[msg.sender], usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint256 wad) external {
         require(int256(wad) >= 0, "CollateralJoin4/negative-amount");
 
@@ -452,24 +565,40 @@ abstract contract CollateralLike5 {
 contract CollateralJoin5 {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
-    function addAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 1;
-        emit AddAuthorization(usr);
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 1;
+        emit AddAuthorization(account);
     }
-    function removeAuthorization(address usr) external isAuthorized {
-        authorizedAccounts[usr] = 0;
-        emit RemoveAuthorization(usr);
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 0;
+        emit RemoveAuthorization(account);
     }
+    /**
+    * @notice Checks whether msg.sender can call an authed function
+    **/
     modifier isAuthorized {
-      require(authorizedAccounts[msg.sender] == 1, "CollateralJoin5/not-authorized");
-      _;
+        require(authorizedAccounts[msg.sender] == 1, "CollateralJoin5/account-not-authorized");
+        _;
     }
 
-    SAFEEngineLike   public safeEngine;
+    // Safe engine contract
+    SAFEEngineLike  public safeEngine;
+    // The name of the collateral type handled by this join contract
     bytes32         public collateralType;
+    // The collateral token contract
     CollateralLike5 public collateral;
+    // The number of decimals the collateral has
     uint            public decimals;
-    uint            public contractEnabled;  // Access Flag
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -482,10 +611,13 @@ contract CollateralJoin5 {
         collateral = CollateralLike5(collateral_);
         decimals = collateral.decimals();
         require(decimals < 18, "CollateralJoin5/decimals-18-or-higher");
+
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
+
         safeEngine = SAFEEngineLike(safeEngine_);
         collateralType = collateralType_;
+
         emit AddAuthorization(msg.sender);
     }
 
@@ -495,12 +627,21 @@ contract CollateralJoin5 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
     // --- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) public {
         require(contractEnabled == 1, "CollateralJoin5/not-contractEnabled");
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
@@ -509,6 +650,11 @@ contract CollateralJoin5 {
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin5/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) public {
         uint wad18 = multiply(wad, 10 ** (18 - decimals));
         require(int(wad18) >= 0, "CollateralJoin5/overflow");
@@ -573,12 +719,18 @@ contract CollateralJoin6 {
         return both(allowance[msg.sender] > 0, addition(amount, collateralJoined[msg.sender]) <= allowance[msg.sender]);
     }
 
-    SAFEEngineLike public safeEngine;
-    bytes32        public collateralType;
-    CollateralLike public collateral;
-    uint           public decimals;
-    uint           public allowed;
-    uint           public contractEnabled;
+    // Safe engine contract
+    SAFEEngineLike  public safeEngine;
+    // The name of the collateral type handled by this join contract
+    bytes32         public collateralType;
+    // The collateral token contract
+    CollateralLike6 public collateral;
+    // The number of decimals the collateral has
+    uint            public decimals;
+    // The number of allowed addresses that can add collateral in the system
+    uint            public allowed;
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -613,6 +765,9 @@ contract CollateralJoin6 {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
@@ -624,6 +779,12 @@ contract CollateralJoin6 {
     }
 
     // --- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) external {
         require(contractEnabled == 1, "CollateralJoin6/not-contractEnabled");
         require(canJoin(wad), "CollateralJoin6/cannot-join-above-allowance");
@@ -633,6 +794,11 @@ contract CollateralJoin6 {
         require(collateral.transferFrom(msg.sender, address(this), wad), "CollateralJoin6/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) external {
         require(wad <= 2 ** 255, "CollateralJoin6/overflow");
         if (collateralJoined[msg.sender] >= wad) {
@@ -650,21 +816,40 @@ contract CollateralJoin6 {
 contract AuthCollateralJoin {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
-    function addAuthorization(address usr) public isAuthorized {
-        authorizedAccounts[usr] = 1;
-        emit AddAuthorization(usr);
+    /**
+     * @notice Add auth to an account
+     * @param account Account to add auth to
+     */
+    function addAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 1;
+        emit AddAuthorization(account);
     }
-    function removeAuthorization(address usr) public isAuthorized {
-        authorizedAccounts[usr] = 0;
-        emit RemoveAuthorization(usr);
+    /**
+     * @notice Remove auth from an account
+     * @param account Account to remove auth from
+     */
+    function removeAuthorization(address account) external isAuthorized {
+        authorizedAccounts[account] = 0;
+        emit RemoveAuthorization(account);
     }
-    modifier isAuthorized { require(authorizedAccounts[msg.sender] == 1, "AuthCollateralJoin/non-authed"); _; }
+    /**
+    * @notice Checks whether msg.sender can call an authed function
+    **/
+    modifier isAuthorized {
+        require(authorizedAccounts[msg.sender] == 1, "AuthCollateralJoin/account-not-authorized");
+        _;
+    }
 
-    SAFEEngineLike public safeEngine;
-    bytes32 public collateralType;
-    CollateralLike public collateral;
-    uint public decimals;
-    uint public contractEnabled;
+    // Safe engine contract
+    SAFEEngineLike  public safeEngine;
+    // The name of the collateral type handled by this join contract
+    bytes32         public collateralType;
+    // The collateral token contract
+    CollateralLike  public collateral;
+    // The number of decimals the collateral has
+    uint            public decimals;
+    // Whether this contract is disabled or not
+    uint            public contractEnabled;
 
     // --- Events ---
     event AddAuthorization(address account);
@@ -678,8 +863,10 @@ contract AuthCollateralJoin {
         collateralType = collateralType_;
         collateral = CollateralLike(collateral_);
         decimals = collateral.decimals();
+
         authorizedAccounts[msg.sender] = 1;
         contractEnabled = 1;
+
         emit AddAuthorization(msg.sender);
     }
 
@@ -691,12 +878,21 @@ contract AuthCollateralJoin {
     }
 
     // --- Administration ---
+    /*
+    * @notify Disable this contract
+    */
     function disableContract() external isAuthorized {
         contractEnabled = 0;
         emit DisableContract();
     }
 
     // --- Collateral Gateway ---
+    /*
+    * @notify Join collateral tokens in the system
+    * @dev It reverts in case the contract is disabled
+    * @param usr The address that will receive tokens inside the system
+    * @param wad The amount of tokens to join
+    */
     function join(address usr, uint wad) public isAuthorized {
         require(contractEnabled == 1, "AuthCollateralJoin/contract-not-enabled");
         require(int(wad) >= 0, "AuthCollateralJoin/overflow");
@@ -704,6 +900,11 @@ contract AuthCollateralJoin {
         require(collateral.transferFrom(msg.sender, address(this), wad), "AuthCollateralJoin/failed-transfer");
         emit Join(msg.sender, usr, wad);
     }
+    /*
+    * @notify Exit collateral tokens from the system and send them to a custom address
+    * @param usr The address that will receive collateral tokens after they are exited
+    * @param wad The amount of tokens to exit
+    */
     function exit(address usr, uint wad) public isAuthorized {
         require(wad <= 2 ** 255, "AuthCollateralJoin/overflow");
         safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
