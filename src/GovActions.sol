@@ -49,6 +49,8 @@ abstract contract PauseLike {
 }
 
 abstract contract MerkleDistributorFactoryLike {
+    function nonce() virtual public view returns (uint256);
+
     function deployDistributor(bytes32, uint256) virtual external;
     function sendTokensToDistributor(uint256) virtual external;
     function sendTokensToCustom(address, uint256) virtual external;
@@ -324,6 +326,11 @@ contract GovActions {
 
     function deployDistributor(address target, bytes32 merkleRoot, uint256 amount) public {
         MerkleDistributorFactoryLike(target).deployDistributor(merkleRoot, amount);
+    }
+
+    function deployDistributorAndSendTokens(address target, bytes32 merkleRoot, uint256 amount) public {
+        MerkleDistributorFactoryLike(target).deployDistributor(merkleRoot, amount);
+        MerkleDistributorFactoryLike(target).sendTokensToDistributor(MerkleDistributorFactoryLike(target).nonce());
     }
 
     function sendTokensToDistributor(address target, uint256 id) public {
