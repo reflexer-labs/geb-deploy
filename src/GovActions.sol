@@ -34,7 +34,6 @@ abstract contract Setter {
     function setSymbol(string calldata) virtual external;
     function disableContract() virtual external;
     function toggleSaviour(address) virtual external;
-
 }
 
 abstract contract GlobalSettlementLike {
