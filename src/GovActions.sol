@@ -353,4 +353,16 @@ contract GovActions {
     function getBackTokensFromDistributor(address target, uint256 id, uint256 amount) public {
         MerkleDistributorFactoryLike(target).getBackTokensFromDistributor(id, amount);
     }
+
+    function setIncreasingRewardsParams(address target, uint256 baseUpdateCallerReward, uint256 maxUpdateCallerReward) public {
+        Setter(target).modifyParameters("baseUpdateCallerReward", baseUpdateCallerReward);
+        Setter(target).modifyParameters("maxUpdateCallerReward", maxUpdateCallerReward);
+    }
+
+    function setIncreasingRewardsParamsAndAllowances(address target, address treasury, uint256 baseUpdateCallerReward, uint256 maxUpdateCallerReward, uint256 perBlockAllowance, uint256 totalAllowance) public {
+        Setter(target).modifyParameters("baseUpdateCallerReward", baseUpdateCallerReward);
+        Setter(target).modifyParameters("maxUpdateCallerReward", maxUpdateCallerReward);
+        Setter(treasury).setPerBlockAllowance(target, perBlockAllowance);
+        Setter(treasury).setTotalAllowance(target, totalAllowance);
+    }
 }
