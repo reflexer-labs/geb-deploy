@@ -16,3 +16,6 @@
 [submodule "lib/ds-pause"]
 	path = lib/ds-pause
 	url = https://github.com/reflexer-labs/ds-pause.git
+[submodule "lib/geb"]
+	path = lib/geb
+	url = https://github.com/reflexer-labs/geb.git
