@@ -35,6 +35,7 @@ abstract contract Setter {
     function disableContract() virtual external;
     function toggleSaviour(address) virtual external;
     function setMinDesiredCollateralizationRatio(bytes32, uint256) virtual external;
+    function updateResult(uint256) virtual external;
 }
 
 abstract contract GlobalSettlementLike {
@@ -369,5 +370,9 @@ contract GovActions {
 
     function setMinDesiredCollateralizationRatio(address target, bytes32 collateralType, uint256 cRatio) public {
         Setter(target).setMinDesiredCollateralizationRatio(collateralType, cRatio);
+    }
+
+    function updateResult(address target, uint256 result) public {
+        Setter(target).updateResult(result);
     }
 }
