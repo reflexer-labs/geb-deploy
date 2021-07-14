@@ -16,6 +16,3 @@
 [submodule "lib/esm"]
 	path = lib/esm
 	url = https://github.com/reflexer-labs/esm.git
-[submodule "lib/ds-pause"]
-	path = lib/ds-pause
-	url = https://github.com/reflexer-labs/ds-pause.git
