@@ -4,8 +4,8 @@
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License, or
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity 0.6.7;
+import "./utils/ReentrancyGuard.sol";
 
 abstract contract SAFEEngineLike {
     function modifyCollateralBalance(bytes32,address,int) virtual public;
@@ -944,7 +945,7 @@ abstract contract CollateralLike7 {
     function balanceOf(address) virtual public view returns (uint);
 }
 
-contract CollateralJoin7 {
+contract CollateralJoin7 is ReentrancyGuard {
     // --- Auth ---
     mapping (address => uint) public authorizedAccounts;
     /**
@@ -1074,7 +1075,7 @@ contract CollateralJoin7 {
     * @param usr The address that will receive tokens inside the system
     * @param wad The amount of tokens to join
     */
-    function join(address usr, uint wad) external {
+    function join(address usr, uint wad) external nonReentrant {
         require(contractEnabled == 1, "CollateralJoin7/not-contractEnabled");
         require(int(wad) >= 0, "CollateralJoin7/overflow");
         safeEngine.modifyCollateralBalance(collateralType, usr, int(wad));
@@ -1086,7 +1087,7 @@ contract CollateralJoin7 {
     * @param usr The address that will receive collateral tokens after they are exited
     * @param wad The amount of tokens to exit
     */
-    function exit(address usr, uint wad) external {
+    function exit(address usr, uint wad) external nonReentrant {
         require(wad <= 2 ** 255, "CollateralJoin7/overflow");
         safeEngine.modifyCollateralBalance(collateralType, msg.sender, -int(wad));
         require(collateral.transfer(usr, wad), "CollateralJoin7/failed-transfer");
@@ -1106,7 +1107,7 @@ contract CollateralJoin7 {
         address token,
         uint256 amount,
         bytes calldata data
-    ) external returns (bool) {
+    ) external nonReentrant returns (bool) {
         require(contractEnabled == 1, "CollateralJoin7/not-contractEnabled");
         uint256 initialBalance = collateral.balanceOf(address(this));
         uint256 fee            = flashFee(token, amount);
