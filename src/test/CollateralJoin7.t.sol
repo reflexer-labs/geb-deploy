@@ -264,6 +264,63 @@ contract CollateralJoin7Test is DSTest {
 
         collateralA.flashLoan(IERC3156FlashBorrowerLike(address(this)), address(collateral), loanSize, data);
     }
+    function testFail_flash_loan_reenter_join() public {
+        uint loanSize = 1000 ether;
+        collateral.mint(loanSize * 3);
+        collateral.approve(address(collateralA), loanSize);
+        assertTrue( this.try_join_tokenCollateral(address(this), loanSize));
+
+        uint fee = collateralA.flashLoanFee() * loanSize / 1 ether;
+
+        bytes memory data = abi.encode(
+            collateralA.CALLBACK_SUCCESS(),      // return value
+            loanSize,
+            fee,
+            loanSize + fee,                      // amount to repay
+            collateral.balanceOf(address(this)), // previous balance
+            2                                    // reenter join
+        );
+
+        collateralA.flashLoan(IERC3156FlashBorrowerLike(address(this)), address(collateral), loanSize, data);
+    }
+    function testFail_flash_loan_reenter_exit() public {
+        uint loanSize = 1000 ether;
+        collateral.mint(loanSize * 3);
+        collateral.approve(address(collateralA), loanSize);
+        assertTrue( this.try_join_tokenCollateral(address(this), loanSize));
+
+        uint fee = collateralA.flashLoanFee() * loanSize / 1 ether;
+
+        bytes memory data = abi.encode(
+            collateralA.CALLBACK_SUCCESS(),      // return value
+            loanSize,
+            fee,
+            loanSize + fee,                      // amount to repay
+            collateral.balanceOf(address(this)), // previous balance
+            3                                    // reenter exit
+        );
+
+        collateralA.flashLoan(IERC3156FlashBorrowerLike(address(this)), address(collateral), loanSize, data);
+    }
+    function testFail_flash_loan_reenter_loan() public {
+        uint loanSize = 1000 ether;
+        collateral.mint(loanSize * 3);
+        collateral.approve(address(collateralA), loanSize);
+        assertTrue( this.try_join_tokenCollateral(address(this), loanSize));
+
+        uint fee = collateralA.flashLoanFee() * loanSize / 1 ether;
+
+        bytes memory data = abi.encode(
+            collateralA.CALLBACK_SUCCESS(),      // return value
+            loanSize,
+            fee,
+            loanSize + fee,                      // amount to repay
+            collateral.balanceOf(address(this)), // previous balance
+            4                                    // reenter flashLoan
+        );
+
+        collateralA.flashLoan(IERC3156FlashBorrowerLike(address(this)), address(collateral), loanSize, data);
+    }
     function testFail_flash_loan_invalid_token(address addr) public {
         uint loanSize = 1000 ether;
         collateral.mint(loanSize * 3);
@@ -296,8 +353,8 @@ contract CollateralJoin7Test is DSTest {
             uint fee_,
             uint amountToRepay,
             uint previousBalance,
-            bool doRevert
-        ) = abi.decode(data, (bytes32, uint, uint, uint, uint, bool));
+            uint doRevert
+        ) = abi.decode(data, (bytes32, uint, uint, uint, uint, uint));
 
         uint currentBalance = collateral.balanceOf(address(this));
 
@@ -307,8 +364,15 @@ contract CollateralJoin7Test is DSTest {
         assertEq(token, address(collateral));
         assertEq(currentBalance, previousBalance + amount);
 
+        if (doRevert == 2)
+            collateralA.join(address(this), 1);
+        else if (doRevert == 3)
+            collateralA.exit(address(this), 1);
+        else if (doRevert == 4)
+            collateralA.flashLoan(IERC3156FlashBorrowerLike(address(this)), address(collateralA), 1, "");
+
         collateral.transfer(msg.sender, amountToRepay);
-        require(!doRevert, "forced revert");
+        require(doRevert != 1, "forced revert");
         return returnValue;
     }
 }
