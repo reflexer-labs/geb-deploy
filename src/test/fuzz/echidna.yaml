@@ -1,0 +1,14 @@
+seqLen: 50
+testLimit: 200000
+checkAsserts: true
+sender: ["0x10000", "0x20000", "0xabc00"]
+coverage: false
+# maxTimeDelay: 725760 # 1.2 weeks
+# maxBlockDelay: 60480 # around 1 weeks of blocks
+testMaxGas: 12500000 # current block gas limit
+estimateGas: false
+
+# list of methods to filter
+filterFunctions: ["Fuzz.setUp()", "Fuzz.IS_TEST()", "Fuzz.failed()", "Fuzz.test_fuzz()"] # removing ds-test functions
+# by default, blacklist methods in filterFunctions
+filterBlacklist: true

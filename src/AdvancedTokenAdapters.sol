@@ -1109,6 +1109,7 @@ contract CollateralJoin7 is ReentrancyGuard {
         bytes calldata data
     ) external nonReentrant returns (bool) {
         require(contractEnabled == 1, "CollateralJoin7/not-contractEnabled");
+        require(amount > 0, "CollateralJoin7/null-amount");
         uint256 initialBalance = collateral.balanceOf(address(this));
         uint256 fee            = flashFee(token, amount);
 
@@ -1122,7 +1123,7 @@ contract CollateralJoin7 is ReentrancyGuard {
         );
 
         // check repayment
-        require (collateral.balanceOf(address(this)) >= addition(initialBalance, fee), "CollateralJoin7/loan-not-fully-paid");
+        require (collateral.balanceOf(address(this)) == addition(initialBalance, fee), "CollateralJoin7/loan-not-fully-paid");
 
         // send fees to feeReceiver
         require(collateral.transfer(feeReceiver, fee), "CollateralJoin7/transfer-failed");
