@@ -146,7 +146,7 @@ contract CollateralJoin7Test is DSTest {
         feePercentage = feePercentage % 1 ether; // up to 100%
         collateralA.modifyParameters("flashLoanFee", feePercentage);
 
-        loanSize = loanSize % 10000000000 ether;
+        loanSize = (loanSize % 10000000000 ether) + 1;
         collateral.mint(loanSize * 3);
         collateral.approve(address(collateralA), loanSize);
         assertTrue( this.try_join_tokenCollateral(address(this), loanSize));
